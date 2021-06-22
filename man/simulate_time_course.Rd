@@ -4,7 +4,18 @@
 \alias{simulate_time_course}
 \title{simulate_time_course}
 \usage{
-simulate_time_course(n_samples = 0)
+simulate_time_course(
+  t = NULL,
+  n_samples = 20,
+  sfreq = 24,
+  start = 0.192,
+  seed_num = 1,
+  snratio = 1,
+  intercept = 0.5,
+  amplitude = 0.1,
+  frequency = 4,
+  phi = 0
+)
 }
 \arguments{
 \item{n_samples}{Number of samples}

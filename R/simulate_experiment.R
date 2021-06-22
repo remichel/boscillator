@@ -16,5 +16,7 @@
 #'
 
 simulate_experiment <- function(n_samples = 0){
-  if(n_samples == 0) message('Under construction...')
+
+
+  stats::rbinom(2, 1, .8)
 }
