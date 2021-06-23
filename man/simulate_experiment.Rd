@@ -4,7 +4,24 @@
 \alias{simulate_experiment}
 \title{simulate_experiment}
 \usage{
-simulate_experiment(n_samples = 0)
+simulate_experiment(
+  n_sub = 14,
+  n_timepoints = 20,
+  n_trials = 100,
+  sfreq = 25,
+  intercept = 0.5,
+  amplitude = 0.1,
+  freq = 4,
+  phi = 0,
+  phase_jitter_within_subj = 0,
+  phase_jitter_across_subj = pi/4,
+  amplitude_jitter_within_subj = 0,
+  amplitude_jitter_across_subj = 0,
+  freq_jitter_within_subj = 0,
+  freq_jitter_across_subj = 0,
+  intercept_jitter_across_subj = 0.2,
+  seed_num = NULL
+)
 }
 \arguments{
 \item{n_samples}{Number of samples}
