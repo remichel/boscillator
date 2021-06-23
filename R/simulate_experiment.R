@@ -27,12 +27,12 @@ simulate_experiment <-
            freq = 4,
            phi = 0,
            phase_jitter_within_subj = 0,
-           phase_jitter_across_subj = pi / 4,
+           phase_jitter_across_subj = 0,
            amplitude_jitter_within_subj = 0,
            amplitude_jitter_across_subj = 0,
            freq_jitter_within_subj = 0,
            freq_jitter_across_subj = 0,
-           intercept_jitter_across_subj = .2,
+           intercept_jitter_across_subj = 0,
            seed_num = NULL) {
     # set seed
     if (is.null(seed_num)) {
@@ -59,17 +59,17 @@ simulate_experiment <-
       dplyr::group_by(subj) %>%
       dplyr::mutate(osc = sin_model(
         time,
-        !!intercept + stats::rnorm(1, 0,!!intercept_jitter_across_subj),
-        !!amplitude + stats::rnorm(1, 0,!!amplitude_jitter_across_subj),
-        !!freq + stats::rnorm(1, 0,!!freq_jitter_across_subj),
-        !!phi + stats::rnorm(1, 0,!!phase_jitter_across_subj)
+        !!intercept + stats::rnorm(1, 0, !!intercept_jitter_across_subj),
+        !!amplitude + stats::rnorm(1, 0, !!amplitude_jitter_across_subj),
+        !!freq + stats::rnorm(1, 0, !!freq_jitter_across_subj),
+        !!phi + stats::rnorm(1, 0, !!phase_jitter_across_subj)
       )) %>%
       dplyr::ungroup()
 
     # simulate single trial responses
-    data <- cbind(data,t(
-                    sapply(data$osc, stats::rbinom, n = n_trials, size = 1)
-                  ))
+    data <- cbind(data, t(
+      sapply(data$osc, stats::rbinom, n = n_trials, size = 1)
+    ))
 
     # bring into long format
     data <- data %>%
@@ -86,6 +86,7 @@ simulate_experiment <-
     bosc$timepoints <- t
     bosc$data$single_trial$data <- data
     bosc$data$single_trial$sim_spec <- list(
+      seed = seed_num,
       n_sub = n_sub,
       n_timepoints = n_timepoints,
       n_trials = n_trials,
