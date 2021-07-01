@@ -19,7 +19,8 @@ bosc <- function(){
   bosc = list(timepoints = NULL,
               data = list(single_trial = NULL,
                           single_subject = NULL,
-                          grand_average = NULL),
+                          grand_average = NULL,
+                          agg_observer = NULL),
               preprocessing = NULL,
               tests = NULL)
   class(bosc) = "BOSC-Object"

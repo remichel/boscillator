@@ -21,6 +21,11 @@ simulate_experiment(
   freq_jitter_across_subj = 0,
   intercept_jitter_across_subj = 0,
   transient = "none",
+  transient_expModel_params = c(0, 1, 0.3),
+  trend = "none",
+  trend_linModel_params = c(intercept, amplitude),
+  trend_expModel_params = c(0, 1 - 2 * amplitude, 0.6),
+  aggregate = T,
   seed_num = NULL
 )
 }

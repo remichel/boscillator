@@ -4,6 +4,16 @@
 #' Simulates a time course from a dense sampling study.
 #'
 #' @param n_samples Number of samples
+#' @param t
+#' @param sfreq
+#' @param start
+#' @param seed_num
+#' @param snratio
+#' @param range
+#' @param intercept
+#' @param amplitude
+#' @param frequency
+#' @param phi
 #'
 #' @return A vector
 #' @export simulate_time_course

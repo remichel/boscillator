@@ -1,13 +1,35 @@
 #' simulate_experiment
 #'
+#' @param n_sub
+#' @param n_timepoints
+#' @param n_trials
+#' @param sfreq
+#' @param intercept
+#' @param amplitude
+#' @param freq
+#' @param phi
+#' @param phase_jitter_within_subj
+#' @param phase_jitter_across_subj
+#' @param amplitude_jitter_within_subj
+#' @param amplitude_jitter_across_subj
+#' @param freq_jitter_within_subj
+#' @param freq_jitter_across_subj
+#' @param intercept_jitter_across_subj
+#' @param transient
+#' @param transient_expModel_params
+#' @param trend
+#' @param trend_linModel_params
+#' @param trend_expModel_params
+#' @param aggregate
+#' @param seed_num
+#'
 #' @description \code{simulate_experiment}
 #' Simulates the raw dataset of a dense sampling study.
-#'
-#' @param n_samples Number of samples
 #'
 #' @return A data frame
 #' @importFrom dplyr %>%
 #' @importFrom stats rnorm
+#' @importFrom rlang .data
 #' @export simulate_experiment
 #' @name simulate_experiment
 #'
@@ -38,6 +60,7 @@ simulate_experiment <-
            trend = "none",
            trend_linModel_params = c(intercept, amplitude),
            trend_expModel_params = c(0, 1 - 2 * amplitude, .6),
+           aggregate = T,
            seed_num = NULL) {
     # set seed
     if (is.null(seed_num)) {
@@ -88,9 +111,9 @@ simulate_experiment <-
 
     # simulate probabilities for hits based on oscillation
     data <- data %>%
-      dplyr::group_by(subj) %>%
+      dplyr::group_by(.data$subj) %>%
       dplyr::mutate(osc = sin_model(
-        time,
+        .data$time,
         !!intercept + stats::rnorm(1, 0, !!intercept_jitter_across_subj),
         !!amplitude + stats::rnorm(1, 0, !!amplitude_jitter_across_subj),
         !!freq + stats::rnorm(1, 0, !!freq_jitter_across_subj),
@@ -110,8 +133,8 @@ simulate_experiment <-
         names_to = "trial",
         values_to = "resp"
       ) %>%
-      dplyr::mutate(trial = as.numeric(trial)) %>%
-      dplyr::select(-osc)
+      dplyr::mutate(trial = as.numeric(.data$trial)) %>%
+      dplyr::select(-.data$osc)
 
     # create bosc object
     bosc <- bosc()
@@ -136,6 +159,27 @@ simulate_experiment <-
       intercept_jitter_across_subj = intercept_jitter_across_subj
     )
     class(bosc) <- "BOSC-Object"
+
+    if(aggregate == T){
+
+      # single subject time courses
+      bosc$data$single_subject$data <- bosc$data$single_trial$data %>%
+        dplyr::group_by(.data$subj, .data$time) %>%
+        dplyr::summarise(hr = mean(.data$resp))
+
+
+      # grand average
+      bosc$data$grand_average$data <- bosc$data$single_subject$data %>%
+        dplyr::group_by(.data$time) %>%
+        dplyr::summarise(hr = mean(.data$hr))
+
+
+      # aggregated observer
+      bosc$data$agg_observer$data <- bosc$data$single_trial$data %>%
+        dplyr::group_by(.data$time) %>%
+        dplyr::summarise(hr = mean(.data$resp))
+
+    }
 
     return(bosc)
   }
