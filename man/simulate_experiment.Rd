@@ -14,12 +14,13 @@ simulate_experiment(
   freq = 4,
   phi = 0,
   phase_jitter_within_subj = 0,
-  phase_jitter_across_subj = pi/4,
+  phase_jitter_across_subj = 0,
   amplitude_jitter_within_subj = 0,
   amplitude_jitter_across_subj = 0,
   freq_jitter_within_subj = 0,
   freq_jitter_across_subj = 0,
-  intercept_jitter_across_subj = 0.2,
+  intercept_jitter_across_subj = 0,
+  transient = "none",
   seed_num = NULL
 )
 }
