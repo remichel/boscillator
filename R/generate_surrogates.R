@@ -63,7 +63,7 @@ generate_surrogates <-
 
       bosc$data$single_trial$surrogate$data <- bosc$data$single_trial$data %>%
         dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
-        dplyr::group_by(.data$subj, .data$trial) %>%
+        dplyr::group_by(.data$subj, .data$time, .data$trial) %>%
         dplyr::mutate(n_surr = dplyr::row_number()) %>%
         dplyr::ungroup() %>%
         dplyr::group_by(.data$subj, .data$n_surr) %>%
@@ -116,7 +116,7 @@ generate_surrogates <-
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$subj, .data$n_surr) %>%
-          dplyr::mutate(ar1 = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
         bosc$data$single_subject$surrogate$data <- ss
@@ -132,7 +132,7 @@ generate_surrogates <-
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(ar1 = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
         bosc$data$grand_average$surrogate$data <- ga
@@ -148,7 +148,7 @@ generate_surrogates <-
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(ar1 = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
 
         bosc$data$agg_observer$surrogate$data <- aggo
         bosc$data$agg_observer$surrogate$spec <- list(
