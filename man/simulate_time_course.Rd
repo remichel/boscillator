@@ -20,6 +20,8 @@ simulate_time_course(
 }
 \arguments{
 \item{n_samples}{Number of samples}
+
+\item{phi}{}
 }
 \value{
 A vector

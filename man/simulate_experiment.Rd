@@ -30,7 +30,7 @@ simulate_experiment(
 )
 }
 \arguments{
-\item{n_samples}{Number of samples}
+\item{seed_num}{}
 }
 \value{
 A data frame

@@ -16,7 +16,8 @@
 #' @export generate_surrogates
 #' @name generate_surrogates
 #' @examples
-#' bosc = generate_surrogates(bosc, n_surr = 1000, method = "perm")
+#' bosc = simulate_experiment(n = 10, n_timepoints = 10, n_trials = 10)
+#' bosc = generate_surrogates(bosc, n_surr = 100, method = "perm")
 #'
 #' #' @author René Michel
 
@@ -29,7 +30,9 @@ generate_surrogates <-
            aggregate = T) {
 
     # check for bosc object
-    stopifnot(class(bosc) == "BOSC-Object")
+    if(class(bosc) != "BOSC-Object"){
+      stop("No object of class 'BOSC-Object' found. Consider using 'bosc()' to generate a BOSC object before calling this function.")
+    }
 
     # check for already existing surrogates
     if (is.null(bosc$data$single_trial$surrogate) == F & overwrite == F) {
@@ -39,14 +42,14 @@ generate_surrogates <-
     # set seed
     set.seed(n_seed)
 
-    # create empty list
-    bosc$data$single_trial$surrogate$data <- vector(mode = "list", length = n_surr)
-    names(bosc$data$single_trial$surrogate$data) <- paste("S", 1:n_surr, sep = "_")
-
     # create surrogates
     if (method == "perm") {
 
       # create permutations
+
+      # create empty list (for loop version)
+      #bosc$data$single_trial$surrogate$data <- vector(mode = "list", length = n_surr)
+      #names(bosc$data$single_trial$surrogate$data) <- paste("S", 1:n_surr, sep = "_")
 
       # # slower loop version
       # for (iPerm in 1:n_surr) {
@@ -59,9 +62,9 @@ generate_surrogates <-
       # bosc$data$single_trial$surrogate$data = do.call(rbind.data.frame, bosc$data$single_trial$surrogate$data)
 
       bosc$data$single_trial$surrogate$data <- bosc$data$single_trial$data %>%
-        dplyr::slice(rep(1:n(), each = !!n_surr)) %>%
+        dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
         dplyr::group_by(.data$subj, .data$trial) %>%
-        dplyr::mutate(n_surr = row_number()) %>%
+        dplyr::mutate(n_surr = dplyr::row_number()) %>%
         dplyr::ungroup() %>%
         dplyr::group_by(.data$subj, .data$n_surr) %>%
         dplyr::mutate(time = sample(.data$time))
@@ -108,12 +111,12 @@ generate_surrogates <-
         #    dplyr::mutate(ar1 = simulate(Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
 
         ss = bosc$data$single_subject$data %>%
-          dplyr::slice(rep(1:n(), each = !!n_surr)) %>%
+          dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$subj, .data$time) %>%
-          dplyr::mutate(n_surr = row_number()) %>%
+          dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$subj, .data$n_surr) %>%
-          dplyr::mutate(ar1 = simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(ar1 = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
         bosc$data$single_subject$surrogate$data <- ss
@@ -124,12 +127,12 @@ generate_surrogates <-
 
         # AR1 models from grand average
         ga = bosc$data$grand_average$data %>%
-          dplyr::slice(rep(1:n(), each = !!n_surr)) %>%
+          dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$time) %>%
-          dplyr::mutate(n_surr = row_number()) %>%
+          dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(ar1 = simulate(Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(ar1 = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
         bosc$data$grand_average$surrogate$data <- ga
@@ -140,12 +143,12 @@ generate_surrogates <-
 
         # AR1 models for aggregated observer
         aggo <- bosc$data$agg_observer$data %>%
-          dplyr::slice(rep(1:n(), each = !!n_surr)) %>%
+          dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$time) %>%
-          dplyr::mutate(n_surr = row_number()) %>%
+          dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(ar1 = simulate(Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(ar1 = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
 
         bosc$data$agg_observer$surrogate$data <- aggo
         bosc$data$agg_observer$surrogate$spec <- list(
