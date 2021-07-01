@@ -33,6 +33,11 @@ simulate_experiment <-
            freq_jitter_within_subj = 0,
            freq_jitter_across_subj = 0,
            intercept_jitter_across_subj = 0,
+           transient = "none",
+           transient_expModel_params = c(0, 1, .3),
+           trend = "none",
+           trend_linModel_params = c(intercept, amplitude),
+           trend_expModel_params = c(0, 1 - 2 * amplitude, .6),
            seed_num = NULL) {
     # set seed
     if (is.null(seed_num)) {
@@ -43,11 +48,38 @@ simulate_experiment <-
     # create time vector
     t <- seq(0, (n_timepoints - 1) * 1 / sfreq, 1 / sfreq)
 
+    # exponential model for transient window / trend
+    expModel <- function(t, intercept, n0, tau) {
+      intercept + n0 * exp(-t / tau)
+    }
+    linModel <- function(t, b0, b1) {
+      b0 + t * b1
+    }
+
+
+
     # generative sinusoidal model
     sin_model <- function(t, intercept, amplitude, frequency, phi) {
-      intercept + (amplitude + stats::rnorm(length(t), 0, amplitude_jitter_within_subj)) * sin(2 * pi * t * (frequency + stats::rnorm(
+      `if`(
+        trend == "linear", linModel(t, trend_linModel_params[1], trend_linModel_params[2]),
+        `if`(
+          trend == "exponential", expModel(t, trend_expModel_params[1], trend_expModel_params[2], trend_expModel_params[3]),
+          intercept
+        )
+      ) + ((amplitude + stats::rnorm(length(t), 0, amplitude_jitter_within_subj)) * sin(2 * pi * t * (frequency + stats::rnorm(
         length(t), 0, freq_jitter_within_subj
-      )) + phi + stats::rnorm(length(t), 0, phase_jitter_within_subj))
+      )) + phi + stats::rnorm(length(t), 0, phase_jitter_within_subj))) * `if`(
+        transient == "hanning", e1071::hanning.window(n_timepoints),
+        `if`(
+          transient == "exponential", expModel(t, transient_expModel_params[1], transient_expModel_params[2], transient_expModel_params[3]),
+            rep(1, n_timepoints)
+          )
+        )
+
+
+      # add a AR1 model here as well
+      # add random walks here as well
+      # noise terms
     }
 
     # sample single trial data
