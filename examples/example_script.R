@@ -1,42 +1,39 @@
 library(devtools)
-install()
+load_all()
 
 library(ggplot2)
 library(dplyr)
 
 # simulate experiment
-d = simulate_experiment(n = 10, n_trials = 50, n_timepoints = 30)
+bosc = simulate_experiment(phase_jitter_across_subj = 0)
+#bosc = simulate_experiment(phase_jitter_across_subj = 0, transient = "exponential", transient_expModel_params = c(0, 1, .3))
+#bosc = simulate_experiment(phase_jitter_across_subj = 0, trend = "exponential", trend_expModel_params = c(0, .5, .6))
+#bosc = simulate_experiment(phase_jitter_across_subj = 0, transient = "hanning")
+# generate surrogates
+bosc = generate_surrogates(bosc) # method = "ar"
 
+# plots simulations
 
-# plot simulations
-
-# single subjects
-ggplot(d$data$single_subject$data, aes(x = time, y = hr, group = subj))+
-  geom_line(aes(color = subj))
-# grand average
-ggplot(d$data$grand_average$data, aes(x = time, y = hr))+
+# single subjects simulations
+ggplot(bosc$data$single_subject$data, aes(x = time, y = hr, group = subj))+
+  geom_line(aes(color = subj))+
+  theme(legend.position = "none")
+# grand average simulations
+ggplot(bosc$data$grand_average$data, aes(x = time, y = hr))+
   geom_line()
 
-# generate surrogates
-d = generate_surrogates(d, n_surr = 10, method = "ar")
-
-# convert to factor for plotting
-d$data$single_subject$surrogate$data$n_surr = as.factor(d$data$single_subject$surrogate$data$n_surr)
-
-# plot a single subject and its surrogates
+# plot a single subject simulations and its surrogates
 ggplot(NULL)+
-  geom_line(data = d$data$single_subject$data %>% filter(subj == 2),
+  geom_line(data = bosc$data$single_subject$data %>% filter(subj == 2),
             aes(x = time, y = hr), color = "black", size = 3) +
-  geom_line(data = d$data$single_subject$surrogate$data %>% filter(subj == 2),
-            aes(x = time, y = ar1, group = n_surr, color = n_surr))
+  geom_line(data = bosc$data$single_subject$surrogate$data %>% filter(subj == 2),
+            aes(x = time, y = hr, group = n_surr, color = n_surr))+
+  theme(legend.position = "none")
 
-
-# convert to factor for plotting
-d$data$grand_average$surrogate$data$n_surr = as.factor(d$data$grand_average$surrogate$data$n_surr)
-
-# plot grand average and its surrogates
+# plot grand average simulations and its surrogates
 ggplot(NULL)+
-  geom_line(data = d$data$grand_average$data, aes(x = time, y = hr), color = "black", size = 3) +
-  geom_line(data = d$data$grand_average$surrogate$data, aes(x = time, y = ar1, group = n_surr, color = n_surr))
+  geom_line(data = bosc$data$grand_average$data, aes(x = time, y = hr), color = "black", size = 3) +
+  geom_line(data = bosc$data$grand_average$surrogate$data, aes(x = time, y = hr, group = n_surr, color = n_surr))+
+  theme(legend.position = "none")
 
 
