@@ -19,7 +19,7 @@
 #' bosc = simulate_experiment(n = 10, n_timepoints = 10, n_trials = 10)
 #' bosc = generate_surrogates(bosc, n_surr = 100, method = "perm")
 #'
-#' #' @author René Michel
+#' @author René Michel
 
 generate_surrogates <-
   function(bosc,
