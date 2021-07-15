@@ -1,0 +1,68 @@
+---
+title: "introduction"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Installation
+
+tba 
+
+# Load package
+
+```{r setup}
+library(boscillator)
+```
+
+# First steps
+
+Let's simulate a simple experiment and plot the time courses.
+```{r simulation}
+# simulate experiment data
+bosc = simulate_experiment(phase_jitter_across_subj = 0, transient = "hanning")
+
+# plot simulations
+library(ggplot2)
+ggplot(NULL)+
+  geom_line(data = bosc$data$single_subject$real$data, aes(x = time, y = hr, group = subj, color = subj), linetype = "dashed")+
+  geom_line(data = bosc$data$grand_average$real$data, aes(x = time, y = hr), size = 2)+
+  theme_classic()+
+  theme(legend.position = "none")
+
+```
+
+
+# Create surrogate datasets
+
+We can create surrogates using `generate_surrogates`.
+
+```{r surrogates}
+
+# generate surrogates
+bosc = generate_surrogates(bosc)
+
+# plot simulation and surrogates for a single subject
+ggplot(NULL)+
+  geom_line(data = bosc$data$single_subject$real$data %>% filter(subj == 2),
+            aes(x = time, y = hr), color = "black", size = 3) +
+  geom_line(data = bosc$data$single_subject$surrogate$data %>% filter(subj == 2),
+            aes(x = time, y = hr, group = n_surr, color = n_surr))+
+  theme(legend.position = "none")
+
+# plot grand average simulations and its surrogates
+ggplot(NULL)+
+  geom_line(data = bosc$data$grand_average$real$data, aes(x = time, y = hr), color = "black", size = 3) +
+  geom_line(data = bosc$data$grand_average$surrogate$data, aes(x = time, y = hr, group = n_surr, color = n_surr))+
+  theme(legend.position = "none")
+
+```
