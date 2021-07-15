@@ -139,8 +139,8 @@ simulate_experiment <-
     # create bosc object
     bosc <- bosc()
     bosc$timepoints <- t
-    bosc$data$single_trial$data <- data
-    bosc$data$single_trial$sim_spec <- list(
+    bosc$data$single_trial$real$data <- data
+    bosc$data$single_trial$real$sim_spec <- list(
       seed = seed_num,
       n_sub = n_sub,
       n_timepoints = n_timepoints,
@@ -161,24 +161,7 @@ simulate_experiment <-
     class(bosc) <- "BOSC-Object"
 
     if(aggregate == T){
-
-      # single subject time courses
-      bosc$data$single_subject$data <- bosc$data$single_trial$data %>%
-        dplyr::group_by(.data$subj, .data$time) %>%
-        dplyr::summarise(hr = mean(.data$resp))
-
-
-      # grand average
-      bosc$data$grand_average$data <- bosc$data$single_subject$data %>%
-        dplyr::group_by(.data$time) %>%
-        dplyr::summarise(hr = mean(.data$hr))
-
-
-      # aggregated observer
-      bosc$data$agg_observer$data <- bosc$data$single_trial$data %>%
-        dplyr::group_by(.data$time) %>%
-        dplyr::summarise(hr = mean(.data$resp))
-
+      bosc = aggregate_bosc(bosc, type = "real", levels = "ss-ga")
     }
 
     return(bosc)

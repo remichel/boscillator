@@ -61,7 +61,7 @@ generate_surrogates <-
       # # bind all perms to a single dataframe (required for loop version)
       # bosc$data$single_trial$surrogate$data = do.call(rbind.data.frame, bosc$data$single_trial$surrogate$data)
 
-      bosc$data$single_trial$surrogate$data <- bosc$data$single_trial$data %>%
+      bosc$data$single_trial$surrogate$data <- bosc$data$single_trial$real$data %>%
         dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
         dplyr::group_by(.data$subj, .data$time, .data$trial) %>%
         dplyr::mutate(n_surr = dplyr::row_number()) %>%
@@ -78,29 +78,24 @@ generate_surrogates <-
         # aggregate surrogates
         if (aggregate == T) {
 
+          bosc = aggregate_bosc(bosc, type = "surrogate", levels = "ss-ga")
+
           # aggregate to single subject time courses
-          ss <- bosc$data$single_trial$surrogate$data %>%
-            dplyr::group_by(.data$n_surr, .data$time, .data$subj) %>%
-            dplyr::summarise(hr = mean(.data$resp))
+          # ss <- bosc$data$single_trial$surrogate$data %>%
+          #   dplyr::group_by(.data$n_surr, .data$time, .data$subj) %>%
+          #   dplyr::summarise(hr = mean(.data$resp))
+          #
+          # bosc$data$single_subject$surrogate$data <- ss
+          # bosc$data$single_subject$surrogate$spec <- bosc$data$single_trial$surrogate$spec
+          #
+          # # aggregate to grand average
+          # ga <- ss %>%
+          #   dplyr::group_by(.data$n_surr, .data$time) %>%
+          #   dplyr::summarise(hr = mean(.data$hr))
+          #
+          # bosc$data$grand_average$surrogate$data <- ga
+          # bosc$data$grand_average$surrogate$spec <- bosc$data$single_trial$surrogate$spec
 
-          bosc$data$single_subject$surrogate$data <- ss
-          bosc$data$single_subject$surrogate$spec <- bosc$data$single_trial$surrogate$spec
-
-          # aggregate to grand average
-          ga <- ss %>%
-            dplyr::group_by(.data$n_surr, .data$time) %>%
-            dplyr::summarise(hr = mean(.data$hr))
-
-          bosc$data$grand_average$surrogate$data <- ga
-          bosc$data$grand_average$surrogate$spec <- bosc$data$single_trial$surrogate$spec
-
-          # aggregate to agg_observer
-          aggo <- bosc$data$single_trial$surrogate$data %>%
-            dplyr::group_by(.data$n_surr, .data$time) %>%
-            dplyr::summarise(hr = mean(.data$resp))
-
-          bosc$data$agg_observer$surrogate$data <- aggo
-          bosc$data$agg_observer$surrogate$spec <- bosc$data$single_trial$surrogate$spec
         }
 
     }else if(method == "ar"){
@@ -110,7 +105,7 @@ generate_surrogates <-
         #    dplyr::group_by(.data$subj) %>%
         #    dplyr::mutate(ar1 = simulate(Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
 
-        ss = bosc$data$single_subject$data %>%
+        ss = bosc$data$single_subject$real$data %>%
           dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$subj, .data$time) %>%
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
@@ -126,7 +121,7 @@ generate_surrogates <-
           n_surr = n_surr)
 
         # AR1 models from grand average
-        ga = bosc$data$grand_average$data %>%
+        ga = bosc$data$grand_average$real$data %>%
           dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$time) %>%
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
@@ -140,23 +135,6 @@ generate_surrogates <-
           n_seed = n_seed,
           method = method,
           n_surr = n_surr)
-
-        # AR1 models for aggregated observer
-        aggo <- bosc$data$agg_observer$data %>%
-          dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
-          dplyr::group_by(.data$time) %>%
-          dplyr::mutate(n_surr = dplyr::row_number()) %>%
-          dplyr::ungroup() %>%
-          dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
-
-        bosc$data$agg_observer$surrogate$data <- aggo
-        bosc$data$agg_observer$surrogate$spec <- list(
-          n_seed = n_seed,
-          method = method,
-          n_surr = n_surr)
-
-
 
 
     }else{
