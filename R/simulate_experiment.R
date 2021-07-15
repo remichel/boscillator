@@ -160,7 +160,7 @@ simulate_experiment <-
     )
     class(bosc) <- "BOSC-Object"
 
-    if(aggregate == T){
+    if(aggregate == TRUE){
       bosc = aggregate_bosc(bosc, type = "real", levels = "ss-ga")
     }
 
