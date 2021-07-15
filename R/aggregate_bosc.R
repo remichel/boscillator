@@ -27,67 +27,60 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
   }
 
   # get levels
-  levels = split_string_arg(levels, "-")
+  level_list = split_string_arg(levels, "-")
 
   # get types
-  types = split_string_arg(types, "-")
+  type_list = split_string_arg(types, "-")
 
-  for(type in types){
+  # loop through all conditions
+  for(type in type_list){
 
-    # single subject time courses
-    if("ss" %in% levels){
+    for(level in level_list){
 
-
-      if(is.null(bosc$data$single_subject[[type]]) | overwrite == TRUE){
+        if(is.null(bosc$data[[level]][[type]]) | overwrite == TRUE){
 
         # check for existing data
-        if(!is.null(bosc$data$single_subject[[type]])) message(paste("Single subject", type, "already exists and will be overwritten..."))
+        if(!is.null(bosc$data[[level]][[type]])) message("Data already exists and will be overwritten...")
 
-        # define grouping variables based on the type of data
-        if(type == "surrogate"){
-          group_vars = rlang::syms(c("subj", "time", "n_surr"))
-        }else{
-          group_vars = rlang::syms(c("subj", "time"))
+        # single subject
+        if(level == "ss"){
+
+          # define grouping variables based on the type of data
+          if(type == "surrogate"){
+            group_vars = rlang::syms(c("subj", "time", "n_surr"))
+          }else{
+            group_vars = rlang::syms(c("subj", "time"))
+          }
+
+          # aggregate
+          bosc$data[[level]][[type]]$data <- bosc$data$single_trial[[type]]$data %>%
+            dplyr::group_by(!!!group_vars) %>%
+            dplyr::summarise(hr = mean(.data$resp))
         }
 
-        # aggregate
-        bosc$data$single_subject[[type]]$data <- bosc$data$single_trial[[type]]$data %>%
-          dplyr::group_by(!!!group_vars) %>%
-          dplyr::summarise(hr = mean(.data$resp))
+        # grand average
+        if(level == "ga"){
+
+          # define grouping variables based on the type of data
+          if(type == "surrogate"){
+            group_vars = rlang::syms(c("time", "n_surr"))
+          }else{
+            group_vars = rlang::syms(c("time"))
+          }
+
+          # aggregate
+          bosc$data[[level]][[type]]$data <- bosc$data$ss[[type]]$data %>%
+            dplyr::group_by(!!!group_vars) %>%
+            dplyr::summarise(hr = mean(.data$hr))
+        }
 
       }else{
 
-        stop(paste("Single subject", type, "already exists. If you want to overwrite, please specify as overwrite = T."))
+        stop(paste("Data already exists. If you want to overwrite, please specify as overwrite = T."))
 
       }
     }
 
-    # grand average
-    if("ga" %in% levels){
-
-      if(is.null(bosc$data$grand_average[[type]]) | overwrite == TRUE){
-
-        # check for existing data
-        if(!is.null(bosc$data$grand_average[[type]])) message(paste("Grand average", type, " already exists and will be overwritten..."))
-
-        # define grouping variables based on the type of data
-        if(type == "surrogate"){
-          group_vars = rlang::syms(c("time", "n_surr"))
-        }else{
-          group_vars = rlang::syms(c("time"))
-        }
-
-        # aggregate
-        bosc$data$grand_average[[type]]$data <- bosc$data$single_subject[[type]]$data %>%
-          dplyr::group_by(!!!group_vars) %>%
-          dplyr::summarise(hr = mean(.data$hr))
-
-      }else{
-
-        stop(paste("Grand average", type, "already exists. If you want to overwrite, please specify as overwrite = T."))
-
-      }
-    }
   }
 
   return(bosc)

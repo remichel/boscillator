@@ -34,8 +34,8 @@ bosc = simulate_experiment(phase_jitter_across_subj = 0, transient = "hanning")
 # plot simulations
 library(ggplot2)
 ggplot(NULL)+
-  geom_line(data = bosc$data$single_subject$real$data, aes(x = time, y = hr, group = subj, color = subj), linetype = "dashed")+
-  geom_line(data = bosc$data$grand_average$real$data, aes(x = time, y = hr), size = 2)+
+  geom_line(data = bosc$data$ss$real$data, aes(x = time, y = hr, group = subj, color = subj), linetype = "dashed")+
+  geom_line(data = bosc$data$ga$real$data, aes(x = time, y = hr), size = 2)+
   theme_classic()+
   theme(legend.position = "none")
 
@@ -53,16 +53,16 @@ bosc = generate_surrogates(bosc)
 
 # plot simulation and surrogates for a single subject
 ggplot(NULL)+
-  geom_line(data = bosc$data$single_subject$real$data %>% filter(subj == 2),
+  geom_line(data = bosc$data$ss$real$data %>% filter(subj == 2),
             aes(x = time, y = hr), color = "black", size = 3) +
-  geom_line(data = bosc$data$single_subject$surrogate$data %>% filter(subj == 2),
+  geom_line(data = bosc$data$ss$surrogate$data %>% filter(subj == 2),
             aes(x = time, y = hr, group = n_surr, color = n_surr))+
   theme(legend.position = "none")
 
 # plot grand average simulations and its surrogates
 ggplot(NULL)+
-  geom_line(data = bosc$data$grand_average$real$data, aes(x = time, y = hr), color = "black", size = 3) +
-  geom_line(data = bosc$data$grand_average$surrogate$data, aes(x = time, y = hr, group = n_surr, color = n_surr))+
+  geom_line(data = bosc$data$ga$real$data, aes(x = time, y = hr), color = "black", size = 3) +
+  geom_line(data = bosc$data$ga$surrogate$data, aes(x = time, y = hr, group = n_surr, color = n_surr))+
   theme(legend.position = "none")
 
 ```

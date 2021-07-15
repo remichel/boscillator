@@ -85,27 +85,27 @@ generate_surrogates <-
           #   dplyr::group_by(.data$n_surr, .data$time, .data$subj) %>%
           #   dplyr::summarise(hr = mean(.data$resp))
           #
-          # bosc$data$single_subject$surrogate$data <- ss
-          # bosc$data$single_subject$surrogate$spec <- bosc$data$single_trial$surrogate$spec
+          # bosc$data$ss$surrogate$data <- ss
+          # bosc$data$ss$surrogate$spec <- bosc$data$single_trial$surrogate$spec
           #
           # # aggregate to grand average
           # ga <- ss %>%
           #   dplyr::group_by(.data$n_surr, .data$time) %>%
           #   dplyr::summarise(hr = mean(.data$hr))
           #
-          # bosc$data$grand_average$surrogate$data <- ga
-          # bosc$data$grand_average$surrogate$spec <- bosc$data$single_trial$surrogate$spec
+          # bosc$data$ga$surrogate$data <- ga
+          # bosc$data$ga$surrogate$spec <- bosc$data$single_trial$surrogate$spec
 
         }
 
     }else if(method == "ar"){
 
         # AR1 models for single participants
-        #ss = bosc$data$single_subject$data %>%
+        #ss = bosc$data$ss$data %>%
         #    dplyr::group_by(.data$subj) %>%
         #    dplyr::mutate(ar1 = simulate(Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
 
-        ss = bosc$data$single_subject$real$data %>%
+        ss = bosc$data$ss$real$data %>%
           dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$subj, .data$time) %>%
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
@@ -114,14 +114,14 @@ generate_surrogates <-
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
-        bosc$data$single_subject$surrogate$data <- ss
-        bosc$data$single_subject$surrogate$spec <- list(
+        bosc$data$ss$surrogate$data <- ss
+        bosc$data$ss$surrogate$spec <- list(
           n_seed = n_seed,
           method = method,
           n_surr = n_surr)
 
         # AR1 models from grand average
-        ga = bosc$data$grand_average$real$data %>%
+        ga = bosc$data$ga$real$data %>%
           dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$time) %>%
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
@@ -130,8 +130,8 @@ generate_surrogates <-
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
-        bosc$data$grand_average$surrogate$data <- ga
-        bosc$data$grand_average$surrogate$spec <- list(
+        bosc$data$ga$surrogate$data <- ga
+        bosc$data$ga$surrogate$spec <- list(
           n_seed = n_seed,
           method = method,
           n_surr = n_surr)
