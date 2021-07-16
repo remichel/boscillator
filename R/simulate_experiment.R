@@ -34,7 +34,7 @@
 #' @name simulate_experiment
 #'
 #' @examples
-#' data = simulate_experiment()
+#' bosc = simulate_experiment()
 #'
 #' @author René Michel
 #'
@@ -164,7 +164,7 @@ simulate_experiment <-
     bosc$hist <- paste0(bosc$hist, "sim-exp_")
 
     if(aggregate == TRUE){
-      bosc = aggregate_bosc(bosc, type = "real", levels = "ss-ga")
+      bosc = aggregate_bosc(bosc, types = "real", levels = "ss-ga")
     }
 
     return(bosc)

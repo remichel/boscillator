@@ -81,7 +81,7 @@ generate_surrogates <-
         # aggregate surrogates
         if (aggregate == TRUE) {
 
-          bosc = aggregate_bosc(bosc, type = "surrogate", levels = "ss-ga")
+          bosc = aggregate_bosc(bosc, types = "surrogate", levels = "ss-ga")
 
           # aggregate to single subject time courses
           # ss <- bosc$data$single_trial$surrogate$data %>%
