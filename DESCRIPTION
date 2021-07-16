@@ -26,5 +26,6 @@ Imports:
     rlang,
     e1071,
     forecast,
-    utils
+    utils,
+    bspec
 VignetteBuilder: knitr
