@@ -83,5 +83,8 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
 
   }
 
+  # add executed command to history
+  bosc$hist <- paste0(bosc$hist, "aggregate_")
+
   return(bosc)
 }

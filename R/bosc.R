@@ -20,7 +20,8 @@ bosc <- function(){
               data = list(single_trial = NULL,
                           ss = NULL,
                           ga = NULL),
-              tests = NULL)
+              tests = NULL,
+              hist = "")
   class(bosc) = "BOSC-Object"
 
   return(bosc)

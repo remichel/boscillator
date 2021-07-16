@@ -25,5 +25,6 @@ Imports:
     dplyr,
     rlang,
     e1071,
-    forecast
+    forecast,
+    utils
 VignetteBuilder: knitr

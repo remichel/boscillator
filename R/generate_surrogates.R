@@ -42,6 +42,9 @@ generate_surrogates <-
     # set seed
     set.seed(n_seed)
 
+    # add executed command to history
+    bosc$hist <- paste0(bosc$hist, "gen-surr_")
+
     # create surrogates
     if (method == "perm") {
 
@@ -142,7 +145,6 @@ generate_surrogates <-
       stop("Method unknown.")
 
     }
-
 
 
     return(bosc)

@@ -160,6 +160,9 @@ simulate_experiment <-
     )
     class(bosc) <- "BOSC-Object"
 
+    # add executed command to history
+    bosc$hist <- paste0(bosc$hist, "sim-exp_")
+
     if(aggregate == TRUE){
       bosc = aggregate_bosc(bosc, type = "real", levels = "ss-ga")
     }
