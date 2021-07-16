@@ -30,7 +30,49 @@ simulate_experiment(
 )
 }
 \arguments{
-\item{seed_num}{}
+\item{n_sub}{Number of subjects}
+
+\item{n_timepoints}{Number of timepoints, e.g. number of SOAs probed}
+
+\item{n_trials}{Number of trials per timepoint and participant}
+
+\item{sfreq}{Sampling frequency of timepoints (in Hz)}
+
+\item{intercept}{mean performance of the subject}
+
+\item{amplitude}{amplitude of the underlying oscillation}
+
+\item{freq}{frequency of the underlying oscillation}
+
+\item{phi}{phase of the underlying oscillation (0 to 2pi)}
+
+\item{phase_jitter_within_subj}{sd of phase distribution across trials within subjects}
+
+\item{phase_jitter_across_subj}{sd of phase distribution across subjects}
+
+\item{amplitude_jitter_within_subj}{sd of amp distribution across trials within subjects}
+
+\item{amplitude_jitter_across_subj}{sd of amp distribution across subjects}
+
+\item{freq_jitter_within_subj}{sd of freq distribution across trials within subjects}
+
+\item{freq_jitter_across_subj}{sd of freq distribution across subjects}
+
+\item{intercept_jitter_across_subj}{sd of mean performance across subjects}
+
+\item{transient}{"none", "hanning", or "exponential"}
+
+\item{transient_expModel_params}{model parameters for exponential transient}
+
+\item{trend}{"none", "linear" or "exponential"}
+
+\item{trend_linModel_params}{model parameters for linear trend in performance}
+
+\item{trend_expModel_params}{model parameters for exponential trend in performance}
+
+\item{aggregate}{aggregate single trial data to single subject and grand average time series? defaults to T}
+
+\item{seed_num}{seed number. if not specified, a random seed will be used and saved alongside with the data.}
 }
 \value{
 A data frame
@@ -40,7 +82,7 @@ A data frame
 Simulates the raw dataset of a dense sampling study.
 }
 \examples{
-data = simulate_experiment()
+bosc = simulate_experiment()
 
 }
 \author{

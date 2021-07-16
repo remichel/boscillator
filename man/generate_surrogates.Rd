@@ -14,7 +14,17 @@ generate_surrogates(
 )
 }
 \arguments{
-\item{aggregate}{}
+\item{bosc}{BOSC-Object}
+
+\item{n_surr}{Number of to-be-created surrogate datasets}
+
+\item{method}{permutation ("perm") or autoregression-model ("ar")}
+
+\item{n_seed}{number of the seed}
+
+\item{overwrite}{overwrite existing surrogates? defaults to F}
+
+\item{aggregate}{aggregate surrogated datasets? defaults to T}
 }
 \value{
 A list

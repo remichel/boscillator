@@ -1,27 +1,27 @@
 #' simulate_experiment
 #'
-#' @param n_sub
-#' @param n_timepoints
-#' @param n_trials
-#' @param sfreq
-#' @param intercept
-#' @param amplitude
-#' @param freq
-#' @param phi
-#' @param phase_jitter_within_subj
-#' @param phase_jitter_across_subj
-#' @param amplitude_jitter_within_subj
-#' @param amplitude_jitter_across_subj
-#' @param freq_jitter_within_subj
-#' @param freq_jitter_across_subj
-#' @param intercept_jitter_across_subj
-#' @param transient
-#' @param transient_expModel_params
-#' @param trend
-#' @param trend_linModel_params
-#' @param trend_expModel_params
-#' @param aggregate
-#' @param seed_num
+#' @param n_sub Number of subjects
+#' @param n_timepoints Number of timepoints, e.g. number of SOAs probed
+#' @param n_trials Number of trials per timepoint and participant
+#' @param sfreq Sampling frequency of timepoints (in Hz)
+#' @param intercept mean performance of the subject
+#' @param amplitude amplitude of the underlying oscillation
+#' @param freq frequency of the underlying oscillation
+#' @param phi phase of the underlying oscillation (0 to 2pi)
+#' @param phase_jitter_within_subj sd of phase distribution across trials within subjects
+#' @param phase_jitter_across_subj sd of phase distribution across subjects
+#' @param amplitude_jitter_within_subj sd of amp distribution across trials within subjects
+#' @param amplitude_jitter_across_subj sd of amp distribution across subjects
+#' @param freq_jitter_within_subj sd of freq distribution across trials within subjects
+#' @param freq_jitter_across_subj sd of freq distribution across subjects
+#' @param intercept_jitter_across_subj sd of mean performance across subjects
+#' @param transient "none", "hanning", or "exponential"
+#' @param transient_expModel_params model parameters for exponential transient
+#' @param trend "none", "linear" or "exponential"
+#' @param trend_linModel_params model parameters for linear trend in performance
+#' @param trend_expModel_params model parameters for exponential trend in performance
+#' @param aggregate aggregate single trial data to single subject and grand average time series? defaults to T
+#' @param seed_num seed number. if not specified, a random seed will be used and saved alongside with the data.
 #'
 #' @description \code{simulate_experiment}
 #' Simulates the raw dataset of a dense sampling study.

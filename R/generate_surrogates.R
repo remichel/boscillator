@@ -3,12 +3,12 @@
 #' @description \code{generate_surrogates}
 #' Generates surrogate datasets from a dense sampling study
 #'
-#' @param bosc
-#' @param n_surr
-#' @param method
-#' @param n_seed
-#' @param overwrite
-#' @param aggregate
+#' @param bosc BOSC-Object
+#' @param n_surr Number of to-be-created surrogate datasets
+#' @param method permutation ("perm") or autoregression-model ("ar")
+#' @param n_seed number of the seed
+#' @param overwrite overwrite existing surrogates? defaults to F
+#' @param aggregate aggregate surrogated datasets? defaults to T
 #'
 #' @return A list
 #' @importFrom dplyr %>%
