@@ -92,7 +92,7 @@ simulate_experiment <-
       ) + ((amplitude + stats::rnorm(length(t), 0, amplitude_jitter_within_subj)) * sin(2 * pi * t * (frequency + stats::rnorm(
         length(t), 0, freq_jitter_within_subj
       )) + phi + stats::rnorm(length(t), 0, phase_jitter_within_subj))) * `if`(
-        transient == "hanning", e1071::hanning.window(n_timepoints),
+        transient == "hanning", bspec::hannwindow(n_timepoints),
         `if`(
           transient == "exponential", expModel(t, transient_expModel_params[1], transient_expModel_params[2], transient_expModel_params[3]),
             rep(1, n_timepoints)

@@ -24,7 +24,6 @@ Imports:
     scales,
     dplyr,
     rlang,
-    e1071,
     forecast,
     utils,
     bspec
