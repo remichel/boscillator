@@ -15,11 +15,11 @@ test_that("simulate_experiment output is correct", {
   # check class
   expect_equal(class(test), "BOSC-Object")
   # check spec sheet
-  expect_equal(test$data$single_trial$real$sim_spec$n_sub, n)
-  expect_equal(test$data$single_trial$real$sim_spec$n_trials, ntrial)
-  expect_equal(test$data$single_trial$real$sim_spec$n_timepoints, tps)
-  expect_equal(test$data$single_trial$real$sim_spec$phase_jitter_across_subj, 0)
-  expect_equal(test$data$single_trial$real$sim_spec$intercept_jitter_across_subj, 0)
+  expect_equal(test$data$single_trial$real$spec$n_sub, n)
+  expect_equal(test$data$single_trial$real$spec$n_trials, ntrial)
+  expect_equal(test$data$single_trial$real$spec$n_timepoints, tps)
+  expect_equal(test$data$single_trial$real$spec$phase_jitter_across_subj, 0)
+  expect_equal(test$data$single_trial$real$spec$intercept_jitter_across_subj, 0)
   # check dataset itself
   expect_equal(is.factor(test$data$single_trial$real$data$subj), TRUE)
   expect_equal(is.numeric(test$data$single_trial$real$data$time), TRUE)

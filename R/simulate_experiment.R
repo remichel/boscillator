@@ -140,7 +140,7 @@ simulate_experiment <-
     bosc <- bosc()
     bosc$timepoints <- t
     bosc$data$single_trial$real$data <- data
-    bosc$data$single_trial$real$sim_spec <- list(
+    bosc$data$single_trial$real$spec <- list(
       seed = seed_num,
       n_sub = n_sub,
       n_timepoints = n_timepoints,
