@@ -57,7 +57,7 @@ windowing_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", met
       # check whether detrending was already applied for the condition at hand
       if(!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)){
         if("WINDOWED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
-          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already windowed. Are you sure you want to continue with yet another detrending?"))
+          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already windowed. Are you sure you want to continue with yet another windowing?"))
           if(reply == 2){
             stop("Execution stopped.")
           }

@@ -74,7 +74,7 @@ padding_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", metho
       # check whether padding was already applied for the condition at hand
       if(!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)){
         if("PADDED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
-          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already padded. Are you sure you want to continue with yet another detrending?"))
+          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already padded. Are you sure you want to continue with yet another padding?"))
           if(reply == 2){
             stop("Execution stopped.")
           }
@@ -88,56 +88,58 @@ padding_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", metho
 
         if (iLevel == "ss") {
 
-          bosc$data[[iLevel]][[iType]]$data <- rbind(bosc$data[[iLevel]][[iType]]$data, expand.grid(bosc$data[[iLevel]][[iType]]$data$subj,
-                                                                                                    c(pads_prior, pads_after),
-                                                                                                    0))
+          # create pads
+          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj),
+                              c(pads_prior, pads_after),
+                              0) %>%
+            stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
 
-          # bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          #   dplyr::group_by(.data$subj) %>%
-          #   dplyr::add_row(time = !!pads_prior,
-          #                  hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-          #                                        !!method == "zero" ~ 0),
-          #                  .after = length(bosc$timepoints)) %>%
-          #   dplyr::add_row(time = !!pads_after,
-          #                  hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-          #                                        !!method == "zero" ~ 0), ,
-          #                  .before = 1)
-        # } else if (iLevel == "ga") {
-        #   bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-        #     dplyr::add_row(time = !!pads_prior,
-        #                    hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-        #                                          !!method == "zero" ~ 0),
-        #                    .after = length(bosc$timepoints)) %>%
-        #     dplyr::add_row(time = !!pads_after,
-        #                    hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-        #                                          !!method == "zero" ~ 0), ,
-        #                    .before = 1)
+          # add pads to datasets
+          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+            dplyr::ungroup() %>%
+            dplyr::add_row(!!pads) %>%
+            dplyr::arrange(.data$subj, .data$time)
+
+        }else if(iLevel == "ga"){
+          # create pads
+          pads <- expand.grid(c(pads_prior, pads_after),
+                              0) %>%
+            stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
+
+          # add pads to datasets
+          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+            dplyr::ungroup() %>%
+            dplyr::add_row(!!pads) %>%
+            dplyr::arrange(.data$time)
         }
       } else if (iType == "surrogate") {
 
         if (iLevel == "ss") {
-          # bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          #   dplyr::group_by(.data$subj, .data$n_surr) %>%
-          #   dplyr::add_row(time = !!pads_prior,
-          #                  hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-          #                                        !!method == "zero" ~ 0),
-          #                  .after = length(bosc$timepoints)) %>%
-          #   dplyr::add_row(time = !!pads_after,
-          #                  hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-          #                                        !!method == "zero" ~ 0), ,
-          #                  .before = 1)
+          # create pads
+          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj),
+                              unique(bosc$data[[iLevel]][[iType]]$data$n_surr),
+                              c(pads_prior, pads_after),
+                              0) %>%
+            stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
+
+          # add pads to datasets
+          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+            dplyr::ungroup() %>%
+            dplyr::add_row(!!pads) %>%
+            dplyr::arrange(.data$subj, .data$n_surr, .data$time)
         }
         else if (iLevel == "ga") {
-          # bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          #   dplyr::group_by(.data$n_surr) %>%
-          #   dplyr::add_row(time = !!pads_prior,
-          #                  hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-          #                                        !!method == "zero" ~ 0),
-          #                  .after = length(bosc$timepoints)) %>%
-          #   dplyr::add_row(time = !!pads_after,
-          #                  hr = dplyr::case_when(!!method == "mean" ~ mean(.data$hr),
-          #                                        !!method == "zero" ~ 0), ,
-          #                  .before = 1)
+          # create pads
+          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$n_surr),
+                              c(pads_prior, pads_after),
+                              0) %>%
+            stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
+
+          # add pads to datasets
+          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+            dplyr::ungroup() %>%
+            dplyr::add_row(!!pads) %>%
+            dplyr::arrange(.data$n_surr, .data$time)
         }
       }
 
