@@ -59,34 +59,34 @@ test_fft <- function(bosc, levels = "ss-ga", alpha = .05, overwrite = FALSE) {
 
       bosc$test$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
         dplyr::group_by(.data$n_surr) %>%
-        dplyr::mutate(observed =  bosc$data[[iLevel]]$real$fft$amp) %>%
+        dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
         dplyr::ungroup() %>%
         dplyr::group_by(.data$subj, .data$f) %>%
-        dplyr::summarize(crit_value = quantile(.data$amp, probs = 1-alpha),
-                         p = 1-ecdf(.data$amp)(observed),
-                         observed = observed) %>%
+        dplyr::summarize(crit_value = stats::quantile(.data$amp, probs = 1-!!alpha),
+                         p = 1-stats::ecdf(.data$amp)(.data$observed),
+                         observed = .data$observed) %>%
         dplyr::distinct() %>%
-        dplyr::mutate(alpha = alpha) %>%
-        dplyr::relocate(alpha, .after = f) %>%
-        dplyr::mutate(sig = case_when(observed > crit_value ~ 1,
-                                      observed <= crit_value ~ 0))
+        dplyr::mutate(alpha = !!alpha) %>%
+        dplyr::relocate(.data$alpha, .after = .data$f) %>%
+        dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
+                                             .data$observed <= .data$crit_value ~ 0))
 
 
     }else if(iLevel == "ga"){
 
       bosc$test$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
         dplyr::group_by(.data$n_surr) %>%
-        dplyr::mutate(observed =  bosc$data[[iLevel]]$real$fft$amp) %>%
+        dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
         dplyr::ungroup() %>%
         dplyr::group_by(.data$f) %>%
-        dplyr::summarize(crit_value = quantile(.data$amp, probs = 1-alpha),
-                         p = 1-ecdf(.data$amp)(observed),
-                         observed = observed) %>%
+        dplyr::summarize(crit_value = stats::quantile(.data$amp, probs = 1-!!alpha),
+                         p = 1-stats::ecdf(.data$amp)(.data$observed),
+                         observed = .data$observed) %>%
         dplyr::distinct() %>%
-        dplyr::mutate(alpha = alpha) %>%
-        dplyr::relocate(alpha, .after = f) %>%
-        dplyr::mutate(sig = case_when(observed > crit_value ~ 1,
-                                      observed <= crit_value ~ 0))
+        dplyr::mutate(alpha = !!alpha) %>%
+        dplyr::relocate(.data$alpha, .after = .data$f) %>%
+        dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
+                                             .data$observed <= .data$crit_value ~ 0))
 
 
     }
