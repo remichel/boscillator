@@ -61,7 +61,7 @@ detrend_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", order
         if("DETRENDED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
           reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already detrended. Are you sure you want to continue with yet another detrending?"))
           if(reply == 2){
-            stop("Execution stopped.")
+            next
           }
         }
       }
