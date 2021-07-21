@@ -66,42 +66,29 @@ detrend_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", order
         }
       }
 
-      # detrend
+      # define group vars
       if (iType == "real") {
-
-        if (iLevel == "ss") {
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj) %>%
-            dplyr::mutate(hr = dplyr::case_when(
-              !!order > 0 ~ stats::lm(.data$hr ~ stats::poly(.data$time, !!poly_order))$residuals,
-              !!order <= 0 ~ .data$hr - mean(.data$hr)
-            ))
-        } else if (iLevel == "ga") {
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::mutate(hr = dplyr::case_when(
-              !!order > 0 ~ stats::lm(.data$hr ~ stats::poly(.data$time, !!poly_order))$residuals,
-              !!order <= 0 ~ .data$hr - mean(.data$hr)
-            ))
+        if(iLevel == "ss"){
+          group_vars = dplyr::sym("subj")
+        }else{
+          group_vars = dplyr::syms(NULL)
         }
-      } else if (iType == "surrogate") {
-
-        if (iLevel == "ss") {
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj, .data$n_surr) %>%
-            dplyr::mutate(hr = dplyr::case_when(
-              !!order > 0 ~ stats::lm(.data$hr ~ stats::poly(.data$time, !!poly_order))$residuals,
-              !!order <= 0 ~ .data$hr - mean(.data$hr)
-            ))
-        }
-        else if (iLevel == "ga") {
-        bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(hr = dplyr::case_when(
-            !!order > 0 ~ stats::lm(.data$hr ~ stats::poly(.data$time, !!poly_order))$residuals,
-            !!order <= 0 ~ .data$hr - mean(.data$hr)
-          ))
+      }else if(iType == "surrogate"){
+        if(iLevel == "ss"){
+          group_vars = dplyr::syms(c("subj", "n_surr"))
+        }else{
+          group_vars = dplyr::sym("n_surr")
         }
       }
+
+      # de-trending
+      bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+        dplyr::group_by(!!!group_vars) %>%
+        dplyr::mutate(hr = dplyr::case_when(
+          !!order > 0 ~ stats::lm(.data$hr ~ stats::poly(.data$time, !!poly_order))$residuals,
+          !!order <= 0 ~ .data$hr - mean(.data$hr)
+        ))
+
 
       # add preprocessing step to documentation
       if (is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {

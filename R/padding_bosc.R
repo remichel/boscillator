@@ -47,7 +47,7 @@ padding_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", metho
   # determine sampling interval
   s_interval = 1/bosc$data$single_trial$real$spec$sfreq
 
-  # create pad vectors
+  # create pad time vector
   pads_prior = seq(max(bosc$timepoints) + s_interval,
                    max(bosc$timepoints) + n_prior * s_interval,
                    s_interval)
@@ -55,6 +55,8 @@ padding_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", metho
   pads_after = seq(min(bosc$timepoints) - n_after * s_interval,
                    min(bosc$timepoints) - s_interval,
                    s_interval)
+
+  pads_time = c(pads_prior, pads_after)
 
 
   message("Start Padding...")
@@ -81,69 +83,57 @@ padding_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", metho
         }
       }
 
-
-
-      # padding
+      # create pads
       if (iType == "real") {
-
         if (iLevel == "ss") {
-
-          # create pads
-          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj),
-                              c(pads_prior, pads_after),
-                              0) %>%
+          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj), pads_time, 0) %>%
             stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-
-          # add pads to datasets
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::ungroup() %>%
-            dplyr::add_row(!!pads) %>%
-            dplyr::arrange(.data$subj, .data$time)
-
         }else if(iLevel == "ga"){
-          # create pads
-          pads <- expand.grid(c(pads_prior, pads_after),
-                              0) %>%
+          pads <- expand.grid(pads_time, 0) %>%
             stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-
-          # add pads to datasets
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::ungroup() %>%
-            dplyr::add_row(!!pads) %>%
-            dplyr::arrange(.data$time)
         }
       } else if (iType == "surrogate") {
-
         if (iLevel == "ss") {
-          # create pads
-          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj),
-                              unique(bosc$data[[iLevel]][[iType]]$data$n_surr),
-                              c(pads_prior, pads_after),
-                              0) %>%
+          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj), pads_time, unique(bosc$data[[iLevel]][[iType]]$data$n_surr), 0) %>%
             stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-
-          # add pads to datasets
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::ungroup() %>%
-            dplyr::add_row(!!pads) %>%
-            dplyr::arrange(.data$subj, .data$n_surr, .data$time)
-        }
-        else if (iLevel == "ga") {
-          # create pads
-          pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$n_surr),
-                              c(pads_prior, pads_after),
-                              0) %>%
+        }else if (iLevel == "ga") {
+          pads <- expand.grid(pads_time, unique(bosc$data[[iLevel]][[iType]]$data$n_surr), 0) %>%
             stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-
-          # add pads to datasets
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::ungroup() %>%
-            dplyr::add_row(!!pads) %>%
-            dplyr::arrange(.data$n_surr, .data$time)
         }
       }
 
-      # add preprocessing step to documentation
+      # define group vars
+      if (iType == "real") {
+        if(iLevel == "ss"){
+          group_vars = dplyr::sym("subj")
+        }else{
+          group_vars = dplyr::syms(NULL)
+        }
+      }else if(iType == "surrogate"){
+        if(iLevel == "ss"){
+          group_vars = dplyr::syms(c("subj", "n_surr"))
+        }else{
+          group_vars = dplyr::sym("n_surr")
+        }
+      }
+
+      # add pads to data
+      bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+        dplyr::ungroup() %>%
+        dplyr::add_row(!!pads) %>%
+        dplyr::arrange(!!!group_vars, .data$time)
+
+      # if mean padding is required, substitute zeros with means
+      if(method == "mean"){
+        bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+          dplyr::mutate(flag = !(.data$time %in% !!pads_time)) %>%
+          dplyr::group_by(!!!group_vars) %>%
+          dplyr::mutate(hr = dplyr::case_when(.data$flag == F ~ mean(.data$hr[.data$flag == T]),
+                                              .data$flag == T ~ .data$hr)) %>%
+          dplyr::select(-.data$flag)
+      }
+
+      # add pre-processing step to documentation
       if (is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
         bosc$data[[iLevel]][[iType]]$preprocessing <- paste0("PADDED_METHOD:", method)
       } else {

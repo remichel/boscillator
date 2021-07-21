@@ -5,6 +5,7 @@
 #'
 #' @param bosc BOSC-Object
 #' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
+#' @param test  Which test to perform?
 #' @param alpha Which alpha level to apply?
 #' @param overwrite defaults to F
 #'
@@ -20,7 +21,7 @@
 #' bosc = fft_bosc(bosc)
 #' bosc = test_fft(bosc, levels = "ga")
 #'
-test_fft <- function(bosc, levels = "ss-ga", alpha = .05, overwrite = FALSE) {
+test_fft <- function(bosc, levels = "ss-ga", test = "amp", alpha = .05, overwrite = FALSE) {
 
   # get levels
   if(!is.character(levels)){
@@ -53,45 +54,27 @@ test_fft <- function(bosc, levels = "ss-ga", alpha = .05, overwrite = FALSE) {
     }
 
 
-    # Perform test
-
+    # get correct group vars depending on the analysis level
     if (iLevel == "ss") {
-
-      bosc$test$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
-        dplyr::group_by(.data$n_surr) %>%
-        dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
-        dplyr::ungroup() %>%
-        dplyr::group_by(.data$subj, .data$f) %>%
-        dplyr::summarize(crit_value = stats::quantile(.data$amp, probs = 1-!!alpha),
-                         p = 1-stats::ecdf(.data$amp)(.data$observed),
-                         observed = .data$observed) %>%
-        dplyr::distinct() %>%
-        dplyr::mutate(alpha = !!alpha) %>%
-        dplyr::relocate(.data$alpha, .after = .data$f) %>%
-        dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
-                                             .data$observed <= .data$crit_value ~ 0))
-
-
-    }else if(iLevel == "ga"){
-
-      bosc$test$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
-        dplyr::group_by(.data$n_surr) %>%
-        dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
-        dplyr::ungroup() %>%
-        dplyr::group_by(.data$f) %>%
-        dplyr::summarize(crit_value = stats::quantile(.data$amp, probs = 1-!!alpha),
-                         p = 1-stats::ecdf(.data$amp)(.data$observed),
-                         observed = .data$observed) %>%
-        dplyr::distinct() %>%
-        dplyr::mutate(alpha = !!alpha) %>%
-        dplyr::relocate(.data$alpha, .after = .data$f) %>%
-        dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
-                                             .data$observed <= .data$crit_value ~ 0))
-
-
+      group_vars = dplyr::syms(c("subj", "f"))
+    }else{
+      group_vars = dplyr::syms("f")
     }
 
-
+    # Perform test
+    bosc$tests$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
+      dplyr::group_by(.data$n_surr) %>%
+      dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
+      dplyr::ungroup() %>%
+      dplyr::group_by(!!!group_vars) %>%
+      dplyr::summarize(crit_value = stats::quantile(.data$amp, probs = 1-!!alpha),
+                       p = 1-stats::ecdf(.data$amp)(.data$observed),
+                       observed = .data$observed) %>%
+      dplyr::distinct() %>%
+      dplyr::mutate(alpha = !!alpha) %>%
+      dplyr::relocate(.data$alpha, .after = .data$f) %>%
+      dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
+                                           .data$observed <= .data$crit_value ~ 0))
 
 
   }

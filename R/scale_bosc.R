@@ -63,38 +63,28 @@ scale_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method 
         }
       }
 
-      # scaling
+      # define group vars
       if (iType == "real") {
-
-        if (iLevel == "ss") {
-
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj) %>%
-            dplyr::mutate(hr = scale(.data$hr))
-
-        }else if(iLevel == "ga"){
-
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::mutate(hr = scale(.data$hr))
-
+        if(iLevel == "ss"){
+          group_vars = dplyr::sym("subj")
+        }else{
+          group_vars = dplyr::syms(NULL)
         }
-      } else if (iType == "surrogate") {
-
-        if (iLevel == "ss") {
-
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj, .data$n_surr) %>%
-            dplyr::mutate(hr = scale(.data$hr))
-
-        }
-        else if (iLevel == "ga") {
-
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$n_surr) %>%
-            dplyr::mutate(hr = scale(.data$hr))
-
+      }else if(iType == "surrogate"){
+        if(iLevel == "ss"){
+          group_vars = dplyr::syms(c("subj", "n_surr"))
+        }else{
+          group_vars = dplyr::sym("n_surr")
         }
       }
+
+
+
+
+      # scaling
+      bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+        dplyr::group_by(!!!group_vars) %>%
+        dplyr::mutate(hr = scale(.data$hr))
 
       # add preprocessing step to documentation
       if (is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {

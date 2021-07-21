@@ -40,7 +40,7 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
   for (iType in 1:length(iType_list)) {
     for (iLevel in 1:length(iLevel_list)) {
       # get length of time series
-      len[iLevel, iType] = length(unique(bosc$data[[iLevel]][[iType]]$data$time))
+      len[iLevel, iType] = length(unique(bosc$data[[iLevel_list[iLevel]]][[iType_list[iType]]]$data$time))
     }
   }
   # if all conditions have same length, then determine variables relevant for FFT
@@ -84,57 +84,30 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
         }
       }
 
-
-      # FFT
+      # define group vars
+      # define group vars
       if (iType == "real") {
-
-        if (iLevel == "ss") {
-
-          bosc$data[[iLevel]][[iType]]$fft = bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj) %>%
-            dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(fbins)+1)]) %>%
-            dplyr::mutate(amp = Mod(.data$complex)) %>%
-            dplyr::mutate(phase = Arg(.data$complex)) %>%
-            dplyr::mutate(f = !!fbins) %>%
-            dplyr::relocate(.data$f, .before = .data$complex)
-
-
-        }else if(iLevel == "ga"){
-
-          bosc$data[[iLevel]][[iType]]$fft = bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(fbins)+1)]) %>%
-            dplyr::mutate(amp = Mod(.data$complex)) %>%
-            dplyr::mutate(phase = Arg(.data$complex)) %>%
-            dplyr::mutate(f = !!fbins) %>%
-            dplyr::relocate(.data$f, .before = .data$complex)
-
+        if(iLevel == "ss"){
+          group_vars = dplyr::sym("subj")
+        }else{
+          group_vars = dplyr::syms(NULL)
         }
-
-
-      } else if (iType == "surrogate") {
-
-        if (iLevel == "ss") {
-
-          bosc$data[[iLevel]][[iType]]$fft = bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj, .data$n_surr) %>%
-            dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(fbins)+1)]) %>%
-            dplyr::mutate(amp = Mod(.data$complex)) %>%
-            dplyr::mutate(phase = Arg(.data$complex)) %>%
-            dplyr::mutate(f = !!fbins) %>%
-            dplyr::relocate(.data$f, .before = .data$complex)
-
-        } else if (iLevel == "ga") {
-
-          bosc$data[[iLevel]][[iType]]$fft = bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$n_surr) %>%
-            dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(fbins)+1)]) %>%
-            dplyr::mutate(amp = Mod(.data$complex)) %>%
-            dplyr::mutate(phase = Arg(.data$complex)) %>%
-            dplyr::mutate(f = !!fbins) %>%
-            dplyr::relocate(.data$f, .before = .data$complex)
-
+      }else if(iType == "surrogate"){
+        if(iLevel == "ss"){
+          group_vars = dplyr::syms(c("subj", "n_surr"))
+        }else{
+          group_vars = dplyr::sym("n_surr")
         }
       }
+
+      # FFT
+      bosc$data[[iLevel]][[iType]]$fft = bosc$data[[iLevel]][[iType]]$data %>%
+        dplyr::group_by(!!!group_vars) %>%
+        dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(fbins)+1)]) %>%
+        dplyr::mutate(amp = Mod(.data$complex)) %>%
+        dplyr::mutate(phase = Arg(.data$complex)) %>%
+        dplyr::mutate(f = !!fbins) %>%
+        dplyr::relocate(.data$f, .before = .data$complex)
 
     }
   }

@@ -73,58 +73,33 @@ windowing_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", met
       }
 
 
-      # detrend
+      # define group vars
       if (iType == "real") {
-
-        if (iLevel == "ss") {
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj) %>%
-            dplyr::mutate(hr = dplyr::case_when(
-              !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
-              !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),
-              !!method == "tukey" ~ .data$hr * bspec::tukeywindow(!!n, !!r),
-              !!method == "triangle" ~ .data$hr * bspec::trianglewindow(!!n),
-              !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
-              !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
-            ))
-        } else if (iLevel == "ga") {
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::mutate(hr = dplyr::case_when(
-              !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
-              !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),
-              !!method == "tukey" ~ .data$hr * bspec::tukeywindow(!!n, !!r),
-              !!method == "triangle" ~ .data$hr * bspec::trianglewindow(!!n),
-              !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
-              !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
-            ))
+        if(iLevel == "ss"){
+          group_vars = dplyr::sym("subj")
+        }else{
+          group_vars = dplyr::syms(NULL)
         }
-      } else if (iType == "surrogate") {
-
-        if (iLevel == "ss") {
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$subj, .data$n_surr) %>%
-            dplyr::mutate(hr = dplyr::case_when(
-              !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
-              !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),
-              !!method == "tukey" ~ .data$hr * bspec::tukeywindow(!!n, !!r),
-              !!method == "triangle" ~ .data$hr * bspec::trianglewindow(!!n),
-              !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
-              !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
-            ))
-        }
-        else if (iLevel == "ga") {
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(.data$n_surr) %>%
-            dplyr::mutate(hr = dplyr::case_when(
-              !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
-              !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),
-              !!method == "tukey" ~ .data$hr * bspec::tukeywindow(!!n, !!r),
-              !!method == "triangle" ~ .data$hr * bspec::trianglewindow(!!n),
-              !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
-              !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
-            ))
+      }else if(iType == "surrogate"){
+        if(iLevel == "ss"){
+          group_vars = dplyr::syms(c("subj", "n_surr"))
+        }else{
+          group_vars = dplyr::sym("n_surr")
         }
       }
+
+      # detrend
+      bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+        dplyr::group_by(!!!group_vars) %>%
+        dplyr::mutate(hr = dplyr::case_when(
+          !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
+          !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),
+          !!method == "tukey" ~ .data$hr * bspec::tukeywindow(!!n, !!r),
+          !!method == "triangle" ~ .data$hr * bspec::trianglewindow(!!n),
+          !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
+          !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
+        ))
+
 
       # add preprocessing step to documentation
       if (is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
