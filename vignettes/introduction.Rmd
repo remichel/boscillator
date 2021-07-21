@@ -107,3 +107,20 @@ ggplot(bosc$test$fft$ss, aes(x = f, y = observed, group = subj))+
   geom_line(aes(y = crit_value, color = subj), linetype = "dashed")
 
 ```
+
+```{r full pipeline}
+
+bosc = simulate_experiment(transient = "exponential")
+bosc = generate_surrogates(bosc)
+
+bosc = detrend_bosc(bosc, order = 2)
+bosc = scale_bosc(bosc, method = "z")
+bosc = windowing_bosc(bosc, method = "hann")
+bosc = padding_bosc(bosc, method = "zero")
+
+bosc = fft_bosc(bosc)
+bosc = test_fft(bosc, alpha = .05)
+
+
+
+```
