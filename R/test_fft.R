@@ -62,19 +62,21 @@ test_fft <- function(bosc, levels = "ss-ga", test = "amp", alpha = .05, overwrit
     }
 
     # Perform test
-    bosc$tests$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
-      dplyr::group_by(.data$n_surr) %>%
-      dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
-      dplyr::ungroup() %>%
-      dplyr::group_by(!!!group_vars) %>%
-      dplyr::summarize(crit_value = stats::quantile(.data$amp, probs = 1-!!alpha),
-                       p = 1-stats::ecdf(.data$amp)(.data$observed),
-                       observed = .data$observed) %>%
-      dplyr::distinct() %>%
-      dplyr::mutate(alpha = !!alpha) %>%
-      dplyr::relocate(.data$alpha, .after = .data$f) %>%
-      dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
-                                           .data$observed <= .data$crit_value ~ 0))
+    if(test == "amp"){
+      bosc$tests$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
+        dplyr::group_by(.data$n_surr) %>%
+        dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
+        dplyr::ungroup() %>%
+        dplyr::group_by(!!!group_vars) %>%
+        dplyr::summarize(crit_value = stats::quantile(.data$amp, probs = 1-!!alpha),
+                         p = 1-stats::ecdf(.data$amp)(.data$observed),
+                         observed = .data$observed) %>%
+        dplyr::distinct() %>%
+        dplyr::mutate(alpha = !!alpha) %>%
+        dplyr::relocate(.data$alpha, .after = .data$f) %>%
+        dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
+                                             .data$observed <= .data$crit_value ~ 0))
+    }
 
 
   }

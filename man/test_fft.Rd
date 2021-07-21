@@ -4,12 +4,14 @@
 \alias{test_fft}
 \title{test_fft}
 \usage{
-test_fft(bosc, levels = "ss-ga", alpha = 0.05, overwrite = FALSE)
+test_fft(bosc, levels = "ss-ga", test = "amp", alpha = 0.05, overwrite = FALSE)
 }
 \arguments{
 \item{bosc}{BOSC-Object}
 
 \item{levels}{Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
+
+\item{test}{Which test to perform?}
 
 \item{alpha}{Which alpha level to apply?}
 
