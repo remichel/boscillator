@@ -29,7 +29,7 @@ library(boscillator)
 Let's simulate a simple experiment and plot the time courses.
 ```{r simulation}
 # simulate experiment data
-bosc = simulate_experiment(phase_jitter_across_subj = 0, transient = "hanning")
+bosc = simulate_experiment(transient = "exponential")
 
 # plot simulations
 library(ggplot2)
