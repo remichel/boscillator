@@ -9,22 +9,16 @@ simulate_experiment(
   n_timepoints = 20,
   n_trials = 100,
   sfreq = 25,
-  intercept = 0.5,
-  amplitude = 0.1,
-  freq = 4,
-  phi = 0,
-  phase_jitter_within_subj = 0,
-  phase_jitter_across_subj = 0,
-  amplitude_jitter_within_subj = 0,
-  amplitude_jitter_across_subj = 0,
-  freq_jitter_within_subj = 0,
-  freq_jitter_across_subj = 0,
-  intercept_jitter_across_subj = 0,
+  osc_params = c(0.5, 0.1, 4, 0),
+  phase_jitter = c(0, 0),
+  amplitude_jitter = c(0, 0),
+  freq_jitter = c(0, 0),
+  intercept_jitter = 0,
   transient = "none",
   transient_expModel_params = c(0, 1, 0.3),
   trend = "none",
-  trend_linModel_params = c(intercept, amplitude),
-  trend_expModel_params = c(0, 1 - 2 * amplitude, 0.6),
+  trend_linModel_params = c(osc_params[1], osc_params[2]),
+  trend_expModel_params = c(0, 1 - 2 * osc_params[2], 0.6),
   aggregate = T,
   seed_num = NULL
 )
@@ -38,27 +32,15 @@ simulate_experiment(
 
 \item{sfreq}{Sampling frequency of timepoints (in Hz)}
 
-\item{intercept}{mean performance of the subject}
+\item{osc_params}{intercept (mean performance of the subject), amplitude, frequency, and phase of the underlying oscillation (freq in Hz, phase = 0 to 2pi)}
 
-\item{amplitude}{amplitude of the underlying oscillation}
+\item{phase_jitter}{sd of phase distribution across trials within subjects and across subjects}
 
-\item{freq}{frequency of the underlying oscillation}
+\item{amplitude_jitter}{sd of amp distribution across trials within subjects and across subjects}
 
-\item{phi}{phase of the underlying oscillation (0 to 2pi)}
+\item{freq_jitter}{sd of freq distribution across trials within subjects and across subjects}
 
-\item{phase_jitter_within_subj}{sd of phase distribution across trials within subjects}
-
-\item{phase_jitter_across_subj}{sd of phase distribution across subjects}
-
-\item{amplitude_jitter_within_subj}{sd of amp distribution across trials within subjects}
-
-\item{amplitude_jitter_across_subj}{sd of amp distribution across subjects}
-
-\item{freq_jitter_within_subj}{sd of freq distribution across trials within subjects}
-
-\item{freq_jitter_across_subj}{sd of freq distribution across subjects}
-
-\item{intercept_jitter_across_subj}{sd of mean performance across subjects}
+\item{intercept_jitter}{sd of mean performance across subjects}
 
 \item{transient}{"none", "hanning", or "exponential"}
 

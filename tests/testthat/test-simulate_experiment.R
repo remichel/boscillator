@@ -8,8 +8,8 @@ test_that("simulate_experiment output is correct", {
                              n_trials = ntrial,
                              n_timepoints = tps,
                              sfreq = sfreq,
-                             phase_jitter_across_subj = 0,
-                             intercept_jitter_across_subj = 0)
+                             phase_jitter = c(0,0),
+                             intercept_jitter = 0)
 
 
   # check class
@@ -18,8 +18,8 @@ test_that("simulate_experiment output is correct", {
   expect_equal(test$data$single_trial$real$spec$n_sub, n)
   expect_equal(test$data$single_trial$real$spec$n_trials, ntrial)
   expect_equal(test$data$single_trial$real$spec$n_timepoints, tps)
-  expect_equal(test$data$single_trial$real$spec$phase_jitter_across_subj, 0)
-  expect_equal(test$data$single_trial$real$spec$intercept_jitter_across_subj, 0)
+  expect_equal(test$data$single_trial$real$spec$phase_jitter[2], 0)
+  expect_equal(test$data$single_trial$real$spec$intercept_jitter, 0)
   # check dataset itself
   expect_equal(is.factor(test$data$single_trial$real$data$subj), TRUE)
   expect_equal(is.numeric(test$data$single_trial$real$data$time), TRUE)
