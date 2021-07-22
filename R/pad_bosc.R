@@ -1,6 +1,6 @@
-#' padding_bosc
+#' pad_bosc
 #'
-#' @description \code{padding_bosc}
+#' @description \code{pad_bosc}
 #' Adds pads to the time courses in an BOSC-Object.
 #'
 #' @param bosc BOSC-Object
@@ -12,14 +12,14 @@
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
-#' @export padding_bosc
-#' @name padding_bosc
+#' @export pad_bosc
+#' @name pad_bosc
 #'
 #' @examples
 #' bosc = simulate_experiment()
-#' bosc = padding_bosc(bosc, types = "real", levels = "ga", method = "zero")
+#' bosc = pad_bosc(bosc, types = "real", levels = "ga", method = "zero")
 #'
-padding_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "zero", n_pads = length(bosc$timepoints)) {
+pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "zero", n_pads = length(bosc$timepoints)) {
 
   # get levels
   if(!is.character(levels)){

@@ -75,9 +75,9 @@ We can use the functions `detrend_bosc`, `scale_bosc`, `windowing_bosc` and `pad
 
 bosc = detrend_bosc(bosc, order = 2)
 
-bosc = windowing_bosc(bosc, method = "hann")
+bosc = window_bosc(bosc, method = "hann")
 
-bosc = padding_bosc(bosc, method = "zero")
+bosc = pad_bosc(bosc, method = "zero")
 
 bosc = scale_bosc(bosc, method = "z")
 
@@ -115,8 +115,8 @@ bosc = generate_surrogates(bosc)
 
 bosc = detrend_bosc(bosc, order = 2)
 bosc = scale_bosc(bosc, method = "z")
-bosc = windowing_bosc(bosc, method = "hann")
-bosc = padding_bosc(bosc, method = "zero")
+bosc = window_bosc(bosc, method = "hann")
+bosc = pad_bosc(bosc, method = "zero")
 
 bosc = fft_bosc(bosc)
 bosc = test_fft(bosc, alpha = .05)

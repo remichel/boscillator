@@ -1,6 +1,6 @@
-#' windowing_bosc
+#' window_bosc
 #'
-#' @description \code{windowing_bosc}
+#' @description \code{window_bosc}
 #' Applies a window function to the time courses in an BOSC-Object.
 #'
 #' @param bosc BOSC-Object
@@ -13,14 +13,14 @@
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
-#' @export windowing_bosc
-#' @name windowing_bosc
+#' @export window_bosc
+#' @name window_bosc
 #'
 #' @examples
 #' bosc = simulate_experiment()
-#' bosc = windowing_bosc(bosc, types = "real", levels = "ga", method = "hann")
+#' bosc = window_bosc(bosc, types = "real", levels = "ga", method = "hann")
 #'
-windowing_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "hann", r = .1, alpha = .54) {
+window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "hann", r = .1, alpha = .54) {
 
   # get levels
   if(!is.character(levels)){

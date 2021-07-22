@@ -26,5 +26,6 @@ Imports:
     rlang,
     forecast,
     utils,
-    bspec
+    bspec,
+    ggplot2
 VignetteBuilder: knitr
