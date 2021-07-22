@@ -54,16 +54,18 @@ test_fft <- function(bosc, levels = "ss-ga", test = "amp", alpha = .05, overwrit
     }
 
 
-    # get correct group vars depending on the analysis level
-    if (iLevel == "ss") {
-      group_vars = dplyr::syms(c("subj", "f"))
-    }else{
-      group_vars = dplyr::syms("f")
-    }
 
     # Perform test
     if(test == "amp"){
-      bosc$tests$fft[[iLevel]] = bosc$data[[iLevel]]$surrogate$fft %>%
+
+      # get correct group vars depending on the analysis level
+      if (iLevel == "ss") {
+        group_vars = dplyr::syms(c("subj", "f"))
+      }else{
+        group_vars = dplyr::syms("f")
+      }
+
+      bosc$tests$fft$amp[[iLevel]]$results = bosc$data[[iLevel]]$surrogate$fft %>%
         dplyr::group_by(.data$n_surr) %>%
         dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
         dplyr::ungroup() %>%
@@ -76,6 +78,42 @@ test_fft <- function(bosc, levels = "ss-ga", test = "amp", alpha = .05, overwrit
         dplyr::relocate(.data$alpha, .after = .data$f) %>%
         dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
                                              .data$observed <= .data$crit_value ~ 0))
+    }else if(test == "complex"){
+
+      group_vars = dplyr::syms(c("subj", "f"))
+
+      if(iLevel == "ga"){
+        message("This analysis needs to be performed on single subject data. Will skip to next level...")
+        next
+      }else if(iLevel == "ss"){
+        message("Averaging across subjects in complex plane to determine 2D vector lengths...")
+      }
+
+      # save single surrogate data for 2d plot
+      bosc$tests$fft$complex[[iLevel]]$data = bosc$data[[iLevel]]$surrogate$fft %>%
+        dplyr::group_by(.data$n_surr) %>%
+        dplyr::mutate(observed = !!bosc$data[[iLevel]]$real$fft$complex) %>%
+        dplyr::ungroup() %>%
+        dplyr::group_by(.data$n_surr, .data$f) %>%
+        dplyr::summarize(observed = mean(.data$observed),
+                         surrogate = mean(.data$complex)) %>%
+        dplyr::mutate(observed_length = Mod(.data$observed),
+                      surrogate_length = Mod(.data$surrogate),
+                      observed_phase = Arg(.data$observed),
+                      surrogate_phase = Arg(.data$surrogate)) %>%
+        dplyr::ungroup()
+
+      bosc$tests$fft$complex[[iLevel]]$results <- bosc$tests$fft$complex[[iLevel]]$data %>%
+        dplyr::group_by(.data$f) %>%
+        dplyr::summarize(crit_length = stats::quantile(.data$surrogate_length, probs = 1-!!alpha),
+                         p = 1-stats::ecdf(.data$surrogate_length)(.data$observed_length),
+                         observed_length = .data$observed_length) %>%
+        dplyr::distinct() %>%
+        dplyr::mutate(alpha = !!alpha) %>%
+        dplyr::relocate(.data$alpha, .after = .data$f) %>%
+        dplyr::mutate(sig = dplyr::case_when(.data$observed_length > .data$crit_length ~ 1,
+                                             .data$observed_length <= .data$crit_length ~ 0))
+
     }
 
 
