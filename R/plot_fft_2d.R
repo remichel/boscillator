@@ -1,0 +1,51 @@
+#' plot_fft_2d
+#'
+#' @description \code{plot_fft_2d}
+#' Plots the results of an FFT 2D test.
+#'
+#' @param bosc BOSC-Object
+#' @param freqs A vector of frequencies (in Hz) to plot, defaults to all frequencies available
+#'
+#' @return A BOSC-Object
+#' @importFrom dplyr %>%
+#' @importFrom rlang .data
+#' @export plot_fft_2d
+#' @name plot_fft_2d
+#'
+
+#'
+plot_fft_2d <- function(bosc, freqs = unique(bosc$tests$fft$complex$ss$data$f)) {
+
+
+
+  # subset to frequencies of interest
+  d = bosc$tests$fft$complex$ss$data %>%
+    dplyr::filter(.data$f %in% !!freqs)
+
+  #test = bosc$tests$fft$complex$ss$results %>%
+  #  dplyr::filter(f %in% !!freqs)
+
+  # ´determine suitable ymax for plot
+  yMax = max(d$observed_length, d$surrogate_length)
+
+  # plot
+  tmpPlot = ggplot2::ggplot(d, ggplot2::aes(x = .data$surrogate_phase, y = .data$surrogate_length)) +
+    ggplot2::geom_hline(yintercept = seq(0,yMax,yMax/10), color = "grey90", size = 0.5)+
+    ggplot2::geom_segment(ggplot2::aes(x = .data$surrogate_phase, xend = .data$surrogate_phase, y = 0, yend = .data$surrogate_length), size = 1, color = "grey90", alpha = .8)+
+    ggplot2::geom_point(color = "grey20", alpha = .2)+
+    ggplot2::geom_segment(ggplot2::aes(x = .data$observed_phase, xend = .data$observed_phase, y = 0, yend = .data$observed_length),size = 1.75, color = "black")+
+    ggplot2::geom_point(ggplot2::aes(x = .data$observed_phase, y = .data$observed_length), size = 3, color = "black")+
+    ggplot2::coord_polar(start = pi/2, direction = -1)+
+    #ggplot2::geom_segment(data = test, ggplot2::aes(x = 0, xend = 1.99*pi, y = .data$crit_length, yend = .data$crit_length), color = "red")+
+    ggplot2::scale_x_continuous(expand = c(0,0), limits = c(-pi,pi), breaks = seq(-pi,pi/2,pi/2), labels = c("180°", "270°", "0/360°", "90°"))+
+    ggplot2::scale_y_continuous(expand = c(0,0), breaks = seq(0,yMax,yMax/10), limits = c(0,yMax))+
+    ggplot2::ylab('Amplitude')+
+    ggplot2::xlab('Phase Angle')+
+    ggplot2::theme_minimal()+
+    ggplot2::facet_wrap(~.data$f)+
+    ggplot2::theme(axis.text.y = ggplot2::element_blank())
+
+  print(tmpPlot)
+
+
+}
