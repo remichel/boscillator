@@ -1,7 +1,7 @@
-#' plot_fft_2d
+#' plot_complex
 #'
-#' @description \code{plot_fft_2d}
-#' Plots the results of an FFT 2D test.
+#' @description \code{plot_complex}
+#' Plots the results of an FFT complex test.
 #'
 #' @param bosc BOSC-Object
 #' @param freqs A vector of frequencies (in Hz) to plot, defaults to all frequencies available
@@ -9,12 +9,12 @@
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
-#' @export plot_fft_2d
-#' @name plot_fft_2d
+#' @export plot_complex
+#' @name plot_complex
 #'
 
 #'
-plot_fft_2d <- function(bosc, freqs = unique(bosc$tests$fft$ss$complex$data$f)) {
+plot_complex <- function(bosc, freqs = unique(bosc$tests$fft$ss$complex$data$f)) {
 
 
 
@@ -45,7 +45,7 @@ plot_fft_2d <- function(bosc, freqs = unique(bosc$tests$fft$ss$complex$data$f)) 
     # split by frequency
     ggplot2::facet_wrap(~.data$f)+
     # scale and label axes
-    ggplot2::scale_x_continuous(expand = c(0,0), limits = c(-pi,pi), breaks = seq(-pi,pi/2,pi/2), labels = c("180°", "270°", "0/360°", "90°"))+
+    ggplot2::scale_x_continuous(expand = c(0,0), limits = c(-pi,pi), breaks = seq(-pi,pi/2,pi/2), labels = c("pi", "3/2pi", "0", "pi/2"))+
     ggplot2::scale_y_continuous(expand = c(0,0), breaks = seq(0,yMax,yMax/10), limits = c(0,yMax))+
     ggplot2::ylab('Amplitude')+
     ggplot2::xlab('Phase Angle')+
