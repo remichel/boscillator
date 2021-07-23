@@ -4,7 +4,7 @@
 #' Plots the FFT frequency spectrum.
 #'
 #' @param bosc BOSC-Object
-#' @param level Which level shall be plotted? "ss", "ga" or "merged_spectra"
+#' @param levels Which level shall be plotted? "ss", "ga" or "merged_spectra"
 #'
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
@@ -13,7 +13,6 @@
 #' @name plot_spectrum
 #'
 
-#'
 plot_spectrum <- function(bosc, levels = "ss-merged_spectra-ga") {
 
 

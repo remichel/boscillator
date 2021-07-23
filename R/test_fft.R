@@ -5,7 +5,7 @@
 #'
 #' @param bosc BOSC-Object
 #' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
-#' @param test  Which test to perform?
+#' @param tests  Which test to perform?
 #' @param alpha_amp Which alpha level to apply for amplitude test
 #' @param alpha_complex Which alpha level to apply for complex plane test
 #' @param alpha_phase Which alpha level to apply for rayleigh test
@@ -172,7 +172,7 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
                            statistic = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$statistic,
                            p = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$p.value,
                            alpha = !!alpha_phase) %>%
-          dplyr::mutate(sig = case_when(.data$p < .data$alpha ~ 1,
+          dplyr::mutate(sig = dplyr::case_when(.data$p < .data$alpha ~ 1,
                                         .data$p >= .data$alpha ~ 0))
 
       }

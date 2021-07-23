@@ -128,7 +128,7 @@ bosc = scale_bosc(bosc, method = "z")
 bosc = fft_bosc(bosc, overwrite = T)
 bosc = test_fft(bosc, alpha_amp = .05/10, overwrite = T)
 
-plot_fft_2d(bosc, freqs = seq(2.5, 6.25, 1.25))
+plot_complex(bosc, freqs = seq(2.5, 6.25, 1.25))
 plot_spectrum(bosc)
 
 

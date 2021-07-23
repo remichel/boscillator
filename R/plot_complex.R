@@ -23,7 +23,7 @@ plot_fft_2d <- function(bosc, freqs = unique(bosc$tests$fft$ss$complex$data$f)) 
     dplyr::filter(.data$f %in% !!freqs)
 
   test = bosc$tests$fft$ss$complex$results %>%
-    dplyr::filter(f %in% !!freqs)
+    dplyr::filter(.data$f %in% !!freqs)
 
   # ´determine suitable ymax for plot
   yMax = max(d$observed_length, d$surrogate_length)

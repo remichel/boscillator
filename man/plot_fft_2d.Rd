@@ -4,7 +4,7 @@
 \alias{plot_fft_2d}
 \title{plot_fft_2d}
 \usage{
-plot_fft_2d(bosc, freqs = unique(bosc$tests$fft$complex$ss$data$f))
+plot_fft_2d(bosc, freqs = unique(bosc$tests$fft$ss$complex$data$f))
 }
 \arguments{
 \item{bosc}{BOSC-Object}

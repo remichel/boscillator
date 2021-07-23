@@ -4,16 +4,28 @@
 \alias{test_fft}
 \title{test_fft}
 \usage{
-test_fft(bosc, levels = "ss-ga", test = "amp", alpha = 0.05, overwrite = FALSE)
+test_fft(
+  bosc,
+  levels = "ss-ga",
+  tests = "amp-complex-phase",
+  alpha_amp = 0.05,
+  alpha_complex = alpha_amp,
+  alpha_phase = alpha_amp,
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{bosc}{BOSC-Object}
 
 \item{levels}{Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
 
-\item{test}{Which test to perform?}
+\item{tests}{Which test to perform?}
 
-\item{alpha}{Which alpha level to apply?}
+\item{alpha_amp}{Which alpha level to apply for amplitude test}
+
+\item{alpha_complex}{Which alpha level to apply for complex plane test}
+
+\item{alpha_phase}{Which alpha level to apply for rayleigh test}
 
 \item{overwrite}{defaults to F}
 }
@@ -28,6 +40,6 @@ Performs an FFT on a time courses in an BOSC-Object.
 bosc = simulate_experiment()
 bosc = generate_surrogates(bosc)
 bosc = fft_bosc(bosc)
-bosc = test_fft(bosc, levels = "ga")
+bosc = test_fft(bosc, levels = "ga", tests = "amp-complex")
 
 }
