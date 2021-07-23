@@ -27,5 +27,6 @@ Imports:
     forecast,
     utils,
     bspec,
-    ggplot2
+    ggplot2,
+    circular
 VignetteBuilder: knitr
