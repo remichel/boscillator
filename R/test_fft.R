@@ -57,7 +57,7 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
       }
 
       # check if test data exists
-      if(!is.null(bosc$test[[iLevel]][[iTest]])){
+      if(!is.null(bosc$tests$fft[[iLevel]][[iTest]])){
         if(overwrite == TRUE){
           message("Test already exists. Will overwrite...")
         }else{
@@ -71,7 +71,7 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
       # Perform test
       if(iTest == "amp"){
 
-                # get correct group vars depending on the analysis level
+        # get correct group vars depending on the analysis level
         if (iLevel == "ss") {
           group_vars = dplyr::syms(c("subj", "f"))
         }else{
