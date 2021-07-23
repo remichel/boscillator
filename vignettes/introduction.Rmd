@@ -120,7 +120,7 @@ bosc = simulate_experiment(n_sub = 14,
 bosc = generate_surrogates(bosc,
                            n_surr = 1000)
 
-bosc = detrend_bosc(bosc, order = 2)
+bosc = detrend_bosc(bosc, order = 1)
 bosc = scale_bosc(bosc, method = "z")
 # bosc = window_bosc(bosc, method = "hann")
 #bosc = pad_bosc(bosc, method = "zero")
@@ -130,6 +130,7 @@ bosc = test_fft(bosc, alpha_amp = .05/10, overwrite = T)
 
 plot_complex(bosc, freqs = seq(2.5, 6.25, 1.25))
 plot_spectrum(bosc)
+plot_phase(bosc)
 
 
 ```
