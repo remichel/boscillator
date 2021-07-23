@@ -109,7 +109,25 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
         dplyr::mutate(f = !!fbins) %>%
         dplyr::relocate(.data$f, .before = .data$complex)
 
+      # merge single subject spectra
+      if(iLevel == "ss"){
+
+        # determine group vars
+        if(iType == "surrogate"){
+          group_vars = dplyr::syms(c("n_surr", "f"))
+        }else if(iType == "real"){
+          group_vars = dplyr::sym("f")
+        }
+
+        # merge spectra across subjects
+        bosc$data[[iLevel]][[iType]]$merged_spectra <- bosc$data[[iLevel]][[iType]]$fft %>%
+          dplyr::group_by(!!!group_vars) %>%
+          dplyr::summarise(amp = mean(.data$amp))
+      }
+
     }
+
+
   }
 
   # add executed command to history

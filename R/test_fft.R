@@ -33,7 +33,7 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
   }
 
   # get tests
-  if(!is.character(levels)){
+  if(!is.character(tests)){
     stop("Argument levels must be a character.")
   }else{
     iTest_list <- split_string_arg(tests, "-")
@@ -71,14 +71,14 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
       # Perform test
       if(iTest == "amp"){
 
-        message("Comparing Observed FFT Amplitudes against Permutations (alpha = ", alpha_amp,")...")
-
-        # get correct group vars depending on the analysis level
+                # get correct group vars depending on the analysis level
         if (iLevel == "ss") {
           group_vars = dplyr::syms(c("subj", "f"))
         }else{
           group_vars = dplyr::syms("f")
         }
+
+        message("Comparing Observed FFT Amplitudes against Permutations (alpha = ", alpha_amp,")...")
 
         bosc$tests$fft[[iLevel]][[iTest]]$results = bosc$data[[iLevel]]$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
@@ -93,6 +93,31 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
           dplyr::relocate(.data$alpha, .after = .data$f) %>%
           dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
                                                .data$observed <= .data$crit_value ~ 0))
+
+        # also perform test on merged spectra if ss is chosen
+        if(iLevel == "ss"){
+
+          # define group vars
+          group_vars = dplyr::syms("f")
+
+          bosc$tests$fft$merged_spectra[[iTest]]$results = bosc$data[[iLevel]]$surrogate$merged_spectra %>%
+            dplyr::group_by(.data$n_surr) %>%
+            dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$merged_spectra$amp) %>%
+            dplyr::ungroup() %>%
+            dplyr::group_by(!!!group_vars) %>%
+            dplyr::summarize(crit_value = unname(stats::quantile(.data$amp, probs = 1-!!alpha_amp)),
+                             p = 1-stats::ecdf(.data$amp)(.data$observed),
+                             observed = .data$observed) %>%
+            dplyr::distinct() %>%
+            dplyr::mutate(alpha = !!alpha_amp) %>%
+            dplyr::relocate(.data$alpha, .after = .data$f) %>%
+            dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
+                                                 .data$observed <= .data$crit_value ~ 0))
+        }
+
+
+
+
       }else if(iTest == "complex"){
 
         group_vars = dplyr::syms(c("subj", "f"))
