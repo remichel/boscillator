@@ -97,10 +97,10 @@ simulate_experiment <-
     data <- data %>%
       dplyr::group_by(.data$subj) %>%
       dplyr::mutate(osc = sin_model(.data$time,
-                                    !!osc_params[1] + stats::rnorm(1, 0, !!intercept_jitter),
-                                    !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2]),
-                                    !!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2]),
-                                    !!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2]))) %>%
+                                    max(0, !!osc_params[1] + stats::rnorm(1, 0, !!intercept_jitter)),
+                                    max(0, !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2])),
+                                    max(!!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2])),
+                                    max(0,!!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2])))) %>%
       dplyr::ungroup()
 
     # simulate single trial responses
