@@ -79,7 +79,7 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
         if(overwrite == TRUE){
           message("FFT Data already exists. Will overwrite...")
         }else{
-          warning("FFT Data already exists. Will skip to next dataset without performing the FFT...")
+          message("FFT Data already exists. Will skip to next dataset without performing the FFT...")
           next
         }
       }
