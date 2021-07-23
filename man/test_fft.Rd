@@ -6,7 +6,7 @@
 \usage{
 test_fft(
   bosc,
-  levels = "ss-ga",
+  levels = "ss-merged_spectra-ga",
   tests = "amp-complex-phase",
   alpha_amp = 0.05,
   alpha_complex = alpha_amp,

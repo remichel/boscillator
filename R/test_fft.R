@@ -23,7 +23,7 @@
 #' bosc = fft_bosc(bosc)
 #' bosc = test_fft(bosc, levels = "ga", tests = "amp-complex")
 #'
-test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_amp = .05, alpha_complex = alpha_amp, alpha_phase = alpha_amp, overwrite = FALSE) {
+test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex-phase", alpha_amp = .05, alpha_complex = alpha_amp, alpha_phase = alpha_amp, overwrite = FALSE) {
 
   # get levels
   if(!is.character(levels)){
@@ -74,7 +74,7 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
         # get correct group vars depending on the analysis level
         if (iLevel == "ss") {
           group_vars = dplyr::syms(c("subj", "f"))
-        }else{
+        }else if(iLevel == "ga" | iLevel == "merged_spectra"){
           group_vars = dplyr::syms("f")
         }
 
@@ -94,35 +94,13 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
           dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
                                                .data$observed <= .data$crit_value ~ 0))
 
-        # also perform test on merged spectra if ss is chosen
-        if(iLevel == "ss"){
-
-          # define group vars
-          group_vars = dplyr::syms("f")
-
-          bosc$tests$fft$merged_spectra[[iTest]]$results = bosc$data[[iLevel]]$surrogate$merged_spectra %>%
-            dplyr::group_by(.data$n_surr) %>%
-            dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$merged_spectra$amp) %>%
-            dplyr::ungroup() %>%
-            dplyr::group_by(!!!group_vars) %>%
-            dplyr::summarize(crit_value = unname(stats::quantile(.data$amp, probs = 1-!!alpha_amp)),
-                             p = 1-stats::ecdf(.data$amp)(.data$observed),
-                             observed = .data$observed) %>%
-            dplyr::distinct() %>%
-            dplyr::mutate(alpha = !!alpha_amp) %>%
-            dplyr::relocate(.data$alpha, .after = .data$f) %>%
-            dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
-                                                 .data$observed <= .data$crit_value ~ 0))
-        }
-
-
 
 
       }else if(iTest == "complex"){
 
         group_vars = dplyr::syms(c("subj", "f"))
 
-        if(iLevel == "ga"){
+        if(iLevel == "ga" | iLevel == "merged_spectra"){
           message("Note: Complex vector analysis needs to be performed on single subject data. Will skip and proceed with next test...")
           next
         }else if(iLevel == "ss"){
@@ -158,7 +136,7 @@ test_fft <- function(bosc, levels = "ss-ga", tests = "amp-complex-phase", alpha_
       }else if(iTest == "phase"){
 
         # skip grand average level
-        if(iLevel == "ga"){
+        if(iLevel == "ga" | iLevel == "merged_spectra"){
           message("Note: Phase analysis needs to be performed on single subject data. Will skip and proceed with next test...")
           next
         }
