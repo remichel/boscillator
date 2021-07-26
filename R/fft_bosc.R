@@ -7,6 +7,7 @@
 #' @param types Which data should be padded? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.
 #' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
 #' @param overwrite defaults to F
+#' @param verbose defaults to T
 #'
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
@@ -18,7 +19,7 @@
 #' bosc = simulate_experiment()
 #' bosc = fft_bosc(bosc, types = "real", levels = "ga")
 #'
-fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite = FALSE) {
+fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -40,7 +41,7 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
   for (iType in 1:length(iType_list)) {
     for (iLevel in 1:length(iLevel_list)) {
       # get length of time series
-      len[iLevel, iType] = length(unique(bosc$data[[iLevel_list[iLevel]]][[iType_list[iType]]]$data$time))
+      len[iType, iLevel] = length(unique(bosc$data[[iLevel_list[iLevel]]][[iType_list[iType]]]$data$time))
     }
   }
   # if all conditions have same length, then determine variables relevant for FFT
@@ -60,26 +61,26 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
   }
 
 
-  message("Start FFT...")
+  if(verbose == T) message("Start FFT...")
 
   # loop through all conditions
   for (iType in iType_list) {
     for (iLevel in iLevel_list) {
 
-      message(paste("FFTing", iLevel, iType, "..."))
+      if(verbose == T) message(paste("FFTing", iLevel, iType, "..."))
 
       # check if required data exists
       if(is.null(bosc$data[[iLevel]][[iType]]$data)){
-        message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
       # check if FFT data exists
       if(!is.null(bosc$data[[iLevel]][[iType]]$fft)){
         if(overwrite == TRUE){
-          message("FFT Data already exists. Will overwrite...")
+          if(verbose == T) message("FFT Data already exists. Will overwrite...")
         }else{
-          message("FFT Data already exists. Will skip to next dataset without performing the FFT...")
+          if(verbose == T) message("FFT Data already exists. Will skip to next dataset without performing the FFT...")
           next
         }
       }
@@ -133,6 +134,6 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "fft_")
 
-  message("FFT completed.")
+  if(verbose == T) message("FFT completed.")
   return(bosc)
 }

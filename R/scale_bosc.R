@@ -7,6 +7,7 @@
 #' @param types Which data should be scaled? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.
 #' @param levels Which levels of data need to be scaled? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
 #' @param method defaults to z
+#' @param verbose defaults to T
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
@@ -17,7 +18,7 @@
 #' bosc = simulate_experiment()
 #' bosc = scale_bosc(bosc, types = "real", levels = "ga")
 #'
-scale_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "z") {
+scale_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "z", verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -34,22 +35,29 @@ scale_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method 
   }
 
   # get method
-  if(method != "z"){
-    stop("There is no other method than z-scaling implemented yet.")
+  if(method == "none"){
+    if(verbose == T) message("Will skip scaling...")
+    skip = T
+  }else if(method == "z"){
+    skip = F
+  }else{
+    stop("There is no other method than z-scaling (or no scaling) implemented yet.")
   }
 
 
-  message("Start Scaling...")
+  if(skip == F){
+
+  if(verbose == T) message("Start Scaling...")
 
   # loop through all conditions
   for (iType in iType_list) {
     for (iLevel in iLevel_list) {
 
-      message(paste("Scaling", iLevel, iType, "..."))
+      if(verbose == T) message(paste("Scaling", iLevel, iType, "..."))
 
       # check if required data exists
       if(is.null(bosc$data[[iLevel]][[iType]]$data)){
-        message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
@@ -99,6 +107,8 @@ scale_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method 
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "scaled_")
 
-  message("Scaling completed.")
+  }
+
+  if(verbose == T) message("Scaling completed.")
   return(bosc)
 }

@@ -9,6 +9,7 @@
 #' @param method Which window function should be used? defaults to "hann" for a hanning window
 #' @param r Additional parameter for the tukey window function
 #' @param alpha Additional parameter for the hamming, cosine and kaiser window function
+#' @param verbose defaults to T
 #'
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
@@ -20,7 +21,7 @@
 #' bosc = simulate_experiment()
 #' bosc = window_bosc(bosc, types = "real", levels = "ga", method = "hann")
 #'
-window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "hann", r = .1, alpha = .54) {
+window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "hann", r = .1, alpha = .54, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -41,16 +42,16 @@ window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method
     stop("Method must be a character.")
   }
 
-  message("Start windowing...")
+  if(verbose == T) message("Start windowing...")
   # loop through all conditions
   for (iType in iType_list) {
     for (iLevel in iLevel_list) {
 
-      message(paste("Windowing", iLevel, iType, "..."))
+      if(verbose == T) message(paste("Windowing", iLevel, iType, "..."))
 
       # check if required data exists
       if(is.null(bosc$data[[iLevel]][[iType]]$data)){
-        message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
@@ -68,7 +69,7 @@ window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method
       if(length(bosc$timepoints) == length(unique(bosc$data[[iLevel]][[iType]]$data$time))){
         n = length(bosc$timepoints)
       }else{
-        message("Number of timepoints in dataset seems to deviate from original number of timepoints, possibly due to padding. Continue with number the number of timepoints in dataset, which is ", length(unique(bosc$data[[iLevel]][[iType]]$data$time)), "...")
+        if(verbose == T) message("Number of timepoints in dataset seems to deviate from original number of timepoints, possibly due to padding. Continue with number the number of timepoints in dataset, which is ", length(unique(bosc$data[[iLevel]][[iType]]$data$time)), "...")
         n = length(unique(bosc$data[[iLevel]][[iType]]$data$time))
       }
 
@@ -89,16 +90,20 @@ window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method
       }
 
       # detrend
-      bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-        dplyr::group_by(!!!group_vars) %>%
-        dplyr::mutate(hr = dplyr::case_when(
-          !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
-          !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),
-          !!method == "tukey" ~ .data$hr * bspec::tukeywindow(!!n, !!r),
-          !!method == "triangle" ~ .data$hr * bspec::trianglewindow(!!n),
-          !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
-          !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
-        ))
+      if(method != "none"){
+        bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+          dplyr::group_by(!!!group_vars) %>%
+          dplyr::mutate(hr = dplyr::case_when(
+            !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
+            !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),
+            !!method == "tukey" ~ .data$hr * bspec::tukeywindow(!!n, !!r),
+            !!method == "triangle" ~ .data$hr * bspec::trianglewindow(!!n),
+            !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
+            !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
+          ))
+      }else{
+        if(verbose == T) message("No window will be applied...")
+      }
 
 
       # add preprocessing step to documentation
@@ -114,6 +119,6 @@ window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "window_")
 
-  message("Windowing completed.")
+  if(verbose == T) message("Windowing completed.")
   return(bosc)
 }
