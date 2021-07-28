@@ -101,6 +101,9 @@ simulate_experiment <-
                                     max(0, !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2])),
                                     max(!!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2])),
                                     max(0,!!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2])))) %>%
+      dplyr::mutate(osc = dplyr::case_when(.data$osc > 1 ~ 1,
+                                           .data$osc < 0 ~ 0,
+                                           TRUE ~ .data$osc)) %>% # apply limits [0 1]
       dplyr::ungroup()
 
     # simulate single trial responses
