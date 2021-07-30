@@ -2,6 +2,7 @@
 
 export(aggregate_bosc)
 export(bosc)
+export(bosc_import)
 export(detrend_bosc)
 export(fft_bosc)
 export(generate_surrogates)
