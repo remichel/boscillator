@@ -10,7 +10,8 @@ window_bosc(
   levels = "ss-ga",
   method = "hann",
   r = 0.1,
-  alpha = 0.54
+  alpha = 0.54,
+  verbose = T
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ window_bosc(
 \item{r}{Additional parameter for the tukey window function}
 
 \item{alpha}{Additional parameter for the hamming, cosine and kaiser window function}
+
+\item{verbose}{defaults to T}
 }
 \value{
 A BOSC-Object

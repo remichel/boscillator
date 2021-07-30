@@ -11,7 +11,8 @@ test_fft(
   alpha_amp = 0.05,
   alpha_complex = alpha_amp,
   alpha_phase = alpha_amp,
-  overwrite = FALSE
+  overwrite = FALSE,
+  verbose = T
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ test_fft(
 \item{alpha_phase}{Which alpha level to apply for rayleigh test}
 
 \item{overwrite}{defaults to F}
+
+\item{verbose}{defaults to T}
 }
 \value{
 A BOSC-Object

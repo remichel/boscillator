@@ -4,7 +4,13 @@
 \alias{scale_bosc}
 \title{scale_bosc}
 \usage{
-scale_bosc(bosc, types = "real-surrogate", levels = "ss-ga", method = "z")
+scale_bosc(
+  bosc,
+  types = "real-surrogate",
+  levels = "ss-ga",
+  method = "z",
+  verbose = T
+)
 }
 \arguments{
 \item{bosc}{BOSC-Object}
@@ -14,6 +20,8 @@ scale_bosc(bosc, types = "real-surrogate", levels = "ss-ga", method = "z")
 \item{levels}{Which levels of data need to be scaled? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
 
 \item{method}{defaults to z}
+
+\item{verbose}{defaults to T}
 }
 \value{
 A BOSC-Object

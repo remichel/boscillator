@@ -4,7 +4,13 @@
 \alias{detrend_bosc}
 \title{detrend_bosc}
 \usage{
-detrend_bosc(bosc, types = "real-surrogate", levels = "ss-ga", order = 0)
+detrend_bosc(
+  bosc,
+  types = "real-surrogate",
+  levels = "ss-ga",
+  order = 0,
+  verbose = T
+)
 }
 \arguments{
 \item{bosc}{BOSC-Object}
@@ -13,7 +19,9 @@ detrend_bosc(bosc, types = "real-surrogate", levels = "ss-ga", order = 0)
 
 \item{levels}{Which levels of data need to be detrended? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
 
-\item{order}{Choose an order of the polynomial fit which will then be removed (0 = demean)}
+\item{order}{Choose an order of the polynomial fit which will then be removed (0 = demean). Order = -1 will lead to skipping detrending.}
+
+\item{verbose}{defaults to T}
 }
 \value{
 A BOSC-Object

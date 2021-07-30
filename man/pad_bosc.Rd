@@ -9,7 +9,8 @@ pad_bosc(
   types = "real-surrogate",
   levels = "ss-ga",
   method = "zero",
-  n_pads = length(bosc$timepoints)
+  n_pads = length(bosc$timepoints),
+  verbose = T
 )
 }
 \arguments{
@@ -21,7 +22,9 @@ pad_bosc(
 
 \item{method}{Padding method? "zero" or "mean"}
 
-\item{n_pads}{Number of pads}
+\item{n_pads}{Number of pads. n_pads = 0 will skip padding}
+
+\item{verbose}{defaults to T}
 }
 \value{
 A BOSC-Object

@@ -4,7 +4,13 @@
 \alias{fft_bosc}
 \title{fft_bosc}
 \usage{
-fft_bosc(bosc, types = "real-surrogate", levels = "ss-ga", overwrite = FALSE)
+fft_bosc(
+  bosc,
+  types = "real-surrogate",
+  levels = "ss-ga",
+  overwrite = FALSE,
+  verbose = T
+)
 }
 \arguments{
 \item{bosc}{BOSC-Object}
@@ -14,6 +20,8 @@ fft_bosc(bosc, types = "real-surrogate", levels = "ss-ga", overwrite = FALSE)
 \item{levels}{Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
 
 \item{overwrite}{defaults to F}
+
+\item{verbose}{defaults to T}
 }
 \value{
 A BOSC-Object
