@@ -5,7 +5,7 @@
 #'
 #' @param data A dataframe with dense sampling data
 #' @param sfreq in Hz
-#' @param vars The index variables in your data frame that identify (1) subjects, (2) timepoints, (3) trials, and (4) the responses. Insert the names as a vector in the order specified before (ie. c = ("subj", "time", "trial", "resp")), regardless of the order they occur in your dataset.
+#' @param vars The index variables in your data frame that identify (1) subjects, (2) timepoints, (3) trials (only for single trial), and (4) the responses. Insert the names as a vector in the order specified before (ie. c = ("subj", "time", "trial", "resp")), regardless of the order they occur in your dataset.
 #' @param level Specify the level of your data, e.g. "single_trial", "ss" or "ga"
 #' @param n_timepoints Number of unique timepoints in dataset
 #' @param aggregate Shall single trial data be averaged to "ss" and "ga"?
@@ -18,33 +18,60 @@ bosc_import <- function(data, sfreq, n_timepoints, vars = c("subj", "time", "tri
   #create bosc object
   bosc = bosc()
 
-  # check index variables
-  index_vars = c("subj", "time", "trial", "resp")
-
-  for(iVar in 1:length(vars)){
-    if(vars[iVar] != index_vars[iVar]){
-      message("Warning: Variable ", vars[iVar], ' will be renamed to ', index_vars[iVar])
-    }
-  }
-
-  # subset to relevant variables
-  data <- data %>%
-    dplyr::select(!!vars)
-  # rename variables
-  colnames(data) <- index_vars
-
-  # assign timepoints
-  bosc$timepoints = sort(unique(data$time))
-  bosc$data$single_trial$real$spec$n_timepoints = n_timepoints
-
-  # save sfreq
-  bosc$data$single_trial$real$spec$sfreq = sfreq
-
-  # save data in bosc
   if(level == "single_trial"){
+    # check index variables
+    index_vars = c("subj", "time", "trial", "resp")
+
+    for(iVar in 1:length(vars)){
+      if(vars[iVar] != index_vars[iVar]){
+        message("Warning: Variable ", vars[iVar], ' will be renamed to ', index_vars[iVar])
+      }
+    }
+
+    # subset to relevant variables
+    data <- data %>%
+      dplyr::select(!!vars)
+    # rename variables
+    colnames(data) <- index_vars
+
+    # assign timepoints
+    bosc$timepoints = sort(unique(data$time))
+    bosc$data$single_trial$real$spec$n_timepoints = n_timepoints
+
+    # save sfreq
+    bosc$data$single_trial$real$spec$sfreq = sfreq
+
+    # save data in bosc
     bosc$data$single_trial$real$data = data
+
+  }else if(level == "ss"){
+
+    # check index variables
+    index_vars = c("subj", "time", "hr")
+
+    for(iVar in 1:length(vars)){
+      if(vars[iVar] != index_vars[iVar]){
+        message("Warning: Variable ", vars[iVar], ' will be renamed to ', index_vars[iVar])
+      }
+    }
+
+    # subset to relevant variables
+    data <- data %>%
+      dplyr::select(!!vars)
+    # rename variables
+    colnames(data) <- index_vars
+
+    # assign timepoints
+    bosc$timepoints = sort(unique(data$time))
+    bosc$data$single_trial$real$spec$n_timepoints = n_timepoints
+
+    # save sfreq
+    bosc$data$single_trial$real$spec$sfreq = sfreq
+
+    # save data in bosc
+    bosc$data$ss$real$data = data
   }else{
-    stop("Your chosen import option is not available yet.")
+    stop("Your desired level is not implemented in boscillator yet... :(")
   }
 
   # check if timepoints and sfreq can be reproduced in data
