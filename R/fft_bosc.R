@@ -4,8 +4,8 @@
 #' Performs an FFT on a time courses in an BOSC-Object.
 #'
 #' @param bosc BOSC-Object
-#' @param types Which data should be padded? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.
-#' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
+#' @param types Which data should be FFTed? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.
+#' @param levels Which levels of data need to be FFTed? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
 #' @param overwrite defaults to F
 #' @param verbose defaults to T
 #'
