@@ -28,5 +28,6 @@ Imports:
     utils,
     bspec,
     ggplot2,
-    circular
+    circular,
+    nls.multstart
 VignetteBuilder: knitr
