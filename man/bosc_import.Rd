@@ -20,7 +20,7 @@ bosc_import(
 
 \item{n_timepoints}{Number of unique timepoints in dataset}
 
-\item{vars}{The index variables in your data frame that identify (1) subjects, (2) timepoints, (3) trials, and (4) the responses. Insert the names as a vector in the order specified before (ie. c = ("subj", "time", "trial", "resp")), regardless of the order they occur in your dataset.}
+\item{vars}{The index variables in your data frame that identify (1) subjects, (2) timepoints, (3) trials (only for single trial), and (4) the responses. Insert the names as a vector in the order specified before (ie. c = ("subj", "time", "trial", "resp")), regardless of the order they occur in your dataset.}
 
 \item{level}{Specify the level of your data, e.g. "single_trial", "ss" or "ga"}
 
