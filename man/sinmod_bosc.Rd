@@ -23,18 +23,18 @@ sinmod_bosc(
 
 \item{fixed_f}{NULL to test all possible frequencies between 0 and nyquist, or specify a vector of frequencies}
 
+\item{niter}{number of iterations for fitting, is piped into iter argument in nls.multstart function}
+
 \item{overwrite}{defaults to F}
 
 \item{verbose}{defaults to T}
-
-\item{return_all}{only relevant if fixed_f is =! NULL. defaults to F. if T, results for all fixed frequencies will be returned. otherwise, only winner frequency results will be returned}
 }
 \value{
 A BOSC-Object
 }
 \description{
 \code{sinmod_bosc}
-Fits sinusoidal model to a time courses in an BOSC-Object.
+Fits sinusoidal model to a time courses in an BOSC-Object using nls.multstart.
 }
 \examples{
 bosc = simulate_experiment()

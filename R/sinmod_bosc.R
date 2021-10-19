@@ -1,13 +1,13 @@
 #' sinmod_bosc
 #'
 #' @description \code{sinmod_bosc}
-#' Fits sinusoidal model to a time courses in an BOSC-Object.
+#' Fits sinusoidal model to a time courses in an BOSC-Object using nls.multstart.
 #'
 #' @param bosc BOSC-Object
 #' @param types Which data should be modelled? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.
 #' @param levels Which levels of data need to be modelled? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
 #' @param fixed_f NULL to test all possible frequencies between 0 and nyquist, or specify a vector of frequencies
-#' @param return_all only relevant if fixed_f is =! NULL. defaults to F. if T, results for all fixed frequencies will be returned. otherwise, only winner frequency results will be returned
+#' @param niter number of iterations for fitting, is piped into iter argument in nls.multstart function
 #' @param overwrite defaults to F
 #' @param verbose defaults to T
 #'
@@ -128,8 +128,8 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                           estimates = purrr::map(fit, broom::tidy),
                           gof = purrr::map(fit, broom::glance),
                           r2 = purrr::map(.x = fit, .y = data, ~ modelr::rsquare(model = .x, data = .y))) %>%
-            tidyr::unnest(cols = c(estimates, gof)) %>%
-            dplyr::select(-c(data, fit))
+            tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
+            dplyr::select(-c(.data$data, .data$fit))
       }else{
         bosc$data[[iLevel]][[iType]]$sinmod = bosc$data[[iLevel]][[iType]]$data %>%
           dplyr::group_by(!!!group_vars) %>%
@@ -145,8 +145,8 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                         estimates = purrr::map(fit, broom::tidy),
                         gof = purrr::map(fit, broom::glance),
                         r2 = purrr::map(.x = fit, .y = data, ~ modelr::rsquare(model = .x, data = .y))) %>%
-          tidyr::unnest(cols = c(estimates, gof)) %>%
-          dplyr::select(-c(data, fit))
+          tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
+          dplyr::select(-c(.data$data, .data$fit))
         }
 
       }else{
@@ -173,9 +173,9 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
         # fit sinmod for every fixed frequency
         bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
           dplyr::mutate(helper = 1) %>%
-          dplyr::full_join(x = ., y = freqs, by = helper) %>%
-          dplyr::select(-helper) %>%
-          dplyr::mutate(f = fixed_f) %>%
+          dplyr::full_join(x = ., y = freqs, by = .data$helper) %>%
+          dplyr::select(-.data$helper) %>%
+          dplyr::mutate(f = .data$fixed_f) %>%
           dplyr::group_by(!!!group_vars) %>%
           tidyr::nest() %>%
           dplyr::mutate(fit = purrr::map(data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
@@ -189,8 +189,8 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                         estimates = purrr::map(fit, broom::tidy),
                         gof = purrr::map(fit, broom::glance),
                         r2 = purrr::map(.x = fit, .y = data, ~ modelr::rsquare(model = .x, data = .y))) %>%
-          tidyr::unnest(cols = c(estimates, gof)) %>%
-          dplyr::select(-c(data, fit))
+          tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
+          dplyr::select(-c(.data$data, .data$fit))
 
       }
 
