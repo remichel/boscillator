@@ -29,5 +29,8 @@ Imports:
     bspec,
     ggplot2,
     circular,
-    nls.multstart
+    nls.multstart,
+    broom,
+    purrr,
+    modelr
 VignetteBuilder: knitr
