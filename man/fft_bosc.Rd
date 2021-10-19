@@ -15,9 +15,9 @@ fft_bosc(
 \arguments{
 \item{bosc}{BOSC-Object}
 
-\item{types}{Which data should be padded? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.}
+\item{types}{Which data should be FFTed? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.}
 
-\item{levels}{Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
+\item{levels}{Which levels of data need to be FFTed? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
 
 \item{overwrite}{defaults to F}
 
