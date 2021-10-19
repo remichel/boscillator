@@ -21,7 +21,7 @@
 #' bosc = simulate_experiment()
 #' bosc = sinmod_bosc(bosc, types = "real", levels = "ga")
 #'
-sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_f = NULL, overwrite = FALSE, verbose = T) {
+sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_f = NULL, niter = 500, overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -88,76 +88,116 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
         }
       }
 
-      # define group vars
-      # define group vars
-      if (iType == "real") {
-        if(iLevel == "ss"){
-          group_vars = dplyr::sym("subj")
-        }else{
-          group_vars = dplyr::syms(NULL)
-        }
-      }else if(iType == "surrogate"){
-        if(iLevel == "ss"){
-          group_vars = dplyr::syms(c("subj", "n_surr"))
-        }else{
-          group_vars = dplyr::sym("n_surr")
-        }
-      }
 
       # sinmod
       sinModel <- function(t, intercept, a, f, phi) {
         intercept + a * sin(2 * pi * t * f + phi)
       }
 
-      rsq <- function(.data, hr, time){
+      if(is.null(fixed_f)){
 
-        modelr::rsquare(nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
-                                                     data = .data,
-                                                     lower = c(intercept = -Inf, a = 0, f = fres, phi = 0),
-                                                     upper = c(intercept = Inf, a = Inf, f = nyquist, phi = 2 * pi),
-                                                     start_lower = c(intercept = .2, a = .2, f = fbins[floor(length(fbins)/4)], phi = 1 / 2 * pi),
-                                                     start_upper = c(intercept = .8, a = .8, f = floor(3*length(fbins)/4), phi = 3 / 2 * pi),
-                                                     iter = 500,
-                                                     supp_errors = "Y"), .)
-      }
-
-      if(!is.null(fixed_f)){
-        tmp = bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::group_by(!!!group_vars) %>%
-          dplyr::summarise(r2 = dplyr::do(rsq(., hr, time)))
-
-        bosc$data[[iLevel]][[iType]]$sinmod$params = test$m$getPars()
-        bosc$data[[iLevel]][[iType]]$sinmod$rsquared = modelr(tmp, )
-      }else{
-
-      }
-
-        #dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(fbins)+1)]) %>%
-        #dplyr::mutate(amp = Mod(.data$complex)) %>%
-        #dplyr::mutate(phase = Arg(.data$complex)) %>%
-        #dplyr::mutate(f = !!fbins) %>%
-        #dplyr::relocate(.data$f, .before = .data$complex)
-
-      # merge single subject spectra
-      if(iLevel == "ss"){
-
-        # determine group vars
-        if(iType == "surrogate"){
-          group_vars = dplyr::syms(c("n_surr", "f"))
-        }else if(iType == "real"){
-          group_vars = dplyr::sym("f")
+        # define group vars
+        if (iType == "real") {
+          if(iLevel == "ss"){
+            group_vars = dplyr::sym("subj")
+          }else{
+            group_vars = dplyr::syms(NULL)
+          }
+        }else if(iType == "surrogate"){
+          if(iLevel == "ss"){
+            group_vars = dplyr::syms(c("subj", "n_surr"))
+          }else{
+            group_vars = dplyr::sym("n_surr")
+          }
         }
 
-        # merge spectra across subjects
-        #bosc$data$merged_spectra[[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$sinmod %>%
-        #  dplyr::group_by(!!!group_vars) %>%
-        #  dplyr::summarise(amp = mean(.data$amp))
+
+        # fit sinmod for every group_var
+        if(length(group_vars) > 0){
+          bosc$data[[iLevel]][[iType]]$sinmod = bosc$data[[iLevel]][[iType]]$data %>%
+            dplyr::group_by(!!!group_vars) %>%
+            tidyr::nest() %>%
+            dplyr::mutate(fit = purrr::map(data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
+                                                                                data = .x,
+                                                                                lower = c(intercept = -Inf, a = 0, f = fres, phi = 0),
+                                                                                upper = c(intercept = Inf, a = Inf, f = nyquist, phi = 2 * pi),
+                                                                                start_lower = c(intercept = .2, a = .2, f = fbins[floor(length(fbins)/4)], phi = 1 / 2 * pi),
+                                                                                start_upper = c(intercept = .8, a = .8, f = floor(3*length(fbins)/4), phi = 3 / 2 * pi),
+                                                                                iter = niter,
+                                                                                supp_errors = "Y")),
+                          estimates = purrr::map(fit, broom::tidy),
+                          gof = purrr::map(fit, broom::glance),
+                          r2 = purrr::map(.x = fit, .y = data, ~ modelr::rsquare(model = .x, data = .y))) %>%
+            tidyr::unnest(cols = c(estimates, gof)) %>%
+            dplyr::select(-c(data, fit))
+      }else{
+        bosc$data[[iLevel]][[iType]]$sinmod = bosc$data[[iLevel]][[iType]]$data %>%
+          dplyr::group_by(!!!group_vars) %>%
+          tidyr::nest(data = dplyr::everything()) %>%
+          dplyr::mutate(fit = purrr::map(data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
+                                                                              data = .x,
+                                                                              lower = c(intercept = -Inf, a = 0, f = fres, phi = 0),
+                                                                              upper = c(intercept = Inf, a = Inf, f = nyquist, phi = 2 * pi),
+                                                                              start_lower = c(intercept = .2, a = .2, f = fbins[floor(length(fbins)/4)], phi = 1 / 2 * pi),
+                                                                              start_upper = c(intercept = .8, a = .8, f = floor(3*length(fbins)/4), phi = 3 / 2 * pi),
+                                                                              iter = niter,
+                                                                              supp_errors = "Y")),
+                        estimates = purrr::map(fit, broom::tidy),
+                        gof = purrr::map(fit, broom::glance),
+                        r2 = purrr::map(.x = fit, .y = data, ~ modelr::rsquare(model = .x, data = .y))) %>%
+          tidyr::unnest(cols = c(estimates, gof)) %>%
+          dplyr::select(-c(data, fit))
+        }
+
+      }else{
+
+        # define group vars
+        if (iType == "real") {
+          if(iLevel == "ss"){
+            group_vars = dplyr::syms(c("subj", "fixed_f"))
+          }else{
+            group_vars = dplyr::sym("fixed_f")
+          }
+        }else if(iType == "surrogate"){
+          if(iLevel == "ss"){
+            group_vars = dplyr::syms(c("subj", "n_surr", "fixed_f"))
+          }else{
+            group_vars = dplyr::syms(c("n_surr", "fixed_f"))
+          }
+        }
+
+        # fixed frequencies dataframe to join it with dataset
+        freqs = as.data.frame(fixed_f)
+        freqs$helper = 1
+
+        # fit sinmod for every fixed frequency
+        bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
+          dplyr::mutate(helper = 1) %>%
+          dplyr::full_join(x = ., y = freqs, by = helper) %>%
+          dplyr::select(-helper) %>%
+          dplyr::mutate(f = fixed_f) %>%
+          dplyr::group_by(!!!group_vars) %>%
+          tidyr::nest() %>%
+          dplyr::mutate(fit = purrr::map(data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
+                                                                              data = .x,
+                                                                              lower = c(intercept = -Inf, a = 0, phi = 0),
+                                                                              upper = c(intercept = Inf, a = Inf, phi = 2 * pi),
+                                                                              start_lower = c(intercept = .2, a = .2, phi = 1 / 2 * pi),
+                                                                              start_upper = c(intercept = .8, a = .8, phi = 3 / 2 * pi),
+                                                                              iter = niter,
+                                                                              supp_errors = "Y")),
+                        estimates = purrr::map(fit, broom::tidy),
+                        gof = purrr::map(fit, broom::glance),
+                        r2 = purrr::map(.x = fit, .y = data, ~ modelr::rsquare(model = .x, data = .y))) %>%
+          tidyr::unnest(cols = c(estimates, gof)) %>%
+          dplyr::select(-c(data, fit))
+
+      }
+
+
       }
 
     }
-
-
-  }
 
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "sinmod_")
