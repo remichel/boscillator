@@ -1,7 +1,7 @@
 #' test_fft
 #'
 #' @description \code{test_fft}
-#' Performs an FFT on a time courses in an BOSC-Object.
+#' Performs statistical test on frequency spectra obtained from fft_bosc.
 #'
 #' @param bosc BOSC-Object
 #' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
