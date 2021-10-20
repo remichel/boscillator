@@ -1,7 +1,7 @@
 #' sinmod_bosc
 #'
 #' @description \code{sinmod_bosc}
-#' Fits sinusoidal model to a time courses in an BOSC-Object using nls.multstart.
+#' Fits sinusoidal model to a time courses in an BOSC-Object using nls.multstart. If not specified otherwise in fixed_f, only the winner model according to nls.multstart (across all frequencies tested by the algorithm) will be reported.
 #'
 #' @param bosc BOSC-Object
 #' @param types Which data should be modelled? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.
@@ -127,7 +127,7 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                                                                                 supp_errors = "Y")),
                           estimates = purrr::map(.data$fit, broom::tidy),
                           gof = purrr::map(.data$fit, broom::glance),
-                          r2 = purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y))) %>%
+                          r2 = unlist(purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y)))) %>%
             tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
             dplyr::select(-c(.data$data, .data$fit))
       }else{
@@ -144,7 +144,7 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                                                                               supp_errors = "Y")),
                         estimates = purrr::map(.data$fit, broom::tidy),
                         gof = purrr::map(.data$fit, broom::glance),
-                        r2 = purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y))) %>%
+                        r2 = unlist(purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y)))) %>%
           tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
           dplyr::select(-c(.data$data, .data$fit))
         }
@@ -189,7 +189,7 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                                                                               supp_errors = "Y")),
                         estimates = purrr::map(.data$fit, broom::tidy),
                         gof = purrr::map(.data$fit, broom::glance),
-                        r2 = purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y))) %>%
+                        r2 = unlist(purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y)))) %>%
           tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
           dplyr::select(-c(.data$data, .data$fit))
 
