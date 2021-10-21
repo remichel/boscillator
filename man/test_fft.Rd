@@ -37,7 +37,7 @@ A BOSC-Object
 }
 \description{
 \code{test_fft}
-Performs an FFT on a time courses in an BOSC-Object.
+Performs statistical test on frequency spectra obtained from fft_bosc.
 }
 \examples{
 bosc = simulate_experiment()

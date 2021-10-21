@@ -34,7 +34,7 @@ A BOSC-Object
 }
 \description{
 \code{sinmod_bosc}
-Fits sinusoidal model to a time courses in an BOSC-Object using nls.multstart.
+Fits sinusoidal model to a time courses in an BOSC-Object using nls.multstart. If not specified otherwise in fixed_f, only the winner model according to nls.multstart (across all frequencies tested by the algorithm) will be reported.
 }
 \examples{
 bosc = simulate_experiment()
