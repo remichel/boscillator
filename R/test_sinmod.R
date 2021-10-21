@@ -6,7 +6,7 @@
 #' @param bosc BOSC-Object
 #' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
 #' @param tests  Which test to perform?
-#' @param alpha_r2 Which alpha level to apply for R² permutation test
+#' @param alpha_r2 Which alpha level to apply for R2 permutation test
 #' @param overwrite defaults to F
 #' @param verbose defaults to T
 #'
@@ -90,7 +90,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha_r2 = .05, ov
           }
         }
 
-        if(verbose == T) message("Comparing Observed R² against Permutations (alpha = ", alpha_r2,")...")
+        if(verbose == T) message("Comparing Observed R2 against Permutations (alpha = ", alpha_r2,")...")
 
 
         # join permutations and observed r2 and determine crit value & p value
@@ -106,14 +106,14 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha_r2 = .05, ov
                           p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%
             dplyr::distinct(.data$crit_value, .keep_all = T) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
-            dplyr::relocate(c(.data$fixed_f, .data$r2_observed), .before = n_surrogates) %>%
+            dplyr::relocate(c(.data$fixed_f, .data$r2_observed), .before = .data$n_surrogates) %>%
             dplyr::mutate(alpha = !!alpha_r2,
                           sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
                                                  .data$r2_observed <= .data$crit_value ~ 0))
         }else{
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$sinmod %>%
             dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(join_vars, "term"), suffix = c("_surr", "_observed")) %>%
-            dplyr::filter(term == "f") %>%
+            dplyr::filter(.data$term == "f") %>%
             dplyr::select(.data$estimate_observed, .data$r2_surr, .data$r2_observed) %>%
             dplyr::ungroup() %>%
             dplyr::group_by(!!!group_vars) %>%
@@ -122,7 +122,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha_r2 = .05, ov
                           p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%
             dplyr::distinct(.data$crit_value, .keep_all = T) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
-            dplyr::relocate(c(.data$estimate_observed, .data$r2_observed), .before = n_surrogates) %>%
+            dplyr::relocate(c(.data$estimate_observed, .data$r2_observed), .before = .data$n_surrogates) %>%
             dplyr::mutate(alpha = !!alpha_r2,
                           sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
                                                  .data$r2_observed <= .data$crit_value ~ 0))

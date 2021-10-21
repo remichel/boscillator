@@ -20,7 +20,7 @@ test_sinmod(
 
 \item{tests}{Which test to perform?}
 
-\item{alpha_r2}{Which alpha level to apply for R² permutation test}
+\item{alpha_r2}{Which alpha level to apply for R2 permutation test}
 
 \item{overwrite}{defaults to F}
 
