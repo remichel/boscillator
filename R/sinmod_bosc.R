@@ -114,7 +114,7 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
 
         # fit sinmod for every group_var
         if(length(group_vars) > 0){
-          bosc$data[[iLevel]][[iType]]$sinmod = bosc$data[[iLevel]][[iType]]$data %>%
+          bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
             dplyr::group_by(!!!group_vars) %>%
             tidyr::nest() %>%
             dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
@@ -125,13 +125,16 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                                                                                 start_upper = c(intercept = .8, a = .8, f = floor(3*length(fbins)/4), phi = 3 / 2 * pi),
                                                                                 iter = niter,
                                                                                 supp_errors = "Y")),
-                          estimates = purrr::map(.data$fit, broom::tidy),
+                          estimates = purrr::map(.data$fit, broom::tidy), # store all estimates here
+                          predictions = purrr::map(.data$fit, broom::augment),
                           gof = purrr::map(.data$fit, broom::glance),
+                          f = purrr::map(.data$fit, broom::tidy), # to unnest it later and extract only f
                           r2 = unlist(purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y)))) %>%
-            tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
-            dplyr::select(-c(.data$data, .data$fit))
+            tidyr::unnest(cols = c(.data$f)) %>%
+            dplyr::select(-c(.data$data, .data$std.error, .data$statistic, .data$p.value)) %>%
+            dplyr::filter(.data$term == "f")
       }else{
-        bosc$data[[iLevel]][[iType]]$sinmod = bosc$data[[iLevel]][[iType]]$data %>%
+        bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
           dplyr::group_by(!!!group_vars) %>%
           tidyr::nest(data = dplyr::everything()) %>%
           dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
@@ -142,11 +145,14 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
                                                                               start_upper = c(intercept = .8, a = .8, f = floor(3*length(fbins)/4), phi = 3 / 2 * pi),
                                                                               iter = niter,
                                                                               supp_errors = "Y")),
-                        estimates = purrr::map(.data$fit, broom::tidy),
+                        estimates = purrr::map(.data$fit, broom::tidy), # store all estimates here
+                        predictions = purrr::map(.data$fit, broom::augment),
                         gof = purrr::map(.data$fit, broom::glance),
+                        f = purrr::map(.data$fit, broom::tidy), # to unnest it later and extract only f
                         r2 = unlist(purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y)))) %>%
-          tidyr::unnest(cols = c(.data$estimates, .data$gof)) %>%
-          dplyr::select(-c(.data$data, .data$fit))
+          tidyr::unnest(cols = c(.data$estimates)) %>%
+          dplyr::select(-c(.data$data, .data$std.error, .data$statistic, .data$p.value)) %>%
+          dplyr::filter(.data$term == "f")
         }
 
       }else{
