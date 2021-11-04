@@ -6,13 +6,15 @@
 #' @param bosc BOSC-Object
 #' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
 #' @param tests  Which test to perform?
-#' @param alpha Vector of alpha levels to apply
+#' @param alpha Vector of alpha levels to apply. If you want to use multiple alpha levels, make sure to set mcc to "none"
 #' @param overwrite defaults to F
 #' @param verbose defaults to T
+#' @param mcc choose between "bonferroni", "fdr" and "none". if != "none", the first entry in alpha will be considered the family wise alpha error and all other entries in alpha will be ignored
 #'
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
+#' @importFrom rlang :=
 #' @export test_fft
 #' @name test_fft
 #'
@@ -22,7 +24,7 @@
 #' bosc = fft_bosc(bosc)
 #' bosc = test_fft(bosc, levels = "ga", tests = "amp-complex")
 #'
-test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex-phase", alpha = .05, overwrite = FALSE, verbose = T) {
+test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex-phase", alpha = .05, mcc = "bonferroni-fdr", overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -36,6 +38,18 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
     stop("Argument levels must be a character.")
   }else{
     iTest_list <- split_string_arg(tests, "-")
+  }
+
+  # get mccs
+  if(!is.character(mcc)){
+    stop("Argument mcc must be a character.")
+  }else{
+    mcc_list <- split_string_arg(mcc, "-")
+
+    if(length(mcc_list) > 0 & mcc_list[1] != "none"){
+      message("Multiple correction methods ", paste(mcc_list, collapse = " & ") , " were chosen. All alpha values except ", alpha[1], " will be ignored. \nInstead, ", alpha[1], " will be considered the desired family-wise alpha level for all MCC..\n")
+      alpha = alpha[1]
+      }
   }
 
   if(verbose == T) message("Starting tests...")
@@ -89,15 +103,50 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
           dplyr::summarize(crit_value = unname(stats::quantile(.data$amp, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                            p = 1-stats::ecdf(.data$amp)(.data$observed),
                            observed = .data$observed) %>%
-          dplyr::distinct() %>%
-          dplyr::mutate(sig = dplyr::case_when(.data$observed > .data$crit_value ~ 1,
-                                               .data$observed <= .data$crit_value ~ 0))
+          dplyr::distinct()
+
+
+        # MCC
+        if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
+
+          # get correct group vars for MCC
+          if (iLevel == "ss") {
+            group_vars = dplyr::syms(c("subj"))
+          }else if(iLevel == "ga" | iLevel == "merged_spectra"){
+            group_vars = NULL
+          }
+
+          # apply all MCC corrections
+          for(iMCC in mcc_list){
+
+            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+              dplyr::group_by(!!group_vars, .data$alpha) %>%
+              dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
+          }
+
+          # convert to long format and erase unused columns
+          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+            dplyr::group_by(!!group_vars, .data$alpha) %>%
+            dplyr::rename(uncorrected = .data$p) %>%
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
+            dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
+
+        }
+
+        # add significance column
+
+        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+          dplyr::mutate(sig = dplyr::case_when(.data$alpha > .data$p ~ 1,
+                                               .data$alpha <= .data$p ~ 0))
 
 
 
       }else if(iTest == "complex"){
 
         group_vars = dplyr::syms(c("subj", "f"))
+
+
+
 
         if(iLevel == "ga" | iLevel == "merged_spectra"){
           if(verbose == T) message("Note: Complex vector analysis needs to be performed on single subject data. Will skip and proceed with next test...")
@@ -120,6 +169,9 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
                         surrogate_phase = Arg(.data$surrogate)) %>%
           dplyr::ungroup()
 
+
+
+
         # determine critical vector length for each frequency
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
           dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
@@ -128,11 +180,42 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
                            p = 1-stats::ecdf(.data$surrogate_length)(.data$observed_length),
                            observed_length = .data$observed_length) %>%
           dplyr::distinct() %>%
-          dplyr::relocate(.data$alpha, .after = .data$f) %>%
-          dplyr::mutate(sig = dplyr::case_when(.data$observed_length > .data$crit_length ~ 1,
-                                               .data$observed_length <= .data$crit_length ~ 0))
+          dplyr::relocate(.data$alpha, .after = .data$f) #%>%
+          #dplyr::mutate(sig = dplyr::case_when(.data$observed_length > .data$crit_length ~ 1,
+          #                                     .data$observed_length <= .data$crit_length ~ 0))
+
+
+        # MCC
+        if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
+
+          # apply all MCC corrections
+          for(iMCC in mcc_list){
+
+            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+              dplyr::group_by(.data$alpha) %>%
+              dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
+          }
+
+          # convert to long format and erase unused columns
+          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+            dplyr::group_by(.data$alpha) %>%
+            dplyr::rename(uncorrected = .data$p) %>%
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
+            dplyr::select(-.data$crit_length) # misleading if mcc is used, as it refers to uncorrected alpha
+
+        }
+
+        # add significance column
+
+        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+          dplyr::mutate(sig = dplyr::case_when(.data$alpha > .data$p ~ 1,
+                                               .data$alpha <= .data$p ~ 0))
+
+
+
 
       }else if(iTest == "phase"){
+
 
         # skip grand average level
         if(iLevel == "ga" | iLevel == "merged_spectra"){
@@ -148,9 +231,38 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
           dplyr::summarize(mean_phase = circular::mean.circular(circular::circular(.data$phase, units = c("radians"))),
                            statistic = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$statistic,
                            p = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$p.value) %>%
-          dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
-          dplyr::mutate(sig = dplyr::case_when(.data$p < .data$alpha ~ 1,
-                                        .data$p >= .data$alpha ~ 0))
+          dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) #%>%
+          #dplyr::mutate(sig = dplyr::case_when(.data$p < .data$alpha ~ 1,
+          #                              .data$p >= .data$alpha ~ 0))
+
+
+
+        # MCC
+        if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
+
+          # apply all MCC corrections
+          for(iMCC in mcc_list){
+
+            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+              dplyr::group_by(.data$alpha) %>%
+              dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
+          }
+
+          # convert to long format and erase unused columns
+          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+            dplyr::group_by(.data$alpha) %>%
+            dplyr::rename(uncorrected = .data$p) %>%
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p")
+
+        }
+
+        # add significance column
+
+        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+          dplyr::mutate(sig = dplyr::case_when(.data$alpha > .data$p ~ 1,
+                                               .data$alpha <= .data$p ~ 0))
+
+
 
       }
 

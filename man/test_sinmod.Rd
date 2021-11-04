@@ -9,6 +9,7 @@ test_sinmod(
   levels = "ss-ga",
   tests = "r2",
   alpha = 0.05,
+  mcc = "bonferroni-fdr",
   overwrite = FALSE,
   verbose = T
 )
@@ -20,7 +21,9 @@ test_sinmod(
 
 \item{tests}{Which test to perform?}
 
-\item{alpha}{Vector of alpha levels to apply for R2 permutation test}
+\item{alpha}{Vector of alpha levels to apply. If you want to use multiple alpha levels, make sure to set mcc to "none"}
+
+\item{mcc}{choose between "bonferroni", "fdr" and "none". if != "none", the first entry in alpha will be considered the family wise alpha error and all other entries in alpha will be ignored}
 
 \item{overwrite}{defaults to F}
 
