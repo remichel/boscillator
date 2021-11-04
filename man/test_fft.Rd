@@ -8,9 +8,7 @@ test_fft(
   bosc,
   levels = "ss-merged_spectra-ga",
   tests = "amp-complex-phase",
-  alpha_amp = 0.05,
-  alpha_complex = alpha_amp,
-  alpha_phase = alpha_amp,
+  alpha = 0.05,
   overwrite = FALSE,
   verbose = T
 )
@@ -22,11 +20,7 @@ test_fft(
 
 \item{tests}{Which test to perform?}
 
-\item{alpha_amp}{Which alpha level to apply for amplitude test}
-
-\item{alpha_complex}{Which alpha level to apply for complex plane test}
-
-\item{alpha_phase}{Which alpha level to apply for rayleigh test}
+\item{alpha}{Vector of alpha levels to apply}
 
 \item{overwrite}{defaults to F}
 

@@ -6,7 +6,7 @@
 #' @param bosc BOSC-Object
 #' @param levels Which levels of data need to be padded? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
 #' @param tests  Which test to perform?
-#' @param alpha_r2 Which alpha level to apply for R2 permutation test
+#' @param alpha Vector of alpha levels to apply for R2 permutation test
 #' @param overwrite defaults to F
 #' @param verbose defaults to T
 #'
@@ -22,7 +22,7 @@
 #' bosc = sinmod_bosc(bosc)
 #' bosc = test_sinmod(bosc, levels = "ga", tests = "r2")
 #'
-test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha_r2 = .05, overwrite = FALSE, verbose = T) {
+test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -90,7 +90,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha_r2 = .05, ov
           }
         }
 
-        if(verbose == T) message("Comparing Observed R2 against Permutations (alpha = ", alpha_r2,")...")
+        if(verbose == T) message("Comparing Observed R2 against Permutations (alpha = ", paste(alpha, collapse = ", "),")...")
 
 
         # join permutations and observed r2 and determine crit value & p value
@@ -100,15 +100,15 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha_r2 = .05, ov
             dplyr::select(.data$fixed_f, .data$r2_surr, .data$r2_observed) %>%
             dplyr::distinct() %>%
             dplyr::ungroup() %>%
-            dplyr::group_by(!!!group_vars) %>%
+            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::group_by(!!!group_vars, .data$alpha) %>%
             dplyr::mutate(n_surrogates = max(.data$n_surr),
-                          crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-!!alpha_r2, na.rm = T)), # is na.rm = T causing any harm here??
+                          crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                           p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%
             dplyr::distinct(.data$crit_value, .keep_all = T) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
             dplyr::relocate(c(.data$fixed_f, .data$r2_observed), .before = .data$n_surrogates) %>%
-            dplyr::mutate(alpha = !!alpha_r2,
-                          sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
+            dplyr::mutate(sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
                                                  .data$r2_observed <= .data$crit_value ~ 0))
         }else{
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$sinmod %>%
@@ -116,15 +116,15 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha_r2 = .05, ov
             dplyr::filter(.data$term == "f") %>%
             dplyr::select(.data$estimate_observed, .data$r2_surr, .data$r2_observed) %>%
             dplyr::ungroup() %>%
-            dplyr::group_by(!!!group_vars) %>%
+            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::group_by(!!!group_vars, .data$alpha) %>%
             dplyr::mutate(n_surrogates = max(.data$n_surr),
-                          crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-!!alpha_r2, na.rm = T)), # is na.rm = T causing any harm here??
+                          crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                           p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%
             dplyr::distinct(.data$crit_value, .keep_all = T) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
             dplyr::relocate(c(.data$estimate_observed, .data$r2_observed), .before = .data$n_surrogates) %>%
-            dplyr::mutate(alpha = !!alpha_r2,
-                          sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
+            dplyr::mutate(sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
                                                  .data$r2_observed <= .data$crit_value ~ 0))
         }
 

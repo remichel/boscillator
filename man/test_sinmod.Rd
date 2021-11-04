@@ -8,7 +8,7 @@ test_sinmod(
   bosc,
   levels = "ss-ga",
   tests = "r2",
-  alpha_r2 = 0.05,
+  alpha = 0.05,
   overwrite = FALSE,
   verbose = T
 )
@@ -20,7 +20,7 @@ test_sinmod(
 
 \item{tests}{Which test to perform?}
 
-\item{alpha_r2}{Which alpha level to apply for R2 permutation test}
+\item{alpha}{Vector of alpha levels to apply for R2 permutation test}
 
 \item{overwrite}{defaults to F}
 
