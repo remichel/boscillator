@@ -9,7 +9,7 @@ test_fft(
   levels = "ss-merged_spectra-ga",
   tests = "amp-complex-phase",
   alpha = 0.05,
-  mcc = "bonferroni-fdr",
+  mcc = "bonferroni-fdr-maxfreq",
   overwrite = FALSE,
   verbose = T
 )
@@ -23,7 +23,7 @@ test_fft(
 
 \item{alpha}{Vector of alpha levels to apply. If you want to use multiple alpha levels, make sure to set mcc to "none"}
 
-\item{mcc}{choose between "bonferroni", "fdr" and "none". if != "none", the first entry in alpha will be considered the family wise alpha error and all other entries in alpha will be ignored}
+\item{mcc}{choose between all methods available for stats::p.adjust, e.g."bonferroni", "fdr", and "maxfreq" or "none". if != "none", the first entry in alpha will be considered the family wise alpha error and all other entries in alpha will be ignored}
 
 \item{overwrite}{defaults to F}
 

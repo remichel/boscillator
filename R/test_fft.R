@@ -9,7 +9,7 @@
 #' @param alpha Vector of alpha levels to apply. If you want to use multiple alpha levels, make sure to set mcc to "none"
 #' @param overwrite defaults to F
 #' @param verbose defaults to T
-#' @param mcc choose between "bonferroni", "fdr" and "none". if != "none", the first entry in alpha will be considered the family wise alpha error and all other entries in alpha will be ignored
+#' @param mcc choose between all methods available for stats::p.adjust, e.g."bonferroni", "fdr", and "maxfreq" or "none". if != "none", the first entry in alpha will be considered the family wise alpha error and all other entries in alpha will be ignored
 #'
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%
@@ -24,7 +24,7 @@
 #' bosc = fft_bosc(bosc)
 #' bosc = test_fft(bosc, levels = "ga", tests = "amp-complex")
 #'
-test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex-phase", alpha = .05, mcc = "bonferroni-fdr", overwrite = FALSE, verbose = T) {
+test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex-phase", alpha = .05, mcc = "bonferroni-fdr-maxfreq", overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -40,6 +40,9 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
     iTest_list <- split_string_arg(tests, "-")
   }
 
+
+  if(verbose == T) message("Starting tests...")
+
   # get mccs
   if(!is.character(mcc)){
     stop("Argument mcc must be a character.")
@@ -49,10 +52,8 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
     if(length(mcc_list) > 0 & mcc_list[1] != "none"){
       message("Multiple correction methods ", paste(mcc_list, collapse = " & ") , " were chosen. All alpha values except ", alpha[1], " will be ignored. \nInstead, ", alpha[1], " will be considered the desired family-wise alpha level for all MCC..\n")
       alpha = alpha[1]
-      }
+    }
   }
-
-  if(verbose == T) message("Starting tests...")
 
 
   # loop through all conditions
@@ -103,21 +104,76 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
           dplyr::summarize(crit_value = unname(stats::quantile(.data$amp, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                            p = 1-stats::ecdf(.data$amp)(.data$observed),
                            observed = .data$observed) %>%
-          dplyr::distinct()
+          dplyr::distinct() %>%
+          dplyr::ungroup()
+
+
+        if("maxfreq" %in% mcc_list){
+
+
+          # get correct group vars
+          if (iLevel == "ss") {
+            group_vars = dplyr::sym("subj")
+          }else if(iLevel == "ga" | iLevel == "merged_spectra"){
+            group_vars = NULL
+          }
+
+          # get p values for max freq approach
+          maxfreq <- bosc$data[[iLevel]]$surrogate$fft %>%
+            dplyr::group_by(.data$n_surr) %>%
+            dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
+            dplyr::ungroup() %>%
+            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::group_by(!!!group_vars, .data$n_surr, .data$alpha) %>%
+            dplyr::summarise(max = max(.data$amp),
+                             observed = .data$observed,
+                             f = .data$f) %>%
+            dplyr::group_by(!!!group_vars,.data$alpha) %>%
+            dplyr::summarize(crit_value = unname(stats::quantile(.data$max, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
+                             p = 1-stats::ecdf(.data$max)(.data$observed),
+                             observed = .data$observed,
+                             f = .data$f) %>%
+            dplyr::relocate(.data$f, .before = .data$alpha) %>%
+            dplyr::distinct()
+
+          # add max freq p values to results table
+          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+            dplyr::mutate(maxfreq = !!maxfreq$p)
+
+
+          # if no other mcc is applied, clean dataset now
+          if(length(mcc_list) == 1){
+
+            # pivot longer
+            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+              dplyr::group_by(!!group_vars, .data$alpha) %>%
+              dplyr::rename(uncorrected = .data$p) %>%
+              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
+              dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
+          }
+        }
+
 
 
         # MCC
         if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
 
+          # exclude maxfreq from the "to-be-computed" list, but keep mcc_list for the pivot longer cols argument
+          if("maxfreq" %in% mcc_list){
+            padjust_list = mcc_list[-which(mcc_list == "maxfreq")]
+          }else{
+            padjust_list = mcc_list
+          }
+
           # get correct group vars for MCC
           if (iLevel == "ss") {
-            group_vars = dplyr::syms(c("subj"))
+            group_vars = dplyr::sym("subj")
           }else if(iLevel == "ga" | iLevel == "merged_spectra"){
             group_vars = NULL
           }
 
           # apply all MCC corrections
-          for(iMCC in mcc_list){
+          for(iMCC in padjust_list){
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(!!group_vars, .data$alpha) %>%
@@ -133,8 +189,8 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
 
         }
 
-        # add significance column
 
+        # add significance column
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
           dplyr::mutate(sig = dplyr::case_when(.data$alpha > .data$p ~ 1,
                                                .data$alpha <= .data$p ~ 0))
@@ -180,16 +236,71 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
                            p = 1-stats::ecdf(.data$surrogate_length)(.data$observed_length),
                            observed_length = .data$observed_length) %>%
           dplyr::distinct() %>%
-          dplyr::relocate(.data$alpha, .after = .data$f) #%>%
+          dplyr::relocate(.data$alpha, .after = .data$f) %>%
+          dplyr::ungroup() #%>%
           #dplyr::mutate(sig = dplyr::case_when(.data$observed_length > .data$crit_length ~ 1,
           #                                     .data$observed_length <= .data$crit_length ~ 0))
+
+
+
+        if("maxfreq" %in% mcc_list){
+
+
+          # get correct group vars
+          if (iLevel == "ss") {
+            group_vars = dplyr::syms("subj")
+          }else if(iLevel == "ga" | iLevel == "merged_spectra"){
+            group_vars = NULL
+          }
+
+          # get p values for max freq approach
+          maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
+            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::group_by(.data$n_surr, .data$alpha) %>%
+            dplyr::summarise(max = max(.data$surrogate_length),
+                             observed_length = .data$observed_length,
+                             f = .data$f) %>%
+            dplyr::group_by(.data$alpha) %>%
+            dplyr::summarize(crit_length = unname(stats::quantile(.data$max, probs = 1-alpha)),
+                             p = 1-stats::ecdf(.data$max)(.data$observed_length),
+                             observed_length = .data$observed_length,
+                             f = .data$f) %>%
+            dplyr::distinct() %>%
+            dplyr::relocate(.data$f, .data$alpha, .before = .data$observed_length)
+
+          # add max freq p values to results table
+          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+            dplyr::mutate(maxfreq = !!maxfreq$p)
+
+
+          # if no other mcc is applied, clean dataset now
+          if(length(mcc_list) == 1){
+
+            # pivot longer
+            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+              dplyr::group_by(!!group_vars, .data$alpha) %>%
+              dplyr::rename(uncorrected = .data$p) %>%
+              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
+              dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
+          }
+        }
+
+
 
 
         # MCC
         if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
 
+
+          # exclude maxfreq from the "to-be-computed" list, but keep mcc_list for the pivot longer cols argument
+          if("maxfreq" %in% mcc_list){
+            padjust_list = mcc_list[-which(mcc_list == "maxfreq")]
+          }else{
+            padjust_list = mcc_list
+          }
+
           # apply all MCC corrections
-          for(iMCC in mcc_list){
+          for(iMCC in padjust_list){
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(.data$alpha) %>%
@@ -206,7 +317,6 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
         }
 
         # add significance column
-
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
           dplyr::mutate(sig = dplyr::case_when(.data$alpha > .data$p ~ 1,
                                                .data$alpha <= .data$p ~ 0))
@@ -240,8 +350,16 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
         # MCC
         if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
 
+          # check if maxfreq is in mcclist and exclude it
+          if("maxfreq" %in% mcc_list){
+            phase_mcc_list = mcc_list[-which(mcc_list == "maxfreq")]
+            message("Max Freq MCC method not applicable to phase test. Will be skipped...")
+          }else{
+            phase_mcc_list = mcc_list
+          }
+
           # apply all MCC corrections
-          for(iMCC in mcc_list){
+          for(iMCC in phase_mcc_list){
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(.data$alpha) %>%
@@ -252,7 +370,7 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
           bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
             dplyr::group_by(.data$alpha) %>%
             dplyr::rename(uncorrected = .data$p) %>%
-            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p")
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!phase_mcc_list), names_to = "mcc_method", values_to = "p")
 
         }
 
