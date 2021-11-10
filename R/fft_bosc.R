@@ -121,7 +121,7 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
         }
 
         # merge spectra across subjects
-        bosc$data$merged_spectra[[iType]]$fft <- bosc$data[[iLevel]][[iType]]$fft %>%
+        bosc$data$merged[[iType]]$fft <- bosc$data[[iLevel]][[iType]]$fft %>%
           dplyr::group_by(!!!group_vars) %>%
           dplyr::summarise(amp = mean(.data$amp))
       }
