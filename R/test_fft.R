@@ -24,7 +24,7 @@
 #' bosc = fft_bosc(bosc)
 #' bosc = test_fft(bosc, levels = "ga", tests = "amp-complex")
 #'
-test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex-phase", alpha = .05, mcc = "bonferroni-fdr-maxfreq", overwrite = FALSE, verbose = T) {
+test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase", alpha = .05, mcc = "bonferroni-fdr-maxfreq", overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -65,9 +65,16 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
 
 
       # check if required data exists
-      if(is.null(bosc$data[[iLevel]]$real$fft) | is.null(bosc$data[[iLevel]]$surrogate$fft)){
-        if(verbose == T) message(paste("No data found in ", iLevel, ".\nWill continue with next iType/iLevel..."))
-        next
+      if(iTest == "ss" | iTest == "ga"){
+        if(is.null(bosc$data[[iLevel]]$real$fft) | is.null(bosc$data[[iLevel]]$surrogate$fft)){
+          if(verbose == T) message(paste("No data found in ", iLevel, ".\nWill continue with next Type/Level..."))
+          next
+        }
+      }else{
+        if(is.null(bosc$data$ss$real$fft) | is.null(bosc$data$ss$surrogate$fft)){
+          if(verbose == T) message(paste("No data found in ss.\nWill continue with next Type/Level..."))
+          next
+        }
       }
 
       # check if test data exists
@@ -88,7 +95,7 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
         # get correct group vars depending on the analysis level
         if (iLevel == "ss") {
           group_vars = dplyr::syms(c("subj", "f"))
-        }else if(iLevel == "ga" | iLevel == "merged_spectra"){
+        }else if(iLevel == "ga" | iLevel == "merged"){
           group_vars = dplyr::syms("f")
         }
 
@@ -114,7 +121,7 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
           # get correct group vars
           if (iLevel == "ss") {
             group_vars = dplyr::sym("subj")
-          }else if(iLevel == "ga" | iLevel == "merged_spectra"){
+          }else if(iLevel == "ga" | iLevel == "merged"){
             group_vars = NULL
           }
 
@@ -168,7 +175,7 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
           # get correct group vars for MCC
           if (iLevel == "ss") {
             group_vars = dplyr::sym("subj")
-          }else if(iLevel == "ga" | iLevel == "merged_spectra"){
+          }else if(iLevel == "ga" | iLevel == "merged"){
             group_vars = NULL
           }
 
@@ -204,17 +211,17 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
 
 
 
-        if(iLevel == "ga" | iLevel == "merged_spectra"){
-          if(verbose == T) message("Note: Complex vector analysis needs to be performed on single subject data. Will skip and proceed with next test...")
+        if(iLevel == "ga" | iLevel == "ss"){
+          if(verbose == T) message("Note: Complex vector analysis needs to be performed with level = merged. Will skip and proceed with next test...")
           next
-        }else if(iLevel == "ss"){
+        }else if(iLevel == "merged"){
           if(verbose == T) message("Compare FFT complex vectors against permutations (alpha = ", paste(alpha, collapse = ", "),") ...")
         }
 
         # save single surrogate data for 2d plot
-        bosc$tests$fft[[iLevel]][[iTest]]$data = bosc$data[[iLevel]]$surrogate$fft %>%
+        bosc$tests$fft[[iLevel]][[iTest]]$data = bosc$data$ss$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(observed = !!bosc$data[[iLevel]]$real$fft$complex) %>%
+          dplyr::mutate(observed = !!bosc$data$ss$real$fft$complex) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr, .data$f) %>%
           dplyr::summarize(observed = mean(.data$observed),
@@ -245,14 +252,6 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
 
         if("maxfreq" %in% mcc_list){
 
-
-          # get correct group vars
-          if (iLevel == "ss") {
-            group_vars = dplyr::syms("subj")
-          }else if(iLevel == "ga" | iLevel == "merged_spectra"){
-            group_vars = NULL
-          }
-
           # get p values for max freq approach
           maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
@@ -278,7 +277,7 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
 
             # pivot longer
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-              dplyr::group_by(!!group_vars, .data$alpha) %>%
+              dplyr::group_by(.data$alpha) %>%
               dplyr::rename(uncorrected = .data$p) %>%
               tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
               dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
@@ -328,7 +327,7 @@ test_fft <- function(bosc, levels = "ss-merged_spectra-ga", tests = "amp-complex
 
 
         # skip grand average level
-        if(iLevel == "ga" | iLevel == "merged_spectra"){
+        if(iLevel == "ga" | iLevel == "merged"){
           if(verbose == T) message("Note: Phase analysis needs to be performed on single subject data. Will skip and proceed with next test...")
           next
         }
