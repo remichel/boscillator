@@ -45,6 +45,7 @@ pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = 
     #stop("Number of pads needs to be either positive or zero (for skipping zero-padding")
     message("Number of pads is negative. Will use default option n_pads = length(bosc$timepoints) instead...")
     n_pads = length(bosc$timepoints)
+    skip = F
   }else if(n_pads == 0){
     skip = T
   }else{
