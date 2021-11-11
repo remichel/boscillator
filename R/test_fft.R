@@ -239,7 +239,7 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
           dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
           dplyr::group_by(.data$f, .data$alpha) %>%
-          dplyr::summarize(crit_length = unname(stats::quantile(.data$surrogate_length, probs = 1-alpha)),
+          dplyr::summarize(crit_length = unname(stats::quantile(.data$surrogate_length, probs = 1-alpha, na.rm = T)), # does it cause harm here?
                            p = 1-stats::ecdf(.data$surrogate_length)(.data$observed_length),
                            observed_length = .data$observed_length) %>%
           dplyr::distinct() %>%
@@ -260,7 +260,7 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
                              observed_length = .data$observed_length,
                              f = .data$f) %>%
             dplyr::group_by(.data$alpha) %>%
-            dplyr::summarize(crit_length = unname(stats::quantile(.data$max, probs = 1-alpha)),
+            dplyr::summarize(crit_length = unname(stats::quantile(.data$max, probs = 1-alpha, na.rm = T)), # does it cause harm here?
                              p = 1-stats::ecdf(.data$max)(.data$observed_length),
                              observed_length = .data$observed_length,
                              f = .data$f) %>%
