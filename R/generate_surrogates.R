@@ -108,32 +108,30 @@ generate_surrogates <-
         #    dplyr::group_by(.data$subj) %>%
         #    dplyr::mutate(ar1 = simulate(Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
 
-        ss = bosc$data$ss$real$data %>%
+      bosc$data$ss$surrogate$data = bosc$data$ss$real$data %>%
           dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$subj, .data$time) %>%
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$subj, .data$n_surr) %>%
-          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
-        bosc$data$ss$surrogate$data <- ss
         bosc$data$ss$surrogate$spec <- list(
           n_seed = n_seed,
           method = method,
           n_surr = n_surr)
 
         # AR1 models from grand average
-        ga = bosc$data$ga$real$data %>%
+        bosc$data$ga$surrogate$data = bosc$data$ga$real$data %>%
           dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
           dplyr::group_by(.data$time) %>%
           dplyr::mutate(n_surr = dplyr::row_number()) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr) %>%
-          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
+          dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
         #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
-        bosc$data$ga$surrogate$data <- ga
         bosc$data$ga$surrogate$spec <- list(
           n_seed = n_seed,
           method = method,
