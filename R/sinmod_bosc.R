@@ -21,7 +21,7 @@
 #' bosc = simulate_experiment()
 #' bosc = sinmod_bosc(bosc, types = "real", levels = "ga")
 #'
-sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_f = NULL, niter = 500, overwrite = FALSE, verbose = T) {
+sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_f = NULL, niter = 100, overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -111,6 +111,10 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
           }
         }
 
+        # define lower bounds of fitting procedure (those values were chosen for HR, i.e. for values ranging from 0 to 1)
+        # maybe in later version, allow lower / upper to be passed as argument by user
+        lower = c(intercept = 0, a = 0, f = fres, phi = 0)
+        upper = c(intercept = 1, a = 1, f = nyquist, phi = 2 * pi)
 
         # fit sinmod for every group_var
         if(length(group_vars) > 0){
@@ -119,18 +123,10 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
             tidyr::nest() %>%
             dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
                                                                                 data = .x,
-                                                                                lower = c(intercept = -Inf, a = 0, f = fres, phi = 0),
-                                                                                upper = c(intercept = Inf, a = Inf, f = nyquist, phi = 2 * pi),
-                                                                                start_lower = c(intercept = .2,
-                                                                                                a = .2,
-                                                                                                f = fbins[ifelse(floor(length(fbins)/4) >= floor(3*length(fbins)/4),
-                                                                                                                                         1, floor(length(fbins)/4))],
-                                                                                                phi = 1 / 2 * pi),
-                                                                                start_upper = c(intercept = .8,
-                                                                                                a = .8,
-                                                                                                f = fbins[ifelse(floor(length(fbins)/4) >= floor(3*length(fbins)/4),
-                                                                                                                                         length(fbins), floor(3*length(fbins)/4))],
-                                                                                                phi = 3 / 2 * pi),
+                                                                                lower = lower,
+                                                                                upper = upper,
+                                                                                start_lower = lower,
+                                                                                start_upper = upper,
                                                                                 iter = niter,
                                                                                 supp_errors = "Y")),
                           estimates = purrr::map(.data$fit, broom::tidy), # store all estimates here
@@ -147,10 +143,10 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
           tidyr::nest(data = dplyr::everything()) %>%
           dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
                                                                               data = .x,
-                                                                              lower = c(intercept = -Inf, a = 0, f = fres, phi = 0),
-                                                                              upper = c(intercept = Inf, a = Inf, f = nyquist, phi = 2 * pi),
-                                                                              start_lower = c(intercept = .2, a = .2, f = fbins[floor(length(fbins)/4)], phi = 1 / 2 * pi),
-                                                                              start_upper = c(intercept = .8, a = .8, f = fbins[floor(3*length(fbins)/4)], phi = 3 / 2 * pi),
+                                                                              lower = lower,
+                                                                              upper = upper,
+                                                                              start_lower = lower,
+                                                                              start_upper = upper,
                                                                               iter = niter,
                                                                               supp_errors = "Y")),
                         estimates = purrr::map(.data$fit, broom::tidy), # store all estimates here
@@ -184,6 +180,12 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
         freqs = as.data.frame(fixed_f)
         freqs$helper = 1
 
+
+        # define lower bounds of fitting procedure (those values were chosen for HR, i.e. for values ranging from 0 to 1)
+        # maybe in later version, allow lower / upper to be passed as argument by user
+        lower = c(intercept = 0, a = 0, phi = 0)
+        upper = c(intercept = 1, a = 1, phi = 2 * pi)
+
         options(dplyr.nest.inform = FALSE)
         # fit sinmod for every fixed frequency
         bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
@@ -195,10 +197,10 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
           tidyr::nest() %>%
           dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
                                                                               data = .x,
-                                                                              lower = c(intercept = -Inf, a = 0, phi = 0),
-                                                                              upper = c(intercept = Inf, a = Inf, phi = 2 * pi),
-                                                                              start_lower = c(intercept = .2, a = .2, phi = 1 / 2 * pi),
-                                                                              start_upper = c(intercept = .8, a = .8, phi = 3 / 2 * pi),
+                                                                              lower = lower,
+                                                                              upper = upper,
+                                                                              start_lower = lower,
+                                                                              start_upper = upper,
                                                                               iter = niter,
                                                                               supp_errors = "Y")),
                         estimates = purrr::map(.data$fit, broom::tidy),
