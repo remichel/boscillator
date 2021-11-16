@@ -6,7 +6,7 @@
 #' @param bosc BOSC-Object
 #' @param n_surr Number of to-be-created surrogate datasets
 #' @param method permutation ("perm") or autoregression-model ("ar")
-#' @param n_seed number of the seed
+#' @param seed_num number of the seed
 #' @param overwrite overwrite existing surrogates? defaults to F
 #' @param aggregate aggregate surrogated datasets? defaults to T
 #'
@@ -25,7 +25,7 @@ generate_surrogates <-
   function(bosc,
            n_surr = 100,
            method = "perm",
-           n_seed = 1,
+           seed_num = NULL,
            overwrite = F,
            aggregate = T) {
 
@@ -40,7 +40,10 @@ generate_surrogates <-
     }
 
     # set seed
-    set.seed(n_seed)
+    if (is.null(seed_num)) {
+      seed_num <- stats::runif(1, 1, 2^20)
+    }
+    set.seed(seed_num)
 
     # add executed command to history
     bosc$hist <- paste0(bosc$hist, "gen-surr_")
@@ -49,21 +52,6 @@ generate_surrogates <-
     if (method == "perm") {
 
       # create permutations
-
-      # create empty list (for loop version)
-      #bosc$data$single_trial$surrogate$data <- vector(mode = "list", length = n_surr)
-      #names(bosc$data$single_trial$surrogate$data) <- paste("S", 1:n_surr, sep = "_")
-
-      # # slower loop version
-      # for (iPerm in 1:n_surr) {
-      #   bosc$data$single_trial$surrogate$data[[names(bosc$data$single_trial$surrogate$data)[iPerm]]] <- bosc$data$single_trial$data %>%
-      #     dplyr::group_by(.data$subj) %>%
-      #     dplyr::mutate(time = sample(.data$time)) %>%
-      #     dplyr::mutate(n_surr = iPerm)
-      # }
-      # # bind all perms to a single dataframe (required for loop version)
-      # bosc$data$single_trial$surrogate$data = do.call(rbind.data.frame, bosc$data$single_trial$surrogate$data)
-
       bosc$data$single_trial$surrogate$data <- bosc$data$single_trial$real$data %>%
         dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
         dplyr::group_by(.data$subj, .data$time, .data$trial) %>%
@@ -83,30 +71,11 @@ generate_surrogates <-
 
           bosc = aggregate_bosc(bosc, types = "surrogate", levels = "ss-ga")
 
-          # aggregate to single subject time courses
-          # ss <- bosc$data$single_trial$surrogate$data %>%
-          #   dplyr::group_by(.data$n_surr, .data$time, .data$subj) %>%
-          #   dplyr::summarise(hr = mean(.data$resp))
-          #
-          # bosc$data$ss$surrogate$data <- ss
-          # bosc$data$ss$surrogate$spec <- bosc$data$single_trial$surrogate$spec
-          #
-          # # aggregate to grand average
-          # ga <- ss %>%
-          #   dplyr::group_by(.data$n_surr, .data$time) %>%
-          #   dplyr::summarise(hr = mean(.data$hr))
-          #
-          # bosc$data$ga$surrogate$data <- ga
-          # bosc$data$ga$surrogate$spec <- bosc$data$single_trial$surrogate$spec
-
         }
 
     }else if(method == "ar"){
 
         # AR1 models for single participants
-        #ss = bosc$data$ss$data %>%
-        #    dplyr::group_by(.data$subj) %>%
-        #    dplyr::mutate(ar1 = simulate(Arima(.data$hr, order = c(1, 0, 0)), nsim = length(!!bosc$timepoints)))
 
       bosc$data$ss$surrogate$data = bosc$data$ss$real$data %>%
           dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
@@ -115,10 +84,9 @@ generate_surrogates <-
           dplyr::ungroup() %>%
           dplyr::group_by(.data$subj, .data$n_surr) %>%
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
-        #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
         bosc$data$ss$surrogate$spec <- list(
-          n_seed = n_seed,
+          seed_num = seed_num,
           method = method,
           n_surr = n_surr)
 
@@ -130,10 +98,9 @@ generate_surrogates <-
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr) %>%
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
-        #  dplyr::mutate(ar1 = stats::arima.sim(stats::arima(.data$hr, order = c(1, 0, 0)), n = length(!!bosc$timepoints)))
 
         bosc$data$ga$surrogate$spec <- list(
-          n_seed = n_seed,
+          seed_num = seed_num,
           method = method,
           n_surr = n_surr)
 
