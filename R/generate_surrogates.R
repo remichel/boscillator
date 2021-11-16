@@ -62,7 +62,7 @@ generate_surrogates <-
 
 
       bosc$data$single_trial$surrogate$spec <- list(
-        n_seed = n_seed,
+        seed_num = seed_num,
         method = method,
         n_surr = n_surr)
 
