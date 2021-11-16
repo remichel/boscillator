@@ -9,7 +9,7 @@ sinmod_bosc(
   types = "real-surrogate",
   levels = "ss-ga",
   fixed_f = NULL,
-  niter = 500,
+  niter = 100,
   overwrite = FALSE,
   verbose = T
 )

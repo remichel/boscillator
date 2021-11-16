@@ -8,7 +8,7 @@ generate_surrogates(
   bosc,
   n_surr = 100,
   method = "perm",
-  n_seed = 1,
+  seed_num = NULL,
   overwrite = F,
   aggregate = T
 )
@@ -20,7 +20,7 @@ generate_surrogates(
 
 \item{method}{permutation ("perm") or autoregression-model ("ar")}
 
-\item{n_seed}{number of the seed}
+\item{seed_num}{number of the seed}
 
 \item{overwrite}{overwrite existing surrogates? defaults to F}
 

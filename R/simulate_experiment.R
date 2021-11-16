@@ -69,7 +69,8 @@ simulate_experiment <-
         ) + ((amplitude + stats::rnorm(length(t), 0, amplitude_jitter[1])) * sin(2 * pi * t * (frequency + stats::rnorm(
         length(t), 0, freq_jitter[1])) + phi + stats::rnorm(length(t), 0, phase_jitter[1]))
         ) * `if`(transient == "hanning", bspec::hannwindow(n_timepoints),
-                 `if`(transient == "exponential", expModel(t, transient_expModel_params[1], transient_expModel_params[2], transient_expModel_params[3]),rep(1, n_timepoints)
+                 `if`(transient == "exponential", expModel(t, transient_expModel_params[1], transient_expModel_params[2], transient_expModel_params[3]),
+                      rep(1, n_timepoints)
         )
       )
 
@@ -82,16 +83,17 @@ simulate_experiment <-
 
     # set seed
     if (is.null(seed_num)) {
-      seed_num <- sample(1:1000, 1)
+      seed_num <- stats::runif(1, 1, 2^20)
     }
     set.seed(seed_num)
 
     # create time vector
-    t <- seq(0, (n_timepoints - 1) * 1 / sfreq, 1 / sfreq)
+    t <- seq(0, (n_timepoints - 1) / sfreq, 1 / sfreq)
 
     # create grid of subjects x time points
-    data <- expand.grid(as.factor(c(1:n_sub)), t)
-    colnames(data) <- c("subj", "time")
+    data <- expand.grid(list(subj = as.factor(c(1:n_sub)),
+                             time = t))
+
 
     # simulate "oscillating" hit probabilities across time points for each subject
     data <- data %>%
@@ -103,21 +105,22 @@ simulate_experiment <-
                                     max(0,!!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2])))) %>%
       dplyr::mutate(osc = dplyr::case_when(.data$osc > 1 ~ 1,
                                            .data$osc < 0 ~ 0,
-                                           TRUE ~ .data$osc)) %>% # apply limits [0 1]
-      dplyr::ungroup()
-
-    # simulate single trial responses
-    data <- cbind(data, t(sapply(data$osc, stats::rbinom, n = n_trials, size = 1)))
-
-    # bring into long format
-    data <- data %>%
-      tidyr::pivot_longer(
-        col = "1":as.character(!!n_trials),
-        names_to = "trial",
-        values_to = "resp"
-      ) %>%
+                                           TRUE ~ .data$osc)) %>% # apply limiter to stay within probability space [0 1]
+      dplyr::ungroup() %>%
+      dplyr::mutate(trial = purrr::map(.data$osc, function(x){
+        stats::rbinom(x, n = !!n_trials, size = 1) %>%
+          t() %>%
+          dplyr::as_tibble()
+        })) %>% # simulate single trial responses
+      tidyr::unnest(cols = .data$trial) %>%
+      dplyr::rename_with(~seq(1,n_trials, 1), .cols = paste0("V", 1:!!n_trials)) %>%
+      tidyr::pivot_longer(col = "1":as.character(!!n_trials),
+                          names_to = "trial",
+                          values_to = "resp") %>% # bring into long format
       dplyr::mutate(trial = as.numeric(.data$trial)) %>%
       dplyr::select(-.data$osc)
+
+
 
     # create BOSC object
     bosc <- bosc()

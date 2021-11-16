@@ -6,7 +6,7 @@
 \usage{
 test_fft(
   bosc,
-  levels = "ss-merged_spectra-ga",
+  levels = "ss-merged-ga",
   tests = "amp-complex-phase",
   alpha = 0.05,
   mcc = "bonferroni-fdr-maxfreq",
