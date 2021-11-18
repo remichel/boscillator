@@ -73,11 +73,6 @@ simulate_experiment <-
                       rep(1, n_timepoints)
         )
       )
-
-
-      # add a AR1 model here as well
-      # add random walks here as well
-      # noise terms
     }
 
 
@@ -87,7 +82,7 @@ simulate_experiment <-
     }
     set.seed(seed_num)
 
-    # create time vector
+    # create time vector (.e.g. SOAs)
     t <- seq(0, (n_timepoints - 1) / sfreq, 1 / sfreq)
 
     # create grid of subjects x time points
@@ -95,29 +90,36 @@ simulate_experiment <-
                              time = t))
 
 
-    # simulate "oscillating" hit probabilities across time points for each subject
+    # simulate single trial data
     data <- data %>%
       dplyr::group_by(.data$subj) %>%
+      # for each subject, determine the probability for a hit for each point in "t" from the underlying sinusoidal model
+      # max() is used to avoid negative input values for the sin_model fctn which might occur due to high jitter values
       dplyr::mutate(osc = sin_model(.data$time,
                                     max(0, !!osc_params[1] + stats::rnorm(1, 0, !!intercept_jitter)),
                                     max(0, !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2])),
                                     max(!!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2])),
                                     max(0,!!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2])))) %>%
+      # apply limiter to the probabilities to stay within probability space [0 1]
       dplyr::mutate(osc = dplyr::case_when(.data$osc > 1 ~ 1,
                                            .data$osc < 0 ~ 0,
-                                           TRUE ~ .data$osc)) %>% # apply limiter to stay within probability space [0 1]
+                                           TRUE ~ .data$osc)) %>%
       dplyr::ungroup() %>%
+      # based on the probabilites saved in .data$osc, simulate single trial responses for n_trials by drawing from a binom distr
       dplyr::mutate(trial = purrr::map(.data$osc, function(x){
         stats::rbinom(x, n = !!n_trials, size = 1) %>%
           t() %>%
           dplyr::as_tibble()
-        })) %>% # simulate single trial responses
+        })) %>%
       tidyr::unnest(cols = .data$trial) %>%
+      # rename the columns into "trial numbers"
       dplyr::rename_with(~seq(1,n_trials, 1), .cols = paste0("V", 1:!!n_trials)) %>%
+      # bring into long format
       tidyr::pivot_longer(col = "1":as.character(!!n_trials),
                           names_to = "trial",
-                          values_to = "resp") %>% # bring into long format
+                          values_to = "resp") %>%
       dplyr::mutate(trial = as.numeric(.data$trial)) %>%
+      # eliminate underlying probability values
       dplyr::select(-.data$osc)
 
 

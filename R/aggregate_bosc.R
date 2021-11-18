@@ -39,40 +39,34 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
 
         if(is.null(bosc$data[[level]][[type]]) | overwrite == TRUE){
 
-        # check for existing data
-        if(!is.null(bosc$data[[level]][[type]])) message("Data already exists and will be overwritten...")
+          # check for existing data
+          if(!is.null(bosc$data[[level]][[type]])) message("Data already exists and will be overwritten...")
 
-        # single subject
-        if(level == "ss"){
+
+          # which levels of data should be aggregated?
+          if(level == "ss"){
+            group_subj = "subj"
+            input_level = "single_trial"
+            output_level = "ss"
+          }else if(level == "ga"){
+            group_subj = NULL
+            input_level = "ss"
+            output_level = "ga"
+          }
 
           # define grouping variables based on the type of data
           if(type == "surrogate"){
-            group_vars = rlang::syms(c("subj", "time", "n_surr"))
+            group_vars = rlang::syms(c(group_subj, "time", "n_surr"))
           }else{
-            group_vars = rlang::syms(c("subj", "time"))
+            group_vars = rlang::syms(c(group_subj, "time"))
           }
 
+
           # aggregate
-          bosc$data[[level]][[type]]$data <- bosc$data$single_trial[[type]]$data %>%
+          bosc$data[[output_level]][[type]]$data <- bosc$data[[input_level]][[type]]$data %>%
             dplyr::group_by(!!!group_vars) %>%
             dplyr::summarise(hr = mean(.data$resp))
-        }
 
-        # grand average
-        if(level == "ga"){
-
-          # define grouping variables based on the type of data
-          if(type == "surrogate"){
-            group_vars = rlang::syms(c("time", "n_surr"))
-          }else{
-            group_vars = rlang::syms(c("time"))
-          }
-
-          # aggregate
-          bosc$data[[level]][[type]]$data <- bosc$data$ss[[type]]$data %>%
-            dplyr::group_by(!!!group_vars) %>%
-            dplyr::summarise(hr = mean(.data$hr))
-        }
 
       }else{
 
