@@ -95,11 +95,11 @@ simulate_experiment <-
       dplyr::group_by(.data$subj) %>%
       # for each subject, determine the probability for a hit for each point in "t" from the underlying sinusoidal model
       # max() is used to avoid negative input values for the sin_model fctn which might occur due to high jitter values
-      dplyr::mutate(osc = sin_model(.data$time,
-                                    max(0, !!osc_params[1] + stats::rnorm(1, 0, !!intercept_jitter)),
-                                    max(0, !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2])),
-                                    max(!!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2])),
-                                    max(0,!!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2])))) %>%
+      dplyr::mutate(osc = sin_model(t = .data$time,
+                                    intercept = max(0, !!osc_params[1] + stats::rnorm(1, 0, !!intercept_jitter)),
+                                    amplitude = max(0, !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2])),
+                                    frequency = max(0, !!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2])),
+                                    phi = !!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2]))) %>%
       # apply limiter to the probabilities to stay within probability space [0 1]
       dplyr::mutate(osc = dplyr::case_when(.data$osc > 1 ~ 1,
                                            .data$osc < 0 ~ 0,
