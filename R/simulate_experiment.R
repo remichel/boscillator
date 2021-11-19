@@ -52,14 +52,10 @@ simulate_experiment <-
            seed_num = NULL) {
 
     # exponential model for transient window / trend
-    expModel <- function(t, intercept, n0, tau) {
-      intercept + n0 * exp(-t / tau)
-    }
+    expModel <- function(t, intercept, n0, tau) {intercept + n0 * exp(-t / tau)}
 
     # linear model for transient window / trend
-    linModel <- function(t, b0, b1) {
-      b0 + t * b1
-    }
+    linModel <- function(t, b0, b1) {b0 + t * b1}
 
     # generative sinusoidal model
     sin_model <- function(t, intercept, amplitude, frequency, phi) {
@@ -70,8 +66,7 @@ simulate_experiment <-
         length(t), 0, freq_jitter[1])) + phi + stats::rnorm(length(t), 0, phase_jitter[1]))
         ) * `if`(transient == "hanning", bspec::hannwindow(n_timepoints),
                  `if`(transient == "exponential", expModel(t, transient_expModel_params[1], transient_expModel_params[2], transient_expModel_params[3]),
-                      rep(1, n_timepoints)
-        )
+                      rep(1, n_timepoints))
       )
     }
 
