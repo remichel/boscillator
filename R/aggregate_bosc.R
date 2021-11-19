@@ -48,10 +48,12 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
             group_subj = "subj"
             input_level = "single_trial"
             output_level = "ss"
+            var = "resp"
           }else if(level == "ga"){
             group_subj = NULL
             input_level = "ss"
             output_level = "ga"
+            var = "hr"
           }
 
           # define grouping variables based on the type of data
@@ -61,12 +63,10 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
             group_vars = rlang::syms(c(group_subj, "time"))
           }
 
-
           # aggregate
           bosc$data[[output_level]][[type]]$data <- bosc$data[[input_level]][[type]]$data %>%
             dplyr::group_by(!!!group_vars) %>%
-            dplyr::summarise(hr = mean(.data$resp))
-
+            dplyr::summarise(hr = mean(!!as.name(var)))
 
       }else{
 
