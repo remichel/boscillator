@@ -32,5 +32,6 @@ Imports:
     nls.multstart,
     broom,
     purrr,
-    modelr
+    modelr,
+    vctrs
 VignetteBuilder: knitr

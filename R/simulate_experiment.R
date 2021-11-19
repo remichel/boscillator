@@ -109,11 +109,11 @@ simulate_experiment <-
       dplyr::mutate(trial = purrr::map(.data$osc, function(x){
         stats::rbinom(x, n = !!n_trials, size = 1) %>%
           t() %>%
-          dplyr::as_tibble()
+          dplyr::as_tibble(.name_repair = ~ vctrs::vec_as_names(..., repair = "unique", quiet = TRUE))
         })) %>%
       tidyr::unnest(cols = .data$trial) %>%
       # rename the columns into "trial numbers"
-      dplyr::rename_with(~seq(1,n_trials, 1), .cols = paste0("V", 1:!!n_trials)) %>%
+      dplyr::rename_with(~seq(1,n_trials, 1), .cols = paste0("...", 1:!!n_trials)) %>%
       # bring into long format
       tidyr::pivot_longer(col = "1":as.character(!!n_trials),
                           names_to = "trial",
