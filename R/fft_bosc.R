@@ -19,7 +19,11 @@
 #' bosc = simulate_experiment()
 #' bosc = fft_bosc(bosc, types = "real", levels = "ga")
 #'
-fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite = FALSE, verbose = T) {
+fft_bosc <- function(bosc,
+                     types = "real-surrogate",
+                     levels = "ss-ga",
+                     overwrite = FALSE,
+                     verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -41,23 +45,32 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
   for (iType in 1:length(iType_list)) {
     for (iLevel in 1:length(iLevel_list)) {
       # get length of time series
-      len[iType, iLevel] = length(unique(bosc$data[[iLevel_list[iLevel]]][[iType_list[iType]]]$data$time))
+      len[iType, iLevel] = dplyr::n_distinct(bosc$data[[iLevel_list[iLevel]]][[iType_list[iType]]]$data$time)
     }
   }
+
   # if all conditions have same length, then determine variables relevant for FFT
   if(length(unique(as.vector(len))) == 1){
+
     # get length of time series
     len = unique(as.vector(len))
+
     # get sampling frequency
     sfreq = bosc$data$single_trial$real$spec$sfreq
+
     # determine frequency resolution
-    fres = sfreq/len
-    # determine nyquist
-    nyquist = sfreq/2
-    # frequency bins
+    fres = sfreq / len
+
+    # determine nyquist frequency
+    nyquist = sfreq / 2
+
+    # determine frequency bins
     fbins = seq(fres, nyquist, fres)
+
   }else{
+
     stop("Datasets differ in length of the time series. Probably padding was applied only to a subset of datasets.")
+
   }
 
 
@@ -85,32 +98,44 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
         }
       }
 
-      # define group vars
+
       # define group vars
       if (iType == "real") {
+
         if(iLevel == "ss"){
+
           group_vars = dplyr::sym("subj")
+
         }else{
+
           group_vars = dplyr::syms(NULL)
+
         }
       }else if(iType == "surrogate"){
+
         if(iLevel == "ss"){
+
           group_vars = dplyr::syms(c("subj", "n_surr"))
+
         }else{
+
           group_vars = dplyr::sym("n_surr")
+
         }
       }
 
       # FFT
       bosc$data[[iLevel]][[iType]]$fft = bosc$data[[iLevel]][[iType]]$data %>%
         dplyr::group_by(!!!group_vars) %>%
-        dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(fbins)+1)]) %>%
-        dplyr::mutate(amp = Mod(.data$complex)) %>%
-        dplyr::mutate(phase = Arg(.data$complex)) %>%
-        dplyr::mutate(f = !!fbins) %>%
+        # apply FFT and get complex output
+        dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(!!fbins)+1)]) %>%
+        # determine Amp & Phase, add frequency bin labels
+        dplyr::mutate(amp = Mod(.data$complex),
+                      phase = Arg(.data$complex),
+                      f = !!fbins) %>%
         dplyr::relocate(.data$f, .before = .data$complex)
 
-      # merge single subject spectra
+
       if(iLevel == "ss"){
 
         # determine group vars
@@ -120,7 +145,7 @@ fft_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", overwrite
           group_vars = dplyr::sym("f")
         }
 
-        # merge spectra across subjects
+        # average spectra across subjects and save it separately
         bosc$data$merged[[iType]]$fft <- bosc$data[[iLevel]][[iType]]$fft %>%
           dplyr::group_by(!!!group_vars) %>%
           dplyr::summarise(amp = mean(.data$amp))
