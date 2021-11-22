@@ -20,7 +20,12 @@
 #' bosc = simulate_experiment()
 #' bosc = pad_bosc(bosc, types = "real", levels = "ga", method = "zero")
 #'
-pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "zero", n_pads = length(bosc$timepoints), verbose = T) {
+pad_bosc <- function(bosc,
+                     types = "real-surrogate",
+                     levels = "ss-ga",
+                     method = "zero",
+                     n_pads = length(bosc$timepoints),
+                     verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -40,6 +45,7 @@ pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = 
   if(!is.character(method)){
     stop("Method must be a character.")
   }
+
   # check n_pads
   if(n_pads < 0){
     #stop("Number of pads needs to be either positive or zero (for skipping zero-padding")
@@ -53,6 +59,7 @@ pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = 
   }
 
   if(skip == F){
+
     # determine pad lengths
     n_prior = ceiling(n_pads/2)
     n_after = n_pads - n_prior
@@ -60,9 +67,9 @@ pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = 
     if(n_prior + n_after != n_pads) warning(paste(n_pads, "were submitted to pad_bosc, but", n_prior + n_after, "pads will be added..."))
 
     # determine sampling interval
-    s_interval = 1/bosc$data$single_trial$real$spec$sfreq
+    s_interval = 1 / bosc$data$single_trial$real$spec$sfreq
 
-    # create pad time vector
+    # equally split the number of pads into two vectors, to add them prior to / after the actual time vector respectively
     pads_prior = seq(max(bosc$timepoints) + s_interval,
                      max(bosc$timepoints) + n_prior * s_interval,
                      s_interval)
@@ -71,6 +78,7 @@ pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = 
                      min(bosc$timepoints) - s_interval,
                      s_interval)
 
+    # create pad time vector
     pads_time = c(pads_prior, pads_after)
 
 
@@ -98,25 +106,6 @@ pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = 
           }
         }
 
-        # create pads
-        if (iType == "real") {
-          if (iLevel == "ss") {
-            pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj), pads_time, 0) %>%
-              stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-          }else if(iLevel == "ga"){
-            pads <- expand.grid(pads_time, 0) %>%
-              stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-          }
-        } else if (iType == "surrogate") {
-          if (iLevel == "ss") {
-            pads <- expand.grid(unique(bosc$data[[iLevel]][[iType]]$data$subj), pads_time, unique(bosc$data[[iLevel]][[iType]]$data$n_surr), 0) %>%
-              stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-          }else if (iLevel == "ga") {
-            pads <- expand.grid(pads_time, unique(bosc$data[[iLevel]][[iType]]$data$n_surr), 0) %>%
-              stats::setNames(names(bosc$data[[iLevel]][[iType]]$data))
-          }
-        }
-
         # define group vars
         if (iType == "real") {
           if(iLevel == "ss"){
@@ -134,19 +123,18 @@ pad_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = 
 
         # add pads to data
         bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::ungroup() %>%
-          dplyr::add_row(!!pads) %>%
-          dplyr::arrange(!!!group_vars, .data$time)
+          dplyr::group_by(!!!group_vars) %>%
+          # add the padded time vector to each group (and fill hr with NA first)
+          dplyr::group_modify(~ dplyr::add_row(., time = !!pads_time,
+                                               hr = NA)) %>%
+          # now, fill the NAs with zeros or mean, depending on the desired method
+          dplyr::mutate(hr = dplyr::case_when(.data$time %in% !!pads_time & !!method == "mean" ~ mean(.data$hr, na.rm = T),
+                                              .data$time %in% !!pads_time & !!method == "zero" ~ 0,
+                                              TRUE ~ .data$hr)
+          ) %>%
+          dplyr::arrange(!!!group_vars, .data$time) %>%
+          dplyr::ungroup()
 
-        # if mean padding is required, substitute zeros with means
-        if(method == "mean"){
-          bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::mutate(flag = !(.data$time %in% !!pads_time)) %>%
-            dplyr::group_by(!!!group_vars) %>%
-            dplyr::mutate(hr = dplyr::case_when(.data$flag == F ~ mean(.data$hr[.data$flag == T]),
-                                                .data$flag == T ~ .data$hr)) %>%
-            dplyr::select(-.data$flag)
-        }
 
         # add pre-processing step to documentation
         if (is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
