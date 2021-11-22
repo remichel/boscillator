@@ -19,7 +19,10 @@
 #' bosc = simulate_experiment(n = 10, n_timepoints = 10, n_trials = 10)
 #' bosc = aggregate_bosc(bosc, types = "real", levels = "ss", overwrite = TRUE)
 #'
-aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = FALSE){
+aggregate_bosc <- function(bosc,
+                           types = "real",
+                           levels = "ss-ga",
+                           overwrite = FALSE){
 
   # check for bosc object
   if(class(bosc) != "BOSC-Object"){
@@ -31,6 +34,7 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
 
   # get types
   type_list = split_string_arg(types, "-")
+
 
   # loop through all conditions
   for(type in type_list){
@@ -45,15 +49,15 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
 
           # which levels of data should be aggregated?
           if(level == "ss"){
-            group_subj = "subj"
-            input_level = "single_trial"
-            output_level = "ss"
-            var = "resp"
+            group_subj    = "subj"
+            input_level   = "single_trial"
+            output_level  = "ss"
+            var           = "resp"
           }else if(level == "ga"){
-            group_subj = NULL
-            input_level = "ss"
-            output_level = "ga"
-            var = "hr"
+            group_subj    = NULL
+            input_level   = "ss"
+            output_level  = "ga"
+            var           = "hr"
           }
 
           # define grouping variables based on the type of data
@@ -70,7 +74,7 @@ aggregate_bosc <- function(bosc, types = "real", levels = "ss-ga", overwrite = F
 
       }else{
 
-        stop(paste("Data already exists. If you want to overwrite, please specify as overwrite = T."))
+        stop("Data already exists. If you want to overwrite, please specify as overwrite = T.")
 
       }
     }
