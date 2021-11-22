@@ -141,7 +141,14 @@ simulate_experiment <-
     bosc <- bosc()
     bosc$timepoints <- t # save timepoints
     bosc$data$single_trial$real$data <- data # save simulated data
-    bosc$data$single_trial$real$spec <- formals() # save all passed argument values
+
+    # save all arguments
+    user_calls <- lapply(as.list(match.call())[-1], eval) # which arguments were submitted by the user
+    all_args <- formals() # which were the default values of the function
+    all_args[names(user_calls)] <- user_calls # substitute defaults with user calls
+    bosc$data$single_trial$real$spec <- all_args
+
+
     if(is.null(bosc$data$single_trial$real$spec$seed_num)){
       bosc$data$single_trial$real$spec$seed_num = seed_num # if seed num was passed as NULL, overwrite with allocated value
     }
