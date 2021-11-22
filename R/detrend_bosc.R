@@ -19,7 +19,11 @@
 #' bosc = simulate_experiment()
 #' bosc = detrend_bosc(bosc, types = "real", levels = "ss", order = 1)
 #'
-detrend_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", order = 0, verbose = T) {
+detrend_bosc <- function(bosc,
+                         types = "real-surrogate",
+                         levels = "ss-ga",
+                         order = 0,
+                         verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -37,62 +41,60 @@ detrend_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", order
 
   # check order
   if(order < 0){
-    if(verbose == T) message("Negative order. No detrending will be applied...")
-    skip = T
+    stop("Negative order. No detrending will be applied...")
   }else if((order %% 1) != 0){
-    stop("Order must be an integer.")
+    stop("Order must be an integer. No detrending will be applied...")
   }else{
     poly_order <- max(order,1)
-    skip = F
   }
 
-  if(skip == F){
 
   if(verbose == T) message("Start detrending...")
+
   # loop through all conditions
   for (iType in iType_list) {
     for (iLevel in iLevel_list) {
 
-        if(verbose == T) message(paste("Detrending", iLevel, iType, "..."))
+      if(verbose == T) message(paste("Detrending", iLevel, iType, "..."))
 
-        # check if required data exists
-        if(is.null(bosc$data[[iLevel]][[iType]]$data)){
-          if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
-          next
-        }
+      # check if required data exists
+      if(is.null(bosc$data[[iLevel]][[iType]]$data)){
+        if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        next
+      }
 
-        # check whether detrending was already applied for the condition at hand
-        if(!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)){
-          if("DETRENDED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
-            reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already detrended. Are you sure you want to continue with yet another detrending?"))
-            if(reply == 2){
-              next
-            }
+      # check whether detrending was already applied for the condition at hand
+      if(!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)){
+        if("DETRENDED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
+          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already detrended. Are you sure you want to continue with yet another detrending?"))
+          if(reply == 2){
+            next
           }
         }
+      }
 
-        # define group vars
-        if (iType == "real") {
-          if(iLevel == "ss"){
-            group_vars = dplyr::sym("subj")
-          }else{
-            group_vars = dplyr::syms(NULL)
-          }
-        }else if(iType == "surrogate"){
-          if(iLevel == "ss"){
-            group_vars = dplyr::syms(c("subj", "n_surr"))
-          }else{
-            group_vars = dplyr::sym("n_surr")
-          }
+      # define group vars
+      if (iType == "real") {
+        if(iLevel == "ss"){
+          group_vars = dplyr::sym("subj")
+        }else{
+          group_vars = dplyr::syms(NULL)
         }
+      }else if(iType == "surrogate"){
+        if(iLevel == "ss"){
+          group_vars = dplyr::syms(c("subj", "n_surr"))
+        }else{
+          group_vars = dplyr::sym("n_surr")
+        }
+      }
 
-        # de-trending
-        bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::group_by(!!!group_vars) %>%
-          dplyr::mutate(hr = dplyr::case_when(
-            !!order > 0 ~ stats::lm(.data$hr ~ stats::poly(.data$time, !!poly_order))$residuals,
-            !!order <= 0 ~ .data$hr - mean(.data$hr)
-          ))
+      # de-trending
+      bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+        dplyr::group_by(!!!group_vars) %>%
+        dplyr::mutate(hr = dplyr::case_when(
+          !!order > 0 ~ stats::lm(.data$hr ~ stats::poly(.data$time, !!poly_order))$residuals,
+          !!order <= 0 ~ .data$hr - mean(.data$hr)
+        ))
 
 
 
@@ -109,7 +111,7 @@ detrend_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", order
 
     # add executed command to history
     bosc$hist <- paste0(bosc$hist, "detrend_")
-  }
+
 
   if(verbose == T) message("Detrending completed.")
   return(bosc)
