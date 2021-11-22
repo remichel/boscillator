@@ -380,7 +380,7 @@ test_fft <- function(bosc,
 
         # rayleigh test
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data$ss$real$fft %>%
-          ungroup() %>%
+          dplyr::ungroup() %>%
           # add all desired alpha levels
           dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
           dplyr::group_by(.data$f, .data$alpha) %>%
