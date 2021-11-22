@@ -59,17 +59,35 @@ simulate_experiment <-
 
     # generative sinusoidal model
     sin_model <- function(t, intercept, amplitude, frequency, phi) {
-      `if`(trend == "linear", linModel(t, trend_linModel_params[1], trend_linModel_params[2]),
-        `if`(trend == "exponential", expModel(t, trend_expModel_params[1], trend_expModel_params[2], trend_expModel_params[3]),
-          intercept)
-        ) + ((amplitude + stats::rnorm(length(t), 0, amplitude_jitter[1])) * sin(2 * pi * t * (frequency + stats::rnorm(
-        length(t), 0, freq_jitter[1])) + phi + stats::rnorm(length(t), 0, phase_jitter[1]))
-        ) * `if`(transient == "hanning", bspec::hannwindow(n_timepoints),
-                 `if`(transient == "exponential", expModel(t, transient_expModel_params[1], transient_expModel_params[2], transient_expModel_params[3]),
-                      rep(1, n_timepoints))
-      )
-    }
 
+      # trend
+      trend <- `if`(trend == "linear", linModel(t,
+                                                trend_linModel_params[1],
+                                                trend_linModel_params[2]),
+                    `if`(trend == "exponential", expModel(t,
+                                                          trend_expModel_params[1],
+                                                          trend_expModel_params[2],
+                                                          trend_expModel_params[3]),
+                         intercept))
+
+      # oscillation
+      osc_amplitude <- stats::rnorm(1, amplitude, amplitude_jitter[1])
+      osc_freq      <- stats::rnorm(1, frequency, freq_jitter[1])
+      osc_phase     <- stats::rnorm(1, phi, phase_jitter[1])
+      oscillation   <- osc_amplitude * sin(2 * pi * t * osc_freq + osc_phase)
+
+      # transient
+      transient <- `if`(transient == "hanning", bspec::hannwindow(n_timepoints),
+                        `if`(transient == "exponential", expModel(t,
+                                                                  transient_expModel_params[1],
+                                                                  transient_expModel_params[2],
+                                                                  transient_expModel_params[3]),
+                             rep(1, n_timepoints)))
+
+      # generate model
+      trend + oscillation * transient
+
+    }
 
     # set seed
     if (is.null(seed_num)) {
@@ -127,24 +145,11 @@ simulate_experiment <-
     if(is.null(bosc$data$single_trial$real$spec$seed_num)){
       bosc$data$single_trial$real$spec$seed_num = seed_num # if seed num was passed as NULL, overwrite with allocated value
     }
-      n_trials = n_trials,
-      sfreq = sfreq,
-      osc_params = osc_params,
-      phase_jitter = phase_jitter,
-      amplitude_jitter = amplitude_jitter,
-      freq_jitter = freq_jitter,
-      intercept_jitter = intercept_jitter,
-      transient = transient,
-      transient_expModel_params = transient_expModel_params,
-      trend = trend,
-      trend_linModel_params = trend_linModel_params,
-      trend_expModel_params = trend_expModel_params
-    )
-    class(bosc) <- "BOSC-Object"
 
     # add executed command to history
     bosc$hist <- paste0(bosc$hist, "sim-exp_")
 
+    # if desired, aggregate the single trial data
     if(aggregate == TRUE){
       bosc = aggregate_bosc(bosc, types = "real", levels = "ss-ga")
     }
