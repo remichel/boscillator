@@ -121,12 +121,12 @@ simulate_experiment <-
 
     # create BOSC object
     bosc <- bosc()
-    bosc$timepoints <- t
-    bosc$data$single_trial$real$data <- data
-    bosc$data$single_trial$real$spec <- list(
-      seed = seed_num,
-      n_sub = n_sub,
-      n_timepoints = n_timepoints,
+    bosc$timepoints <- t # save timepoints
+    bosc$data$single_trial$real$data <- data # save simulated data
+    bosc$data$single_trial$real$spec <- formals() # save all passed argument values
+    if(is.null(bosc$data$single_trial$real$spec$seed_num)){
+      bosc$data$single_trial$real$spec$seed_num = seed_num # if seed num was passed as NULL, overwrite with allocated value
+    }
       n_trials = n_trials,
       sfreq = sfreq,
       osc_params = osc_params,
