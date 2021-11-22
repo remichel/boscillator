@@ -24,7 +24,13 @@
 #' bosc = fft_bosc(bosc)
 #' bosc = test_fft(bosc, levels = "ga", tests = "amp-complex")
 #'
-test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase", alpha = .05, mcc = "bonferroni-fdr-maxfreq", overwrite = FALSE, verbose = T) {
+test_fft <- function(bosc,
+                     levels = "ss-merged-ga",
+                     tests = "amp-complex-phase",
+                     alpha = .05,
+                     mcc = "bonferroni-fdr-maxfreq",
+                     overwrite = FALSE,
+                     verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -43,14 +49,17 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
 
   if(verbose == T) message("Starting tests...")
 
-  # get mccs
+  # get MCCs
   if(!is.character(mcc)){
     stop("Argument mcc must be a character.")
   }else{
     mcc_list <- split_string_arg(mcc, "-")
 
     if(length(mcc_list) > 0 & mcc_list[1] != "none"){
-      message("Multiple correction methods ", paste(mcc_list, collapse = " & ") , " were chosen. All alpha values except ", alpha[1], " will be ignored. \nInstead, ", alpha[1], " will be considered the desired family-wise alpha level for all MCC..\n")
+      message("Multiple correction methods ", paste(mcc_list, collapse = " & ") ,
+              " were chosen. All alpha values except ", alpha[1],
+              " will be ignored. \nInstead, ", alpha[1],
+              " will be considered the desired family-wise alpha level for all MCC..\n")
       alpha = alpha[1]
     }
   }
@@ -67,7 +76,8 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
       # check if required data exists
       if(iTest == "ss" | iTest == "ga"){
         if(is.null(bosc$data[[iLevel]]$real$fft) | is.null(bosc$data[[iLevel]]$surrogate$fft)){
-          if(verbose == T) message(paste("No data found in ", iLevel, ".\nWill continue with next Type/Level..."))
+          if(verbose == T) message(paste("No data found in ", iLevel,
+                                         ".\nWill continue with next Type/Level..."))
           next
         }
       }else{
@@ -99,18 +109,24 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
           group_vars = dplyr::syms("f")
         }
 
-        if(verbose == T) message("Comparing Observed FFT Amplitudes against Permutations (alpha = ", paste(alpha, collapse = ", "),")...")
+        if(verbose == T) message("Comparing Observed FFT Amplitudes against Permutations (alpha = ",
+                                 paste(alpha, collapse = ", "),")...")
 
 
         bosc$tests$fft[[iLevel]][[iTest]]$results = bosc$data[[iLevel]]$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
+          # add observed amplitudes in a separate column to the surrogate dataset
           dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
           dplyr::ungroup() %>%
+          # add all alpha levels
           dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+          # group by all grouping vars (e.g. frequency and subject) and alpha levels to perform tests on each of these groups separately
           dplyr::group_by(!!!group_vars, .data$alpha) %>%
+          # based on alpha, find the critical values for each group within the surrogated amplitudes, extract the p-value and save the observed amplitude again (otherwise its lost after summarize)
           dplyr::summarize(crit_value = unname(stats::quantile(.data$amp, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                            p = 1-stats::ecdf(.data$amp)(.data$observed),
                            observed = .data$observed) %>%
+          # eliminate dublicates
           dplyr::distinct() %>%
           dplyr::ungroup()
 
@@ -128,19 +144,25 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
           # get p values for max freq approach
           maxfreq <- bosc$data[[iLevel]]$surrogate$fft %>%
             dplyr::group_by(.data$n_surr) %>%
+            # add observed amplitudes in a separate column to the surrogate dataset
             dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
             dplyr::ungroup() %>%
+            # add all alpha levels
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            # group by all grouping vars (e.g. frequency and subject), alpha levels AND n_surr to extract the max amplitude from the surrogated datasets
             dplyr::group_by(!!!group_vars, .data$n_surr, .data$alpha) %>%
+            # for each group, extract the maximum amplitude observed in the surrogates
             dplyr::summarise(max = max(.data$amp),
                              observed = .data$observed,
                              f = .data$f) %>%
+            # group by all grouping vars (e.g. frequency and subject), alpha levels, and extract the critical value from the max amplitude distribution for each group
             dplyr::group_by(!!!group_vars,.data$alpha) %>%
             dplyr::summarize(crit_value = unname(stats::quantile(.data$max, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                              p = 1-stats::ecdf(.data$max)(.data$observed),
                              observed = .data$observed,
                              f = .data$f) %>%
             dplyr::relocate(.data$f, .before = .data$alpha) %>%
+            # eliminate dublicates
             dplyr::distinct()
 
           # add max freq p values to results table
@@ -148,21 +170,24 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
             dplyr::mutate(maxfreq = !!maxfreq$p)
 
 
-          # if no other mcc is applied, clean dataset now
+          # if no other MCC method needs to be applied, clean dataset now
           if(length(mcc_list) == 1){
 
             # pivot longer
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(!!group_vars, .data$alpha) %>%
               dplyr::rename(uncorrected = .data$p) %>%
-              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
-              dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
+              # bring dataset into long format to have one row per result
+              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+                                  names_to = "mcc_method",
+                                  values_to = "p") %>%
+              dplyr::select(-.data$crit_value) # delecte crit value, as it refers to uncorrected alpha and is thus misleading if mcc is used
           }
         }
 
 
 
-        # MCC
+        #  if other MCC method needs to be applied, do it now
         if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
 
           # exclude maxfreq from the "to-be-computed" list, but keep mcc_list for the pivot longer cols argument
@@ -184,6 +209,7 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(!!group_vars, .data$alpha) %>%
+              # apply all desired MCCs and save them in separate columns named after the correction method
               dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
           }
 
@@ -191,8 +217,11 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
           bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
             dplyr::group_by(!!group_vars, .data$alpha) %>%
             dplyr::rename(uncorrected = .data$p) %>%
-            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
-            dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
+            # bring dataset into long format to have one row per result
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+                                names_to = "mcc_method",
+                                values_to = "p") %>%
+            dplyr::select(-.data$crit_value) # delecte crit value, as it refers to uncorrected alpha and is thus misleading if mcc is used
 
         }
 
@@ -219,13 +248,16 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
         }
 
         # save single surrogate data for 2d plot
-        bosc$tests$fft[[iLevel]][[iTest]]$data = bosc$data$ss$surrogate$fft %>%
+        bosc$tests$fft[[iLevel]][[iTest]]$data <- bosc$data$ss$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
+          # add observed complex vectors to surrogate dataset
           dplyr::mutate(observed = !!bosc$data$ss$real$fft$complex) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr, .data$f) %>%
+          # summarize complex vectors for observed and surrogate datasets
           dplyr::summarize(observed = mean(.data$observed),
                            surrogate = mean(.data$complex)) %>%
+          # extract observed vector length and directions
           dplyr::mutate(observed_length = Mod(.data$observed),
                         surrogate_length = Mod(.data$surrogate),
                         observed_phase = Arg(.data$observed),
@@ -237,16 +269,17 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
 
         # determine critical vector length for each frequency
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
+          # add all desired alpha levels
           dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
           dplyr::group_by(.data$f, .data$alpha) %>%
+          # determine critical vector length within surrogated datasets and determine p value of observed length
           dplyr::summarize(crit_length = unname(stats::quantile(.data$surrogate_length, probs = 1-alpha, na.rm = T)), # does it cause harm here?
                            p = 1-stats::ecdf(.data$surrogate_length)(.data$observed_length),
                            observed_length = .data$observed_length) %>%
+          # eliminate duplicates
           dplyr::distinct() %>%
           dplyr::relocate(.data$alpha, .after = .data$f) %>%
-          dplyr::ungroup() #%>%
-          #dplyr::mutate(sig = dplyr::case_when(.data$observed_length > .data$crit_length ~ 1,
-          #                                     .data$observed_length <= .data$crit_length ~ 0))
+          dplyr::ungroup()
 
 
 
@@ -254,16 +287,20 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
 
           # get p values for max freq approach
           maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
+            # add all desired alpha levels
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
             dplyr::group_by(.data$n_surr, .data$alpha) %>%
+            # determine max vector length within each surrogated dataset
             dplyr::summarise(max = max(.data$surrogate_length),
                              observed_length = .data$observed_length,
                              f = .data$f) %>%
             dplyr::group_by(.data$alpha) %>%
+            # determine critical maximum vector length within surrogated datasets and determine p value of observed length
             dplyr::summarize(crit_length = unname(stats::quantile(.data$max, probs = 1-alpha, na.rm = T)), # does it cause harm here?
                              p = 1-stats::ecdf(.data$max)(.data$observed_length),
                              observed_length = .data$observed_length,
                              f = .data$f) %>%
+            # eliminate duplicates
             dplyr::distinct() %>%
             dplyr::relocate(.data$f, .data$alpha, .before = .data$observed_length)
 
@@ -279,7 +316,10 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(.data$alpha) %>%
               dplyr::rename(uncorrected = .data$p) %>%
-              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
+              # bring dataset into long format to have one row per result
+              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+                                  names_to = "mcc_method",
+                                  values_to = "p") %>%
               dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
           }
         }
@@ -303,6 +343,7 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(.data$alpha) %>%
+              # apply all desired MCCs and save them in separate columns named after the correction method
               dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
           }
 
@@ -310,7 +351,10 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
           bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
             dplyr::group_by(.data$alpha) %>%
             dplyr::rename(uncorrected = .data$p) %>%
-            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
+            # bring dataset into long format to have one row per result
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+                                names_to = "mcc_method",
+                                values_to = "p") %>%
             dplyr::select(-.data$crit_length) # misleading if mcc is used, as it refers to uncorrected alpha
 
         }
@@ -336,14 +380,15 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
 
         # rayleigh test
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data$ss$real$fft %>%
-          dplyr::group_by(.data$f) %>%
+          ungroup() %>%
+          # add all desired alpha levels
+          dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+          dplyr::group_by(.data$f, .data$alpha) %>%
+          # transform phase into radians and determine mean phase, compute rayleigh test statistic and extract p val
           dplyr::summarize(mean_phase = circular::mean.circular(circular::circular(.data$phase, units = c("radians"))),
                            statistic = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$statistic,
                            p = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$p.value) %>%
-          dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) #%>%
-          #dplyr::mutate(sig = dplyr::case_when(.data$p < .data$alpha ~ 1,
-          #                              .data$p >= .data$alpha ~ 0))
-
+          dplyr::ungroup()
 
 
         # MCC
@@ -362,6 +407,7 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(.data$alpha) %>%
+              # apply all desired MCCs and save them in separate columns named after the correction method
               dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
           }
 
@@ -369,7 +415,10 @@ test_fft <- function(bosc, levels = "ss-merged-ga", tests = "amp-complex-phase",
           bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
             dplyr::group_by(.data$alpha) %>%
             dplyr::rename(uncorrected = .data$p) %>%
-            tidyr::pivot_longer(cols = c(.data$uncorrected, !!phase_mcc_list), names_to = "mcc_method", values_to = "p")
+            # bring dataset into long format to have one row per result
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!phase_mcc_list),
+                                names_to = "mcc_method",
+                                values_to = "p")
 
         }
 

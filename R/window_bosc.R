@@ -21,7 +21,13 @@
 #' bosc = simulate_experiment()
 #' bosc = window_bosc(bosc, types = "real", levels = "ga", method = "hann")
 #'
-window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "hann", r = .1, alpha = .54, verbose = T) {
+window_bosc <- function(bosc,
+                        types = "real-surrogate",
+                        levels = "ss-ga",
+                        method = "hann",
+                        r = .1,
+                        alpha = .54,
+                        verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -43,6 +49,7 @@ window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method
   }
 
   if(verbose == T) message("Start windowing...")
+
   # loop through all conditions
   for (iType in iType_list) {
     for (iLevel in iLevel_list) {
@@ -69,7 +76,8 @@ window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method
       if(length(bosc$timepoints) == length(unique(bosc$data[[iLevel]][[iType]]$data$time))){
         n = length(bosc$timepoints)
       }else{
-        if(verbose == T) message("Number of timepoints in dataset seems to deviate from original number of timepoints, possibly due to padding. Continue with number the number of timepoints in dataset, which is ", length(unique(bosc$data[[iLevel]][[iType]]$data$time)), "...")
+        if(verbose == T) message("Number of timepoints in dataset seems to deviate from original number of timepoints, possibly due to padding. Continue with number the number of timepoints in dataset, which is ",
+                                 length(unique(bosc$data[[iLevel]][[iType]]$data$time)), "...")
         n = length(unique(bosc$data[[iLevel]][[iType]]$data$time))
       }
 
@@ -89,7 +97,7 @@ window_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method
         }
       }
 
-      # detrend
+      # windowing
       if(method != "none"){
         bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
           dplyr::group_by(!!!group_vars) %>%

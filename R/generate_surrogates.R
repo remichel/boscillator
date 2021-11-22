@@ -61,10 +61,7 @@ generate_surrogates <-
         dplyr::mutate(time = sample(.data$time))
 
       # save information about surrogates in a spec file
-      bosc$data$single_trial$surrogate$spec <- list(
-        seed_num = seed_num,
-        method = method,
-        n_surr = n_surr)
+      bosc$data$single_trial$surrogate$spec <- formals()
 
         # aggregate surrogates
         if (aggregate == TRUE) {
@@ -74,6 +71,9 @@ generate_surrogates <-
         }
 
     }else if(method == "ar"){
+      # -------------------------------------------------
+      # still under construction !!!!!!!!!!!!!!!!!!!!!!!
+      # -------------------------------------------------
 
         # AR1 models for single participants (this might be easier & faster using purrr:map as in simulate_experiment)
 
@@ -88,10 +88,7 @@ generate_surrogates <-
           dplyr::group_by(.data$subj, .data$n_surr) %>%
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
 
-        bosc$data$ss$surrogate$spec <- list(
-          seed_num = seed_num,
-          method = method,
-          n_surr = n_surr)
+        bosc$data$ss$surrogate$spec <- formals()
 
         # AR1 models from grand average (this might be easier & faster using purrr:map as in simulate_experiment)
         bosc$data$ga$surrogate$data = bosc$data$ga$real$data %>%
@@ -106,10 +103,7 @@ generate_surrogates <-
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
 
         # save information about surrogates in a spec file
-        bosc$data$ga$surrogate$spec <- list(
-          seed_num = seed_num,
-          method = method,
-          n_surr = n_surr)
+        bosc$data$ga$surrogate$spec <- formals()
 
 
     }else{
