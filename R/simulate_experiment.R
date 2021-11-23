@@ -141,17 +141,24 @@ simulate_experiment <-
     bosc <- bosc()
     bosc$timepoints <- t # save timepoints
     bosc$data$single_trial$real$data <- data # save simulated data
+    bosc$data$single_trial$real$spec <- list( # save information about simulation parameters
+      seed_num = seed_num,
+      n_sub = n_sub,
+      n_timepoints = n_timepoints,
+      n_trials = n_trials,
+      sfreq = sfreq,
+      osc_params = osc_params,
+      phase_jitter = phase_jitter,
+      amplitude_jitter = amplitude_jitter,
+      freq_jitter = freq_jitter,
+      intercept_jitter = intercept_jitter,
+      transient = transient,
+      transient_expModel_params = transient_expModel_params,
+      trend = trend,
+      trend_linModel_params = trend_linModel_params,
+      trend_expModel_params = trend_expModel_params
+    )
 
-    # save all arguments
-    user_calls <- lapply(as.list(match.call())[-1], eval) # which arguments were submitted by the user
-    all_args <- formals() # which were the default values of the function
-    all_args[names(user_calls)] <- user_calls # substitute defaults with user calls
-    bosc$data$single_trial$real$spec <- all_args
-
-
-    if(is.null(bosc$data$single_trial$real$spec$seed_num)){
-      bosc$data$single_trial$real$spec$seed_num = seed_num # if seed num was passed as NULL, overwrite with allocated value
-    }
 
     # add executed command to history
     bosc$hist <- paste0(bosc$hist, "sim-exp_")

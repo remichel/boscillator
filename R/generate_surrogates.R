@@ -60,6 +60,12 @@ generate_surrogates <-
         dplyr::group_by(.data$subj, .data$n_surr) %>%
         dplyr::mutate(time = sample(.data$time))
 
+      # save information about surrogates in a spec file
+      bosc$data$single_trial$surrogate$spec <- list(
+        seed_num = seed_num,
+        method = method,
+        n_surr = n_surr)
+
         # aggregate surrogates
         if (aggregate == TRUE) {
 
@@ -85,7 +91,10 @@ generate_surrogates <-
           dplyr::group_by(.data$subj, .data$n_surr) %>%
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
 
-        bosc$data$ss$surrogate$spec <- formals()
+      bosc$data$ss$surrogate$spec <- list(
+        seed_num = seed_num,
+        method = method,
+        n_surr = n_surr)
 
         # AR1 models from grand average (this might be easier & faster using purrr:map as in simulate_experiment)
         bosc$data$ga$surrogate$data = bosc$data$ga$real$data %>%
@@ -99,6 +108,12 @@ generate_surrogates <-
           dplyr::group_by(.data$n_surr) %>%
           dplyr::mutate(hr = stats::simulate(forecast::Arima(.data$hr, order = c(1, 0, 0), method = "ML"), nsim = length(!!bosc$timepoints)))
 
+        # save information about surrogates in a spec file
+        bosc$data$ga$surrogate$spec <- list(
+          seed_num = seed_num,
+          method = method,
+          n_surr = n_surr)
+
 
 
     }else{
@@ -106,13 +121,6 @@ generate_surrogates <-
       stop("Method unknown.")
 
     }
-
-    # save information about surrogates in a spec file
-    user_calls <- lapply(as.list(match.call())[-1], eval) # which arguments were submitted by the user
-    all_args <- formals() # which were the default values of the function
-    all_args[names(user_calls)] <- user_calls # substitute defaults with user calls
-
-    bosc$data$single_trial$surrogate$spec <- all_args # save all arguments passed to fctn
 
     # add executed command to history
     bosc$hist <- paste0(bosc$hist, "gen-surr_")
