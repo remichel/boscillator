@@ -84,27 +84,12 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
       # Perform test
       if(iTest == "r2"){
 
-        # get correct group vars and join vars depending on the analysis level
-        if("fixed_f" %in% colnames(bosc$data[[iLevel]]$real$sinmod)){
-          if (iLevel == "ss") {
-            group_vars = dplyr::syms(c("subj", "fixed_f"))
-            join_vars = c("subj","fixed_f")
-          }else if(iLevel == "ga"){
-            group_vars = dplyr::sym("fixed_f")
-            join_vars = c("fixed_f")
-          }
-        }
-        else{
-          if (iLevel == "ss") {
-            group_vars = dplyr::sym("subj")
-            join_vars = c("subj")
-          }else if(iLevel == "ga"){
-            group_vars = dplyr::syms(NULL)
-            join_vars = NULL
-          }
-        }
-
-
+        # define group vars for the following step
+        group_vars = NULL
+        # for fixed freq test, group by frequencies
+        if("fixed_f" %in% colnames(bosc$data[[iLevel]]$real$sinmod)){group_vars = c(group_vars, "fixed_f")}
+        # for single subject data, group by subject
+        if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
 
 
         if(verbose == T) message("Comparing Observed R2 against Permutations (alpha = ", paste(alpha, collapse = ", "),")...")
@@ -120,7 +105,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
             dplyr::distinct() %>%
             dplyr::ungroup() %>%
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
-            dplyr::group_by(!!!group_vars, .data$alpha) %>%
+            dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::mutate(n_surrogates = max(.data$n_surr),
                           crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                           p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%
@@ -134,24 +119,24 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
           # MCC
           if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
 
-            # get correct group vars for MCC
-            if (iLevel == "ss") {
-              group_vars = dplyr::sym("subj")
-            }else if(iLevel == "ga"){
-              group_vars = NULL
-            }
+
+
+            # define group vars for MCC
+            group_vars = NULL
+            # for single subject data, group by subject
+            if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
 
             # apply all MCC corrections
             for(iMCC in mcc_list){
 
               bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$tests$sinmod[[iLevel]][[iTest]]$results %>%
-                dplyr::group_by(!!group_vars, .data$alpha) %>%
+                dplyr::group_by_at(c(group_vars, "alpha")) %>%
                 dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
             }
 
             # convert to long format and erase unused columns
             bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$tests$sinmod[[iLevel]][[iTest]]$results %>%
-              dplyr::group_by(!!group_vars, .data$alpha) %>%
+              dplyr::group_by_at(c(group_vars, "alpha")) %>%
               dplyr::rename(uncorrected = .data$p) %>%
               tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
               dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
@@ -173,7 +158,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
             dplyr::select(.data$estimate_observed, .data$r2_surr, .data$r2_observed) %>%
             dplyr::ungroup() %>%
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
-            dplyr::group_by(!!!group_vars, .data$alpha) %>%
+            dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::mutate(n_surrogates = max(.data$n_surr),
                           crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                           p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%

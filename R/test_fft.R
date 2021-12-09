@@ -102,18 +102,18 @@ test_fft <- function(bosc,
       # Perform test
       if(iTest == "amp"){
 
+
         # get correct group vars depending on the analysis level
-        if (iLevel == "ss") {
-          group_vars = dplyr::syms(c("subj", "f"))
-        }else if(iLevel == "ga" | iLevel == "merged"){
-          group_vars = dplyr::syms("f")
-        }
+        group_vars = "f"
+        # for surrogate data, group by n_surr
+        if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+
 
         if(verbose == T) message("Comparing Observed FFT Amplitudes against Permutations (alpha = ",
                                  paste(alpha, collapse = ", "),")...")
 
 
-        bosc$tests$fft[[iLevel]][[iTest]]$results = bosc$data[[iLevel]]$surrogate$fft %>%
+        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
           # add observed amplitudes in a separate column to the surrogate dataset
           dplyr::mutate(observed =  !!bosc$data[[iLevel]]$real$fft$amp) %>%
@@ -121,7 +121,7 @@ test_fft <- function(bosc,
           # add all alpha levels
           dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
           # group by all grouping vars (e.g. frequency and subject) and alpha levels to perform tests on each of these groups separately
-          dplyr::group_by(!!!group_vars, .data$alpha) %>%
+          dplyr::group_by_at(c(group_vars, "alpha")) %>%
           # based on alpha, find the critical values for each group within the surrogated amplitudes, extract the p-value and save the observed amplitude again (otherwise its lost after summarize)
           dplyr::summarize(crit_value = unname(stats::quantile(.data$amp, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                            p = 1-stats::ecdf(.data$amp)(.data$observed),
@@ -134,12 +134,11 @@ test_fft <- function(bosc,
         if("maxfreq" %in% mcc_list){
 
 
-          # get correct group vars
-          if (iLevel == "ss") {
-            group_vars = dplyr::sym("subj")
-          }else if(iLevel == "ga" | iLevel == "merged"){
-            group_vars = NULL
-          }
+          # get correct group vars depending on the analysis level
+          group_vars = NULL
+          # for surrogate data, group by n_surr
+          if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+
 
           # get p values for max freq approach
           maxfreq <- bosc$data[[iLevel]]$surrogate$fft %>%
@@ -150,13 +149,13 @@ test_fft <- function(bosc,
             # add all alpha levels
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
             # group by all grouping vars (e.g. frequency and subject), alpha levels AND n_surr to extract the max amplitude from the surrogated datasets
-            dplyr::group_by(!!!group_vars, .data$n_surr, .data$alpha) %>%
+            dplyr::group_by_at(c(group_vars, "n_surr", "alpha")) %>%
             # for each group, extract the maximum amplitude observed in the surrogates
             dplyr::summarise(max = max(.data$amp),
                              observed = .data$observed,
                              f = .data$f) %>%
             # group by all grouping vars (e.g. frequency and subject), alpha levels, and extract the critical value from the max amplitude distribution for each group
-            dplyr::group_by(!!!group_vars,.data$alpha) %>%
+            dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::summarize(crit_value = unname(stats::quantile(.data$max, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
                              p = 1-stats::ecdf(.data$max)(.data$observed),
                              observed = .data$observed,
@@ -175,7 +174,7 @@ test_fft <- function(bosc,
 
             # pivot longer
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-              dplyr::group_by(!!group_vars, .data$alpha) %>%
+              dplyr::group_by_at(c(group_vars, "alpha")) %>%
               dplyr::rename(uncorrected = .data$p) %>%
               # bring dataset into long format to have one row per result
               tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
@@ -197,25 +196,23 @@ test_fft <- function(bosc,
             padjust_list = mcc_list
           }
 
-          # get correct group vars for MCC
-          if (iLevel == "ss") {
-            group_vars = dplyr::sym("subj")
-          }else if(iLevel == "ga" | iLevel == "merged"){
-            group_vars = NULL
-          }
+          # get correct group vars depending on the analysis level
+          group_vars = NULL
+          # for surrogate data, group by n_surr
+          if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
 
           # apply all MCC corrections
           for(iMCC in padjust_list){
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-              dplyr::group_by(!!group_vars, .data$alpha) %>%
+              dplyr::group_by_at(c(group_vars, "alpha")) %>%
               # apply all desired MCCs and save them in separate columns named after the correction method
               dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
           }
 
           # convert to long format and erase unused columns
           bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-            dplyr::group_by(!!group_vars, .data$alpha) %>%
+            dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::rename(uncorrected = .data$p) %>%
             # bring dataset into long format to have one row per result
             tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
@@ -234,10 +231,6 @@ test_fft <- function(bosc,
 
 
       }else if(iTest == "complex"){
-
-        group_vars = dplyr::syms(c("subj", "f"))
-
-
 
 
         if(iLevel == "ga" | iLevel == "ss"){

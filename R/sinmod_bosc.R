@@ -96,20 +96,13 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
 
       if(is.null(fixed_f)){
 
-        # define group vars
-        if (iType == "real") {
-          if(iLevel == "ss"){
-            group_vars = dplyr::sym("subj")
-          }else{
-            group_vars = dplyr::syms(NULL)
-          }
-        }else if(iType == "surrogate"){
-          if(iLevel == "ss"){
-            group_vars = dplyr::syms(c("subj", "n_surr"))
-          }else{
-            group_vars = dplyr::sym("n_surr")
-          }
-        }
+
+        # define group vars for the following step
+        group_vars = NULL
+        # for single subject data, group by subject
+        if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+        # for surrogate data, group by n_surr
+        if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
 
         # define lower bounds of fitting procedure (those values were chosen for HR, i.e. for values ranging from 0 to 1)
         # maybe in later version, allow lower / upper to be passed as argument by user
@@ -117,9 +110,8 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
         upper = c(intercept = 1, a = 1, f = nyquist, phi = 2 * pi)
 
         # fit sinmod for every group_var
-        if(length(group_vars) > 0){
           bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
-            dplyr::group_by(!!!group_vars) %>%
+            dplyr::group_by_at(group_vars) %>%
             tidyr::nest() %>%
             dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
                                                                                 data = .x,
@@ -137,44 +129,17 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
             tidyr::unnest(cols = c(.data$f)) %>%
             dplyr::select(-c(.data$data, .data$std.error, .data$statistic, .data$p.value)) %>%
             dplyr::filter(.data$term == "f")
-      }else{
-        bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::group_by(!!!group_vars) %>%
-          tidyr::nest(data = dplyr::everything()) %>%
-          dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
-                                                                              data = .x,
-                                                                              lower = lower,
-                                                                              upper = upper,
-                                                                              start_lower = lower,
-                                                                              start_upper = upper,
-                                                                              iter = niter,
-                                                                              supp_errors = "Y")),
-                        estimates = purrr::map(.data$fit, broom::tidy), # store all estimates here
-                        predictions = purrr::map(.data$fit, broom::augment),
-                        gof = purrr::map(.data$fit, broom::glance),
-                        f = purrr::map(.data$fit, broom::tidy), # to unnest it later and extract only f
-                        r2 = unlist(purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y)))) %>%
-          tidyr::unnest(cols = c(.data$estimates)) %>%
-          dplyr::select(-c(.data$data, .data$std.error, .data$statistic, .data$p.value)) %>%
-          dplyr::filter(.data$term == "f")
-        }
+
 
       }else{
 
-        # define group vars
-        if (iType == "real") {
-          if(iLevel == "ss"){
-            group_vars = dplyr::syms(c("subj", "fixed_f"))
-          }else{
-            group_vars = dplyr::sym("fixed_f")
-          }
-        }else if(iType == "surrogate"){
-          if(iLevel == "ss"){
-            group_vars = dplyr::syms(c("subj", "n_surr", "fixed_f"))
-          }else{
-            group_vars = dplyr::syms(c("n_surr", "fixed_f"))
-          }
-        }
+        # define group vars for the following step
+        group_vars = "fixed_f"
+        # for single subject data, group by subject
+        if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+        # for surrogate data, group by n_surr
+        if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
+
 
         # fixed frequencies dataframe to join it with dataset
         freqs = as.data.frame(fixed_f)
@@ -193,7 +158,7 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
           dplyr::full_join(y = freqs, by = .data$helper) %>%
           dplyr::select(-.data$helper) %>%
           dplyr::mutate(f = .data$fixed_f) %>%
-          dplyr::group_by(!!!group_vars) %>%
+          dplyr::group_by_at(group_vars) %>%
           tidyr::nest() %>%
           dplyr::mutate(fit = purrr::map(.data$data, ~ nls.multstart::nls_multstart(hr ~ sinModel(time, intercept, a, f, phi),
                                                                               data = .x,

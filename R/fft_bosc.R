@@ -99,34 +99,16 @@ fft_bosc <- function(bosc,
       }
 
 
-      # define group vars
-      if (iType == "real") {
-
-        if(iLevel == "ss"){
-
-          group_vars = dplyr::sym("subj")
-
-        }else{
-
-          group_vars = dplyr::syms(NULL)
-
-        }
-      }else if(iType == "surrogate"){
-
-        if(iLevel == "ss"){
-
-          group_vars = dplyr::syms(c("subj", "n_surr"))
-
-        }else{
-
-          group_vars = dplyr::sym("n_surr")
-
-        }
-      }
+      # define group vars for the following step
+      group_vars = NULL
+      # for single subject data, group by subject
+      if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+      # for surrogate data, group by n_surr
+      if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
 
       # FFT
       bosc$data[[iLevel]][[iType]]$fft = bosc$data[[iLevel]][[iType]]$data %>%
-        dplyr::group_by(!!!group_vars) %>%
+        dplyr::group_by_at(group_vars) %>%
         # apply FFT and get complex output
         dplyr::summarize(complex = stats::fft(.data$hr)[2:(length(!!fbins)+1)]) %>%
         # determine Amp & Phase, add frequency bin labels
@@ -136,18 +118,17 @@ fft_bosc <- function(bosc,
         dplyr::relocate(.data$f, .before = .data$complex)
 
 
+
+      # average spectra across subjects and save it separately
       if(iLevel == "ss"){
 
-        # determine group vars
-        if(iType == "surrogate"){
-          group_vars = dplyr::syms(c("n_surr", "f"))
-        }else if(iType == "real"){
-          group_vars = dplyr::sym("f")
-        }
+        # define group vars for the following step
+        group_vars = "f"
+        # for surrogate data, group by n_surr
+        if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
 
-        # average spectra across subjects and save it separately
         bosc$data$merged[[iType]]$fft <- bosc$data[[iLevel]][[iType]]$fft %>%
-          dplyr::group_by(!!!group_vars) %>%
+          dplyr::group_by_at(group_vars) %>%
           dplyr::summarise(amp = mean(.data$amp))
       }
 

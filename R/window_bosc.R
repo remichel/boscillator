@@ -82,25 +82,17 @@ window_bosc <- function(bosc,
       }
 
 
-      # define group vars
-      if (iType == "real") {
-        if(iLevel == "ss"){
-          group_vars = dplyr::sym("subj")
-        }else{
-          group_vars = dplyr::syms(NULL)
-        }
-      }else if(iType == "surrogate"){
-        if(iLevel == "ss"){
-          group_vars = dplyr::syms(c("subj", "n_surr"))
-        }else{
-          group_vars = dplyr::sym("n_surr")
-        }
-      }
+      # define group vars for the following step
+      group_vars = NULL
+      # for single subject data, group by subject
+      if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+      # for surrogate data, group by n_surr
+      if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
 
       # windowing
       if(method != "none"){
         bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::group_by(!!!group_vars) %>%
+          dplyr::group_by_at(group_vars) %>%
           dplyr::mutate(hr = dplyr::case_when(
             !!method == "hann" ~ .data$hr * bspec::hannwindow(!!n),
             !!method == "hamm" ~ .data$hr * bspec::hammingwindow(!!n, !!alpha),

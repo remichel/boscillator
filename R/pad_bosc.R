@@ -106,24 +106,17 @@ pad_bosc <- function(bosc,
           }
         }
 
-        # define group vars
-        if (iType == "real") {
-          if(iLevel == "ss"){
-            group_vars = dplyr::sym("subj")
-          }else{
-            group_vars = dplyr::syms(NULL)
-          }
-        }else if(iType == "surrogate"){
-          if(iLevel == "ss"){
-            group_vars = dplyr::syms(c("subj", "n_surr"))
-          }else{
-            group_vars = dplyr::sym("n_surr")
-          }
-        }
+
+        # define group vars for the following step
+        group_vars = NULL
+        # for single subject data, group by subject
+        if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+        # for surrogate data, group by n_surr
+        if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
 
         # add pads to data
         bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::group_by(!!!group_vars) %>%
+          dplyr::group_by_at(group_vars) %>%
           # add the padded time vector to each group (and fill hr with NA first)
           dplyr::group_modify(~ dplyr::add_row(., time = !!pads_time,
                                                hr = NA)) %>%
@@ -132,7 +125,7 @@ pad_bosc <- function(bosc,
                                               .data$time %in% !!pads_time & !!method == "zero" ~ 0,
                                               TRUE ~ .data$hr)
           ) %>%
-          dplyr::arrange(!!!group_vars, .data$time) %>%
+          dplyr::arrange_at(c(group_vars, "time")) %>%
           dplyr::ungroup()
 
 
