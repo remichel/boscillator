@@ -6,8 +6,8 @@
 \usage{
 sinmod_bosc(
   bosc,
-  types = "real-surrogate",
-  levels = "ss-ga",
+  types = c("real", "surrogate"),
+  levels = c("ss", "ga"),
   fixed_f = NULL,
   niter = 100,
   overwrite = FALSE,
@@ -19,7 +19,7 @@ sinmod_bosc(
 
 \item{types}{Which data should be modelled? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.}
 
-\item{levels}{Which levels of data need to be modelled? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"}
+\item{levels}{Which levels of data need to be modelled? Use "ss" for single subject and "ga" for grand average. Multiple arguments need to be passed as a vector.}
 
 \item{fixed_f}{NULL to test all possible frequencies between 0 and nyquist, or specify a vector of frequencies}
 

@@ -6,8 +6,8 @@
 \usage{
 detrend_bosc(
   bosc,
-  types = "real-surrogate",
-  levels = "ss-ga",
+  types = c("real", "surrogate"),
+  levels = c("ss", "ga"),
   order = 0,
   verbose = T
 )

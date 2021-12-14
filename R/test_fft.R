@@ -25,25 +25,20 @@
 #' bosc = test_fft(bosc, levels = "ga", tests = "amp-complex")
 #'
 test_fft <- function(bosc,
-                     levels = "ss-merged-ga",
-                     tests = "amp-complex-phase",
+                     levels = c("ss", "merged", "ga"),
+                     tests = c("amp", "complex", "phase"),
                      alpha = .05,
-                     mcc = "bonferroni-fdr-maxfreq",
+                     mcc = c("bonferroni", "fdr", "maxfreq"),
                      overwrite = FALSE,
                      verbose = T) {
 
   # get levels
   if(!is.character(levels)){
     stop("Argument levels must be a character.")
-  }else{
-    iLevel_list <- split_string_arg(levels, "-")
   }
-
   # get tests
   if(!is.character(tests)){
     stop("Argument levels must be a character.")
-  }else{
-    iTest_list <- split_string_arg(tests, "-")
   }
 
 
@@ -53,10 +48,8 @@ test_fft <- function(bosc,
   if(!is.character(mcc)){
     stop("Argument mcc must be a character.")
   }else{
-    mcc_list <- split_string_arg(mcc, "-")
-
-    if(length(mcc_list) > 0 & mcc_list[1] != "none"){
-      message("Multiple correction methods ", paste(mcc_list, collapse = " & ") ,
+    if(length(mcc) > 0 & mcc[1] != "none"){
+      message("Multiple correction methods ", paste(mcc, collapse = " & ") ,
               " were chosen. All alpha values except ", alpha[1],
               " will be ignored. \nInstead, ", alpha[1],
               " will be considered the desired family-wise alpha level for all MCC..\n")
@@ -66,11 +59,11 @@ test_fft <- function(bosc,
 
 
   # loop through all conditions
-  for (iLevel in iLevel_list) {
+  for (iLevel in levels) {
 
     if(verbose == T) message("\nTest on ", iLevel, ' level...\n')
 
-    for(iTest in iTest_list){
+    for(iTest in tests){
 
 
       # check if required data exists
@@ -131,7 +124,7 @@ test_fft <- function(bosc,
           dplyr::ungroup()
 
 
-        if("maxfreq" %in% mcc_list){
+        if("maxfreq" %in% mcc){
 
 
           # get correct group vars depending on the analysis level
@@ -170,14 +163,14 @@ test_fft <- function(bosc,
 
 
           # if no other MCC method needs to be applied, clean dataset now
-          if(length(mcc_list) == 1){
+          if(length(mcc) == 1){
 
             # pivot longer
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by_at(c(group_vars, "alpha")) %>%
               dplyr::rename(uncorrected = .data$p) %>%
               # bring dataset into long format to have one row per result
-              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc),
                                   names_to = "mcc_method",
                                   values_to = "p") %>%
               dplyr::select(-.data$crit_value) # delecte crit value, as it refers to uncorrected alpha and is thus misleading if mcc is used
@@ -187,13 +180,13 @@ test_fft <- function(bosc,
 
 
         #  if other MCC method needs to be applied, do it now
-        if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
+        if(length(mcc) > 0 & !("none" %in% mcc)){
 
-          # exclude maxfreq from the "to-be-computed" list, but keep mcc_list for the pivot longer cols argument
-          if("maxfreq" %in% mcc_list){
-            padjust_list = mcc_list[-which(mcc_list == "maxfreq")]
+          # exclude maxfreq from the "to-be-computed" list, but keep mcc for the pivot longer cols argument
+          if("maxfreq" %in% mcc){
+            padjust_list = mcc[-which(mcc == "maxfreq")]
           }else{
-            padjust_list = mcc_list
+            padjust_list = mcc
           }
 
           # get correct group vars depending on the analysis level
@@ -215,7 +208,7 @@ test_fft <- function(bosc,
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::rename(uncorrected = .data$p) %>%
             # bring dataset into long format to have one row per result
-            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc),
                                 names_to = "mcc_method",
                                 values_to = "p") %>%
             dplyr::select(-.data$crit_value) # delecte crit value, as it refers to uncorrected alpha and is thus misleading if mcc is used
@@ -276,7 +269,7 @@ test_fft <- function(bosc,
 
 
 
-        if("maxfreq" %in% mcc_list){
+        if("maxfreq" %in% mcc){
 
           # get p values for max freq approach
           maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
@@ -303,14 +296,14 @@ test_fft <- function(bosc,
 
 
           # if no other mcc is applied, clean dataset now
-          if(length(mcc_list) == 1){
+          if(length(mcc) == 1){
 
             # pivot longer
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(.data$alpha) %>%
               dplyr::rename(uncorrected = .data$p) %>%
               # bring dataset into long format to have one row per result
-              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc),
                                   names_to = "mcc_method",
                                   values_to = "p") %>%
               dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
@@ -321,14 +314,14 @@ test_fft <- function(bosc,
 
 
         # MCC
-        if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
+        if(length(mcc) > 0 & !("none" %in% mcc)){
 
 
-          # exclude maxfreq from the "to-be-computed" list, but keep mcc_list for the pivot longer cols argument
-          if("maxfreq" %in% mcc_list){
-            padjust_list = mcc_list[-which(mcc_list == "maxfreq")]
+          # exclude maxfreq from the "to-be-computed" list, but keep mcc for the pivot longer cols argument
+          if("maxfreq" %in% mcc){
+            padjust_list = mcc[-which(mcc == "maxfreq")]
           }else{
-            padjust_list = mcc_list
+            padjust_list = mcc
           }
 
           # apply all MCC corrections
@@ -345,7 +338,7 @@ test_fft <- function(bosc,
             dplyr::group_by(.data$alpha) %>%
             dplyr::rename(uncorrected = .data$p) %>%
             # bring dataset into long format to have one row per result
-            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list),
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc),
                                 names_to = "mcc_method",
                                 values_to = "p") %>%
             dplyr::select(-.data$crit_length) # misleading if mcc is used, as it refers to uncorrected alpha
@@ -385,18 +378,18 @@ test_fft <- function(bosc,
 
 
         # MCC
-        if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
+        if(length(mcc) > 0 & !("none" %in% mcc)){
 
           # check if maxfreq is in mcclist and exclude it
-          if("maxfreq" %in% mcc_list){
-            phase_mcc_list = mcc_list[-which(mcc_list == "maxfreq")]
+          if("maxfreq" %in% mcc){
+            phase_mcc = mcc[-which(mcc == "maxfreq")]
             message("Max Freq MCC method not applicable to phase test. Will be skipped...")
           }else{
-            phase_mcc_list = mcc_list
+            phase_mcc = mcc
           }
 
           # apply all MCC corrections
-          for(iMCC in phase_mcc_list){
+          for(iMCC in phase_mcc){
 
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by(.data$alpha) %>%
@@ -409,7 +402,7 @@ test_fft <- function(bosc,
             dplyr::group_by(.data$alpha) %>%
             dplyr::rename(uncorrected = .data$p) %>%
             # bring dataset into long format to have one row per result
-            tidyr::pivot_longer(cols = c(.data$uncorrected, !!phase_mcc_list),
+            tidyr::pivot_longer(cols = c(.data$uncorrected, !!phase_mcc),
                                 names_to = "mcc_method",
                                 values_to = "p")
 

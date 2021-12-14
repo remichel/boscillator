@@ -6,8 +6,8 @@
 \usage{
 pad_bosc(
   bosc,
-  types = "real-surrogate",
-  levels = "ss-ga",
+  types = c("real", "surrogate"),
+  levels = c("ss", "ga"),
   method = "zero",
   n_pads = length(bosc$timepoints),
   verbose = T

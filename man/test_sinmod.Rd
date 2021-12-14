@@ -6,10 +6,10 @@
 \usage{
 test_sinmod(
   bosc,
-  levels = "ss-ga",
-  tests = "r2",
+  levels = c("ss", "ga"),
+  tests = c("r2"),
   alpha = 0.05,
-  mcc = "bonferroni-fdr",
+  mcc = c("bonferroni", "fdr"),
   overwrite = FALSE,
   verbose = T
 )

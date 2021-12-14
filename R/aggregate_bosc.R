@@ -20,8 +20,8 @@
 #' bosc = aggregate_bosc(bosc, types = "real", levels = "ss", overwrite = TRUE)
 #'
 aggregate_bosc <- function(bosc,
-                           types = "real",
-                           levels = "ss-ga",
+                           types = c("real"),
+                           levels = c("ss", "ga"),
                            overwrite = FALSE){
 
   # check for bosc object
@@ -30,30 +30,34 @@ aggregate_bosc <- function(bosc,
   }
 
   # get levels
-  level_list = split_string_arg(levels, "-")
+  if(!is.character(levels)){
+    stop("Argument levels must be a character.")
+  }
 
   # get types
-  type_list = split_string_arg(types, "-")
+  if(!is.character(types)){
+    stop("Argument types must be a character.")
+  }
 
 
   # loop through all conditions
-  for(type in type_list){
+  for(iType in types){
 
-    for(level in level_list){
+    for(iLevel in levels){
 
-        if(is.null(bosc$data[[level]][[type]]) | overwrite == TRUE){
+        if(is.null(bosc$data[[iLevel]][[iType]]) | overwrite == TRUE){
 
           # check for existing data
-          if(!is.null(bosc$data[[level]][[type]])) message("Data already exists and will be overwritten...")
+          if(!is.null(bosc$data[[iLevel]][[iType]])) message("Data already exists and will be overwritten...")
 
 
           # which levels of data should be aggregated?
-          if(level == "ss"){
+          if(iLevel == "ss"){
             group_subj    = "subj"
             input_level   = "single_trial"
             output_level  = "ss"
             var           = "resp"
-          }else if(level == "ga"){
+          }else if(iLevel == "ga"){
             group_subj    = NULL
             input_level   = "ss"
             output_level  = "ga"
@@ -61,15 +65,15 @@ aggregate_bosc <- function(bosc,
           }
 
           # define grouping variables based on the type of data
-          if(type == "surrogate"){
-            group_vars = rlang::syms(c(group_subj, "time", "n_surr"))
+          if(iType == "surrogate"){
+            group_vars = c(group_subj, "time", "n_surr")
           }else{
-            group_vars = rlang::syms(c(group_subj, "time"))
+            group_vars = c(group_subj, "time")
           }
 
           # aggregate
-          bosc$data[[output_level]][[type]]$data <- bosc$data[[input_level]][[type]]$data %>%
-            dplyr::group_by(!!!group_vars) %>%
+          bosc$data[[output_level]][[iType]]$data <- bosc$data[[input_level]][[iType]]$data %>%
+            dplyr::group_by_at(group_vars) %>%
             dplyr::summarise(hr = mean(!!as.name(var)))
 
       }else{

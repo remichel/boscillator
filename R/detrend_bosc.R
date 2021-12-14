@@ -20,23 +20,19 @@
 #' bosc = detrend_bosc(bosc, types = "real", levels = "ss", order = 1)
 #'
 detrend_bosc <- function(bosc,
-                         types = "real-surrogate",
-                         levels = "ss-ga",
+                         types = c("real", "surrogate"),
+                         levels = c("ss", "ga"),
                          order = 0,
                          verbose = T) {
 
   # get levels
   if(!is.character(levels)){
     stop("Argument levels must be a character.")
-  }else{
-    iLevel_list <- split_string_arg(levels, "-")
   }
 
   # get types
   if(!is.character(types)){
     stop("Argument types must be a character.")
-  }else{
-    iType_list <- split_string_arg(types, "-")
   }
 
   # check order
@@ -52,8 +48,8 @@ detrend_bosc <- function(bosc,
   if(verbose == T) message("Start detrending...")
 
   # loop through all conditions
-  for (iType in iType_list) {
-    for (iLevel in iLevel_list) {
+  for (iType in types) {
+    for (iLevel in levels) {
 
       if(verbose == T) message(paste("Detrending", iLevel, iType, "..."))
 

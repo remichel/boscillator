@@ -165,7 +165,7 @@ simulate_experiment <-
 
     # if desired, aggregate the single trial data
     if(aggregate == TRUE){
-      bosc = aggregate_bosc(bosc, types = "real", levels = "ss-ga")
+      bosc = aggregate_bosc(bosc, types = "real", levels = c("ss","ga"))
     }
 
     return(bosc)

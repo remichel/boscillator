@@ -18,20 +18,20 @@
 #' bosc = simulate_experiment()
 #' bosc = scale_bosc(bosc, types = "real", levels = "ga")
 #'
-scale_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method = "z", verbose = T) {
+scale_bosc <- function(bosc,
+                       types = c("real", "surrogate"),
+                       levels = c("ss", "ga"),
+                       method = "z",
+                       verbose = T) {
 
   # get levels
   if(!is.character(levels)){
     stop("Argument levels must be a character.")
-  }else{
-    iLevel_list <- split_string_arg(levels, "-")
   }
 
   # get types
   if(!is.character(types)){
     stop("Argument types must be a character.")
-  }else{
-    iType_list <- split_string_arg(types, "-")
   }
 
   # get method
@@ -50,8 +50,8 @@ scale_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", method 
   if(verbose == T) message("Start Scaling...")
 
   # loop through all conditions
-  for (iType in iType_list) {
-    for (iLevel in iLevel_list) {
+  for (iType in types) {
+    for (iLevel in levels) {
 
       if(verbose == T) message(paste("Scaling", iLevel, iType, "..."))
 

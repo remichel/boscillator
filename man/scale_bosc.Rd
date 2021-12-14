@@ -6,8 +6,8 @@
 \usage{
 scale_bosc(
   bosc,
-  types = "real-surrogate",
-  levels = "ss-ga",
+  types = c("real", "surrogate"),
+  levels = c("ss", "ga"),
   method = "z",
   verbose = T
 )

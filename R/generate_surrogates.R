@@ -69,7 +69,7 @@ generate_surrogates <-
         # aggregate surrogates
         if (aggregate == TRUE) {
 
-          bosc = aggregate_bosc(bosc, types = "surrogate", levels = "ss-ga")
+          bosc = aggregate_bosc(bosc, types = "surrogate", levels = c("ss", "ga"))
 
         }
 

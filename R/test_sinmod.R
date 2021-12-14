@@ -24,29 +24,24 @@
 #' bosc = sinmod_bosc(bosc)
 #' bosc = test_sinmod(bosc, levels = "ga", tests = "r2")
 #'
-test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc = "bonferroni-fdr", overwrite = FALSE, verbose = T) {
+test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .05, mcc = c("bonferroni", "fdr"), overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
     stop("Argument levels must be a character.")
-  }else{
-    iLevel_list <- split_string_arg(levels, "-")
   }
 
   # get tests
   if(!is.character(tests)){
     stop("Argument levels must be a character.")
-  }else{
-    iTest_list <- split_string_arg(tests, "-")
   }
+
   # get mccs
   if(!is.character(mcc)){
     stop("Argument mcc must be a character.")
   }else{
-    mcc_list <- split_string_arg(mcc, "-")
-
-    if(length(mcc_list) > 0 & mcc_list[1] != "none"){
-      message("Multiple correction methods ", paste(mcc_list, collapse = " & ") , " were chosen. All alpha values except ", alpha[1], " will be ignored. \nInstead, ", alpha[1], " will be considered the desired family-wise alpha level for all MCC..\n")
+    if(length(mcc) > 0 & mcc[1] != "none"){
+      message("Multiple correction methods ", paste(mcc, collapse = " & ") , " were chosen. All alpha values except ", alpha[1], " will be ignored. \nInstead, ", alpha[1], " will be considered the desired family-wise alpha level for all MCC..\n")
       alpha = alpha[1]
     }
   }
@@ -56,11 +51,11 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
 
 
   # loop through all conditions
-  for (iLevel in iLevel_list) {
+  for (iLevel in levels) {
 
     if(verbose == T) message("\nTest on ", iLevel, ' level...\n')
 
-    for(iTest in iTest_list){
+    for(iTest in tests){
 
 
       # check if required data exists
@@ -117,7 +112,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
 
 
           # MCC
-          if(length(mcc_list) > 0 & !("none" %in% mcc_list)){
+          if(length(mcc) > 0 & !("none" %in% mcc)){
 
 
 
@@ -127,7 +122,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
             if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
 
             # apply all MCC corrections
-            for(iMCC in mcc_list){
+            for(iMCC in mcc){
 
               bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$tests$sinmod[[iLevel]][[iTest]]$results %>%
                 dplyr::group_by_at(c(group_vars, "alpha")) %>%
@@ -138,7 +133,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
             bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$tests$sinmod[[iLevel]][[iTest]]$results %>%
               dplyr::group_by_at(c(group_vars, "alpha")) %>%
               dplyr::rename(uncorrected = .data$p) %>%
-              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc_list), names_to = "mcc_method", values_to = "p") %>%
+              tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc), names_to = "mcc_method", values_to = "p") %>%
               dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
 
           }
@@ -150,7 +145,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
 
         }else{
 
-          if(!("none" %in% mcc_list) & length(mcc_list) > 0) message("No fixed frequencies were found. No multiple comparison correction will be applied...")
+          if(!("none" %in% mcc) & length(mcc) > 0) message("No fixed frequencies were found. No multiple comparison correction will be applied...")
 
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$sinmod %>%
             dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(group_vars, "term"), suffix = c("_surr", "_observed")) %>%

@@ -5,7 +5,7 @@
 #'
 #' @param bosc BOSC-Object
 #' @param types Which data should be modelled? choose between "real" and "surrogate" or concatenate to "real-surrogate" to perform aggregation on both.
-#' @param levels Which levels of data need to be modelled? Use "ss" for single subject and "ga" for grand average. Concatenate multiple levels with "-", e.g. "ss-ga"
+#' @param levels Which levels of data need to be modelled? Use "ss" for single subject and "ga" for grand average. Multiple arguments need to be passed as a vector.
 #' @param fixed_f NULL to test all possible frequencies between 0 and nyquist, or specify a vector of frequencies
 #' @param niter number of iterations for fitting, is piped into iter argument in nls.multstart function
 #' @param overwrite defaults to F
@@ -21,29 +21,25 @@
 #' bosc = simulate_experiment()
 #' bosc = sinmod_bosc(bosc, types = "real", levels = "ga")
 #'
-sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_f = NULL, niter = 100, overwrite = FALSE, verbose = T) {
+sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "ga"), fixed_f = NULL, niter = 100, overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
     stop("Argument levels must be a character.")
-  }else{
-    iLevel_list <- split_string_arg(levels, "-")
   }
 
   # get types
   if(!is.character(types)){
     stop("Argument types must be a character.")
-  }else{
-    iType_list <- split_string_arg(types, "-")
   }
 
 
   # loop through all conditions to check whether time series all have the same length
-  len = matrix(NA, length(iType_list), length(iLevel_list))
-  for (iType in 1:length(iType_list)) {
-    for (iLevel in 1:length(iLevel_list)) {
+  len = matrix(NA, length(types), length(levels))
+  for (iType in 1:length(types)) {
+    for (iLevel in 1:length(levels)) {
       # get length of time series
-      len[iType, iLevel] = length(unique(bosc$data[[iLevel_list[iLevel]]][[iType_list[iType]]]$data$time))
+      len[iType, iLevel] = length(unique(bosc$data[[levels[iLevel]]][[types[iType]]]$data$time))
     }
   }
 
@@ -67,8 +63,8 @@ sinmod_bosc <- function(bosc, types = "real-surrogate", levels = "ss-ga", fixed_
   if(verbose == T) message("Start sinusoidal modelling...")
 
   # loop through all conditions
-  for (iType in iType_list) {
-    for (iLevel in iLevel_list) {
+  for (iType in types) {
+    for (iLevel in levels) {
 
       if(verbose == T) message(paste("Modelling", iLevel, iType, "..."))
 

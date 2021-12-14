@@ -21,8 +21,8 @@
 #' bosc = pad_bosc(bosc, types = "real", levels = "ga", method = "zero")
 #'
 pad_bosc <- function(bosc,
-                     types = "real-surrogate",
-                     levels = "ss-ga",
+                     types = c("real", "surrogate"),
+                     levels = c("ss", "ga"),
                      method = "zero",
                      n_pads = length(bosc$timepoints),
                      verbose = T) {
@@ -30,17 +30,11 @@ pad_bosc <- function(bosc,
   # get levels
   if(!is.character(levels)){
     stop("Argument levels must be a character.")
-  }else{
-    iLevel_list <- split_string_arg(levels, "-")
   }
-
   # get types
   if(!is.character(types)){
     stop("Argument types must be a character.")
-  }else{
-    iType_list <- split_string_arg(types, "-")
   }
-
   # check method
   if(!is.character(method)){
     stop("Method must be a character.")
@@ -85,8 +79,8 @@ pad_bosc <- function(bosc,
     if(verbose == T) message("Start Padding...")
 
     # loop through all conditions
-    for (iType in iType_list) {
-      for (iLevel in iLevel_list) {
+    for (iType in types) {
+      for (iLevel in levels) {
 
         if(verbose == T) message(paste("Padding", iLevel, iType, "..."))
 

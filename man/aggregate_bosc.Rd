@@ -4,7 +4,12 @@
 \alias{aggregate_bosc}
 \title{aggregate_bosc}
 \usage{
-aggregate_bosc(bosc, types = "real", levels = "ss-ga", overwrite = FALSE)
+aggregate_bosc(
+  bosc,
+  types = c("real"),
+  levels = c("ss", "ga"),
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{bosc}{BOSC-Object}

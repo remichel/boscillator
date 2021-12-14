@@ -20,32 +20,28 @@
 #' bosc = fft_bosc(bosc, types = "real", levels = "ga")
 #'
 fft_bosc <- function(bosc,
-                     types = "real-surrogate",
-                     levels = "ss-ga",
+                     types = c("real", "surrogate"),
+                     levels = c("ss", "ga"),
                      overwrite = FALSE,
                      verbose = T) {
 
   # get levels
   if(!is.character(levels)){
     stop("Argument levels must be a character.")
-  }else{
-    iLevel_list <- split_string_arg(levels, "-")
   }
 
   # get types
   if(!is.character(types)){
     stop("Argument types must be a character.")
-  }else{
-    iType_list <- split_string_arg(types, "-")
   }
 
 
   # loop through all conditions to check whether time series all have the same length
-  len = matrix(NA, length(iType_list), length(iLevel_list))
-  for (iType in 1:length(iType_list)) {
-    for (iLevel in 1:length(iLevel_list)) {
+  len = matrix(NA, length(types), length(levels))
+  for (iType in 1:length(types)) {
+    for (iLevel in 1:length(levels)) {
       # get length of time series
-      len[iType, iLevel] = dplyr::n_distinct(bosc$data[[iLevel_list[iLevel]]][[iType_list[iType]]]$data$time)
+      len[iType, iLevel] = dplyr::n_distinct(bosc$data[[levels[iLevel]]][[types[iType]]]$data$time)
     }
   }
 
@@ -77,8 +73,8 @@ fft_bosc <- function(bosc,
   if(verbose == T) message("Start FFT...")
 
   # loop through all conditions
-  for (iType in iType_list) {
-    for (iLevel in iLevel_list) {
+  for (iType in types) {
+    for (iLevel in levels) {
 
       if(verbose == T) message(paste("FFTing", iLevel, iType, "..."))
 

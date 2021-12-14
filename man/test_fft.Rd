@@ -6,10 +6,10 @@
 \usage{
 test_fft(
   bosc,
-  levels = "ss-merged-ga",
-  tests = "amp-complex-phase",
+  levels = c("ss", "merged", "ga"),
+  tests = c("amp", "complex", "phase"),
   alpha = 0.05,
-  mcc = "bonferroni-fdr-maxfreq",
+  mcc = c("bonferroni", "fdr", "maxfreq"),
   overwrite = FALSE,
   verbose = T
 )
