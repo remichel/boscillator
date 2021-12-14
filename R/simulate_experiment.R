@@ -60,6 +60,14 @@ simulate_experiment <-
     # generative sinusoidal model
     sin_model <- function(t, intercept, amplitude, frequency, phi) {
 
+      # transient
+      transient <- `if`(transient == "hanning", bspec::hannwindow(n_timepoints),
+                        `if`(transient == "exponential", expModel(t,
+                                                                  transient_expModel_params[1],
+                                                                  transient_expModel_params[2],
+                                                                  transient_expModel_params[3]),
+                             rep(1, n_timepoints)))
+
       # trend
       trend <- `if`(trend == "linear", linModel(t,
                                                 trend_linModel_params[1],
@@ -75,14 +83,6 @@ simulate_experiment <-
       osc_freq      <- stats::rnorm(1, frequency, freq_jitter[1])
       osc_phase     <- stats::rnorm(1, phi, phase_jitter[1])
       oscillation   <- osc_amplitude * sin(2 * pi * t * osc_freq + osc_phase)
-
-      # transient
-      transient <- `if`(transient == "hanning", bspec::hannwindow(n_timepoints),
-                        `if`(transient == "exponential", expModel(t,
-                                                                  transient_expModel_params[1],
-                                                                  transient_expModel_params[2],
-                                                                  transient_expModel_params[3]),
-                             rep(1, n_timepoints)))
 
       # generate model
       trend + oscillation * transient
