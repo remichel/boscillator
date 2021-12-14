@@ -100,7 +100,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
 
 
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$sinmod %>%
-            dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(join_vars, "term"), suffix = c("_surr", "_observed")) %>%
+            dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(group_vars, "term"), suffix = c("_surr", "_observed")) %>%
             dplyr::select(.data$fixed_f, .data$r2_surr, .data$r2_observed) %>%
             dplyr::distinct() %>%
             dplyr::ungroup() %>%
@@ -153,7 +153,7 @@ test_sinmod <- function(bosc, levels = "ss-ga", tests = "r2", alpha = .05, mcc =
           if(!("none" %in% mcc_list) & length(mcc_list) > 0) message("No fixed frequencies were found. No multiple comparison correction will be applied...")
 
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$sinmod %>%
-            dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(join_vars, "term"), suffix = c("_surr", "_observed")) %>%
+            dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(group_vars, "term"), suffix = c("_surr", "_observed")) %>%
             dplyr::filter(.data$term == "f") %>%
             dplyr::select(.data$estimate_observed, .data$r2_surr, .data$r2_observed) %>%
             dplyr::ungroup() %>%
