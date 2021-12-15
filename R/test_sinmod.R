@@ -110,10 +110,10 @@ test_sinmod <- function(bosc,
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::mutate(
               n_surrogates = max(.data$n_surr),
-              crit_value = unname(stats::quantile(.data$r2_surr, probs = 1 - alpha, na.rm = T)), # is na.rm = T causing any harm here??
+              crit_value = unname(stats::quantile(.data$r2_surr, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
               p = 1 - stats::ecdf(.data$r2_surr)(.data$r2_observed)
             ) %>%
-            dplyr::distinct(.data$crit_value, .keep_all = T) %>%
+            dplyr::distinct(.data$crit_value, .keep_all = TRUE) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
             dplyr::relocate(c(.data$fixed_f, .data$r2_observed), .before = .data$n_surrogates) # %>%
           # dplyr::mutate(sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
@@ -165,10 +165,10 @@ test_sinmod <- function(bosc,
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::mutate(
               n_surrogates = max(.data$n_surr),
-              crit_value = unname(stats::quantile(.data$r2_surr, probs = 1 - alpha, na.rm = T)), # is na.rm = T causing any harm here??
+              crit_value = unname(stats::quantile(.data$r2_surr, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
               p = 1 - stats::ecdf(.data$r2_surr)(.data$r2_observed)
             ) %>%
-            dplyr::distinct(.data$crit_value, .keep_all = T) %>%
+            dplyr::distinct(.data$crit_value, .keep_all = TRUE) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
             dplyr::relocate(c(.data$estimate_observed, .data$r2_observed), .before = .data$n_surrogates) %>%
             dplyr::mutate(sig = dplyr::case_when(

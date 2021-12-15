@@ -125,7 +125,7 @@ pad_bosc <- function(bosc,
           )) %>%
           # now, fill the NAs with zeros or mean, depending on the desired method
           dplyr::mutate(hr = dplyr::case_when(
-            .data$time %in% !!pads_time & !!method == "mean" ~ mean(.data$hr, na.rm = T),
+            .data$time %in% !!pads_time & !!method == "mean" ~ mean(.data$hr, na.rm = TRUE),
             .data$time %in% !!pads_time & !!method == "zero" ~ 0,
             TRUE ~ .data$hr
           )) %>%

@@ -128,7 +128,7 @@ test_fft <- function(bosc,
           dplyr::group_by_at(c(group_vars, "alpha")) %>%
           # based on alpha, find the critical values for each group within the surrogated amplitudes, extract the p-value and save the observed amplitude again (otherwise its lost after summarize)
           dplyr::summarize(
-            crit_value = unname(stats::quantile(.data$amp, probs = 1 - alpha, na.rm = T)), # is na.rm = T causing any harm here??
+            crit_value = unname(stats::quantile(.data$amp, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
             p = 1 - stats::ecdf(.data$amp)(.data$observed),
             observed = .data$observed
           ) %>%
@@ -167,7 +167,7 @@ test_fft <- function(bosc,
             # group by all grouping vars (e.g. frequency and subject), alpha levels, and extract the critical value from the max amplitude distribution for each group
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::summarize(
-              crit_value = unname(stats::quantile(.data$max, probs = 1 - alpha, na.rm = T)), # is na.rm = T causing any harm here??
+              crit_value = unname(stats::quantile(.data$max, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
               p = 1 - stats::ecdf(.data$max)(.data$observed),
               observed = .data$observed,
               f = .data$f
@@ -284,7 +284,7 @@ test_fft <- function(bosc,
           dplyr::group_by(.data$f, .data$alpha) %>%
           # determine critical vector length within surrogated datasets and determine p value of observed length
           dplyr::summarize(
-            crit_length = unname(stats::quantile(.data$surrogate_length, probs = 1 - alpha, na.rm = T)), # does it cause harm here?
+            crit_length = unname(stats::quantile(.data$surrogate_length, probs = 1 - alpha, na.rm = TRUE)), # does it cause harm here?
             p = 1 - stats::ecdf(.data$surrogate_length)(.data$observed_length),
             observed_length = .data$observed_length
           ) %>%
@@ -311,7 +311,7 @@ test_fft <- function(bosc,
             dplyr::group_by(.data$alpha) %>%
             # determine critical maximum vector length within surrogated datasets and determine p value of observed length
             dplyr::summarize(
-              crit_length = unname(stats::quantile(.data$max, probs = 1 - alpha, na.rm = T)), # does it cause harm here?
+              crit_length = unname(stats::quantile(.data$max, probs = 1 - alpha, na.rm = TRUE)), # does it cause harm here?
               p = 1 - stats::ecdf(.data$max)(.data$observed_length),
               observed_length = .data$observed_length,
               f = .data$f
