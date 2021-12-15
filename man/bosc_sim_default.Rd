@@ -4,7 +4,17 @@
 \alias{bosc_sim_default}
 \title{bosc_sim_default}
 \usage{
-bosc_sim_default(surrogates = T, detrend = T, window = T, scale = F, pad = F)
+bosc_sim_default(
+  surrogates = T,
+  detrend = T,
+  window = T,
+  scale = F,
+  pad = F,
+  fft = F,
+  sinmod = F,
+  fft_test = F,
+  sinmod_test = F
+)
 }
 \arguments{
 \item{surrogates}{want to generate surrogates?}
@@ -16,13 +26,21 @@ bosc_sim_default(surrogates = T, detrend = T, window = T, scale = F, pad = F)
 \item{scale}{want to scale?}
 
 \item{pad}{want to pad?}
+
+\item{fft}{want to fft?}
+
+\item{sinmod}{want sin modelling?}
+
+\item{fft_test}{want stat test for fft?}
+
+\item{sinmod_test}{want stat test for modelling?}
 }
 \value{
 A BOSC-Object
 }
 \description{
 \code{bosc_sim_default}
-Simulates and preprocesses an experiment with default values.
+Wrapper function for bosc to simulate, preprocess and statistically test an experiment with default values.
 }
 \examples{
 bosc <- bosc_sim_default()
