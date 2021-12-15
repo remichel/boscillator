@@ -21,7 +21,7 @@
 #' bosc = simulate_experiment()
 #' bosc = sinmod_bosc(bosc, types = "real", levels = "ga")
 #'
-sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "ga"), fixed_f = NULL, niter = 100, overwrite = FALSE, verbose = T) {
+sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "ga"), fixed_f = NULL, niter = 100, convergence_count = 50, supp_errors = 'Y', overwrite = FALSE, verbose = T) {
 
   # get levels
   if(!is.character(levels)){
@@ -116,7 +116,8 @@ sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "
                                                                                 start_lower = lower,
                                                                                 start_upper = upper,
                                                                                 iter = niter,
-                                                                                supp_errors = "Y")),
+                                                                                convergence_count = convergence_count,
+                                                                                supp_errors = supp_errors)),
                           estimates = purrr::map(.data$fit, broom::tidy), # store all estimates here
                           predictions = purrr::map(.data$fit, broom::augment),
                           gof = purrr::map(.data$fit, broom::glance),
@@ -163,7 +164,8 @@ sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "
                                                                               start_lower = lower,
                                                                               start_upper = upper,
                                                                               iter = niter,
-                                                                              supp_errors = "Y")),
+                                                                              convergence_count = convergence_count,
+                                                                              supp_errors = supp_errors)),
                         estimates = purrr::map(.data$fit, broom::tidy),
                         gof = purrr::map(.data$fit, broom::glance),
                         r2 = unlist(purrr::map(.x = .data$fit, .y = .data$data, ~ modelr::rsquare(model = .x, data = .y)))) %>%
