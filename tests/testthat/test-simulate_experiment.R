@@ -1,15 +1,16 @@
 test_that("simulate_experiment output is correct", {
-
-  n = 5
-  ntrial = 100
-  tps = 20
-  sfreq = 25
-  test = simulate_experiment(n_sub = n,
-                             n_trials = ntrial,
-                             n_timepoints = tps,
-                             sfreq = sfreq,
-                             phase_jitter = c(0,0),
-                             intercept_jitter = 0)
+  n <- 5
+  ntrial <- 100
+  tps <- 20
+  sfreq <- 25
+  test <- simulate_experiment(
+    n_sub = n,
+    n_trials = ntrial,
+    n_timepoints = tps,
+    sfreq = sfreq,
+    phase_jitter = c(0, 0),
+    intercept_jitter = 0
+  )
 
 
   # check class
@@ -33,5 +34,4 @@ test_that("simulate_experiment output is correct", {
   expect_equal(length(unique(test$data$single_trial$real$data$subj)), n)
   expect_equal(length(unique(test$data$single_trial$real$data$trial)), ntrial)
   expect_equal(length(unique(test$data$single_trial$real$data$time)), tps)
-
 })
