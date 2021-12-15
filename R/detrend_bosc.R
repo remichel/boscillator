@@ -23,7 +23,7 @@ detrend_bosc <- function(bosc,
                          types = c("real", "surrogate"),
                          levels = c("ss", "ga"),
                          order = 0,
-                         verbose = T) {
+                         verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -45,16 +45,16 @@ detrend_bosc <- function(bosc,
   }
 
 
-  if (verbose == T) message("Start detrending...")
+  if (verbose == TRUE) message("Start detrending...")
 
   # loop through all conditions
   for (iType in types) {
     for (iLevel in levels) {
-      if (verbose == T) message(paste("Detrending", iLevel, iType, "..."))
+      if (verbose == TRUE) message(paste("Detrending", iLevel, iType, "..."))
 
       # check if required data exists
       if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
-        if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        if (verbose == TRUE) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
@@ -103,6 +103,6 @@ detrend_bosc <- function(bosc,
   bosc$hist <- paste0(bosc$hist, "detrend_")
 
 
-  if (verbose == T) message("Detrending completed.")
+  if (verbose == TRUE) message("Detrending completed.")
   return(bosc)
 }

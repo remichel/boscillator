@@ -26,8 +26,8 @@ generate_surrogates <-
            n_surr = 100,
            method = "perm",
            seed_num = NULL,
-           overwrite = F,
-           aggregate = T) {
+           overwrite = FALSE,
+           aggregate = TRUE) {
 
     # check for bosc object
     if (class(bosc) != "BOSC-Object") {
@@ -35,7 +35,7 @@ generate_surrogates <-
     }
 
     # check for already existing surrogates
-    if (is.null(bosc$data$single_trial$surrogate) == F & overwrite == F) {
+    if (is.null(bosc$data$single_trial$surrogate) == FALSE & overwrite == FALSE) {
       stop("BOSC-Object seems to already contain surrogate data. Please use 'overwrite == T' if you really want to create new surrogate data.")
     }
 

@@ -13,7 +13,7 @@
 #' @return bosc-Object
 #' @export bosc_import
 #'
-bosc_import <- function(data, sfreq, n_timepoints, vars = c("subj", "time", "trial", "resp"), level = "single_trial", aggregate = T){
+bosc_import <- function(data, sfreq, n_timepoints, vars = c("subj", "time", "trial", "resp"), level = "single_trial", aggregate = TRUE){
 
   # create bosc object
 bosc <- bosc()
@@ -88,7 +88,7 @@ message("Found ", length(unique(data$subj)), " subjects.\nFound ", length(unique
 bosc$hist <- paste0(bosc$hist, "import_")
 
 # aggregate
-if (aggregate == T) {
+if (aggregate == TRUE) {
   bosc <- aggregate_bosc(bosc)
 }
 

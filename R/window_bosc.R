@@ -27,7 +27,7 @@ window_bosc <- function(bosc,
                         method = "hann",
                         r = .1,
                         alpha = .54,
-                        verbose = T) {
+                        verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -42,16 +42,16 @@ window_bosc <- function(bosc,
     stop("Method must be a character.")
   }
 
-  if (verbose == T) message("Start windowing...")
+  if (verbose == TRUE) message("Start windowing...")
 
   # loop through all conditions
   for (iType in types) {
     for (iLevel in levels) {
-      if (verbose == T) message(paste("Windowing", iLevel, iType, "..."))
+      if (verbose == TRUE) message(paste("Windowing", iLevel, iType, "..."))
 
       # check if required data exists
       if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
-        if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        if (verbose == TRUE) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
@@ -69,7 +69,7 @@ window_bosc <- function(bosc,
       if (length(bosc$timepoints) == length(unique(bosc$data[[iLevel]][[iType]]$data$time))) {
         n <- length(bosc$timepoints)
       } else {
-        if (verbose == T) {
+        if (verbose == TRUE) {
           message(
             "Number of timepoints in dataset seems to deviate from original number of timepoints, possibly due to padding. Continue with number the number of timepoints in dataset, which is ",
             length(unique(bosc$data[[iLevel]][[iType]]$data$time)), "..."
@@ -103,7 +103,7 @@ window_bosc <- function(bosc,
             !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
           ))
       } else {
-        if (verbose == T) message("No window will be applied...")
+        if (verbose == TRUE) message("No window will be applied...")
       }
 
 
@@ -119,6 +119,6 @@ window_bosc <- function(bosc,
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "window_")
 
-  if (verbose == T) message("Windowing completed.")
+  if (verbose == TRUE) message("Windowing completed.")
   return(bosc)
 }

@@ -48,7 +48,7 @@ simulate_experiment <-
            trend = "none",
            trend_linModel_params = c(osc_params[1], osc_params[2]),
            trend_expModel_params = c(0, 1 - 2 * osc_params[2], .6),
-           aggregate = T,
+           aggregate = TRUE,
            seed_num = NULL) {
 
     # exponential model for transient window / trend

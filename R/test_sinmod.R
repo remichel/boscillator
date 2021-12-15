@@ -24,7 +24,13 @@
 #' bosc = sinmod_bosc(bosc)
 #' bosc = test_sinmod(bosc, levels = "ga", tests = "r2")
 #'
-test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .05, mcc = c("bonferroni", "fdr"), overwrite = FALSE, verbose = T) {
+test_sinmod <- function(bosc,
+                        levels = c("ss", "ga"),
+                        tests = c("r2"),
+                        alpha = .05,
+                        mcc = c("bonferroni", "fdr"),
+                        overwrite = FALSE,
+                        verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -47,26 +53,26 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
   }
 
 
-  if (verbose == T) message("Starting tests...")
+  if (verbose == TRUE) message("Starting tests...")
 
 
   # loop through all conditions
   for (iLevel in levels) {
-    if (verbose == T) message("\nTest on ", iLevel, " level...\n")
+    if (verbose == TRUE) message("\nTest on ", iLevel, " level...\n")
 
     for (iTest in tests) {
 
 
       # check if required data exists
       if (is.null(bosc$data[[iLevel]]$real$sinmod) | is.null(bosc$data[[iLevel]]$surrogate$sinmod)) {
-        if (verbose == T) message(paste("No data found in ", iLevel, ".\nWill continue with next iType/iLevel..."))
+        if (verbose == TRUE) message(paste("No data found in ", iLevel, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
       # check if test data exists
       if (!is.null(bosc$tests$sinmod[[iLevel]][[iTest]])) {
         if (overwrite == TRUE) {
-          if (verbose == T) message("Test already exists. Will overwrite...")
+          if (verbose == TRUE) message("Test already exists. Will overwrite...")
         } else {
           warning("Test already exists. Will skip to next dataset without performing the FFT...")
           next
@@ -90,7 +96,7 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
         }
 
 
-        if (verbose == T) message("Comparing Observed R2 against Permutations (alpha = ", paste(alpha, collapse = ", "), ")...")
+        if (verbose == TRUE) message("Comparing Observed R2 against Permutations (alpha = ", paste(alpha, collapse = ", "), ")...")
 
 
         # join permutations and observed r2 and determine crit value & p value
@@ -100,7 +106,7 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
             dplyr::select(.data$fixed_f, .data$r2_surr, .data$r2_observed) %>%
             dplyr::distinct() %>%
             dplyr::ungroup() %>%
-            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::mutate(
               n_surrogates = max(.data$n_surr),
@@ -155,7 +161,7 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
             dplyr::filter(.data$term == "f") %>%
             dplyr::select(.data$estimate_observed, .data$r2_surr, .data$r2_observed) %>%
             dplyr::ungroup() %>%
-            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::mutate(
               n_surrogates = max(.data$n_surr),
@@ -178,6 +184,6 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "test_")
 
-  if (verbose == T) message("\nTest completed.")
+  if (verbose == TRUE) message("\nTest completed.")
   return(bosc)
 }

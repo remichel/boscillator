@@ -23,7 +23,7 @@ fft_bosc <- function(bosc,
                      types = c("real", "surrogate"),
                      levels = c("ss", "ga"),
                      overwrite = FALSE,
-                     verbose = T) {
+                     verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -67,25 +67,25 @@ fft_bosc <- function(bosc,
   }
 
 
-  if (verbose == T) message("Start FFT...")
+  if (verbose == TRUE) message("Start FFT...")
 
   # loop through all conditions
   for (iType in types) {
     for (iLevel in levels) {
-      if (verbose == T) message(paste("FFTing", iLevel, iType, "..."))
+      if (verbose == TRUE) message(paste("FFTing", iLevel, iType, "..."))
 
       # check if required data exists
       if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
-        if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        if (verbose == TRUE) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
       # check if FFT data exists
       if (!is.null(bosc$data[[iLevel]][[iType]]$fft)) {
         if (overwrite == TRUE) {
-          if (verbose == T) message("FFT Data already exists. Will overwrite...")
+          if (verbose == TRUE) message("FFT Data already exists. Will overwrite...")
         } else {
-          if (verbose == T) message("FFT Data already exists. Will skip to next dataset without performing the FFT...")
+          if (verbose == TRUE) message("FFT Data already exists. Will skip to next dataset without performing the FFT...")
           next
         }
       }
@@ -137,6 +137,6 @@ fft_bosc <- function(bosc,
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "fft_")
 
-  if (verbose == T) message("FFT completed.")
+  if (verbose == TRUE) message("FFT completed.")
   return(bosc)
 }

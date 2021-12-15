@@ -25,7 +25,7 @@ pad_bosc <- function(bosc,
                      levels = c("ss", "ga"),
                      method = "zero",
                      n_pads = length(bosc$timepoints),
-                     verbose = T) {
+                     verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -45,14 +45,14 @@ pad_bosc <- function(bosc,
     # stop("Number of pads needs to be either positive or zero (for skipping zero-padding")
     message("Number of pads is negative. Will use default option n_pads = length(bosc$timepoints) instead...")
     n_pads <- length(bosc$timepoints)
-    skip <- F
+    skip <- FALSE
   } else if (n_pads == 0) {
-    skip <- T
+    skip <- TRUE
   } else {
-    skip <- F
+    skip <- FALSE
   }
 
-  if (skip == F) {
+  if (skip == FALSE) {
 
     # determine pad lengths
     n_prior <- ceiling(n_pads / 2)
@@ -80,16 +80,16 @@ pad_bosc <- function(bosc,
     pads_time <- c(pads_prior, pads_after)
 
 
-    if (verbose == T) message("Start Padding...")
+    if (verbose == TRUE) message("Start Padding...")
 
     # loop through all conditions
     for (iType in types) {
       for (iLevel in levels) {
-        if (verbose == T) message(paste("Padding", iLevel, iType, "..."))
+        if (verbose == TRUE) message(paste("Padding", iLevel, iType, "..."))
 
         # check if required data exists
         if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
-          if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+          if (verbose == TRUE) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
           next
         }
 
@@ -147,6 +147,6 @@ pad_bosc <- function(bosc,
     bosc$hist <- paste0(bosc$hist, "padd_")
   }
 
-  if (verbose == T) message("Padding completed.")
+  if (verbose == TRUE) message("Padding completed.")
   return(bosc)
 }

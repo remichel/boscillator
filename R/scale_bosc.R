@@ -22,7 +22,7 @@ scale_bosc <- function(bosc,
                        types = c("real", "surrogate"),
                        levels = c("ss", "ga"),
                        method = "z",
-                       verbose = T) {
+                       verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -36,26 +36,26 @@ scale_bosc <- function(bosc,
 
   # get method
   if (method == "none") {
-    if (verbose == T) message("Will skip scaling...")
-    skip <- T
+    if (verbose == TRUE) message("Will skip scaling...")
+    skip <- TRUE
   } else if (method == "z") {
-    skip <- F
+    skip <- FALSE
   } else {
     stop("There is no other method than z-scaling (or no scaling) implemented yet.")
   }
 
 
-  if (skip == F) {
-    if (verbose == T) message("Start Scaling...")
+  if (skip == FALSE) {
+    if (verbose == TRUE) message("Start Scaling...")
 
     # loop through all conditions
     for (iType in types) {
       for (iLevel in levels) {
-        if (verbose == T) message(paste("Scaling", iLevel, iType, "..."))
+        if (verbose == TRUE) message(paste("Scaling", iLevel, iType, "..."))
 
         # check if required data exists
         if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
-          if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+          if (verbose == TRUE) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
           next
         }
 
@@ -99,6 +99,6 @@ scale_bosc <- function(bosc,
     bosc$hist <- paste0(bosc$hist, "scaled_")
   }
 
-  if (verbose == T) message("Scaling completed.")
+  if (verbose == TRUE) message("Scaling completed.")
   return(bosc)
 }

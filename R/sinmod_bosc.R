@@ -23,7 +23,14 @@
 #' bosc = simulate_experiment()
 #' bosc = sinmod_bosc(bosc, types = "real", levels = "ga")
 #'
-sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "ga"), fixed_f = NULL, niter = 100, convergence_count = 50, supp_errors = "Y", overwrite = FALSE, verbose = T) {
+sinmod_bosc <- function(bosc,
+                        types = c("real", "surrogate"),
+                        levels = c("ss", "ga"),
+                        fixed_f = NULL, niter = 100,
+                        convergence_count = 50,
+                        supp_errors = "Y",
+                        overwrite = FALSE,
+                        verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -62,25 +69,25 @@ sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "
   }
 
 
-  if (verbose == T) message("Start sinusoidal modelling...")
+  if (verbose == TRUE) message("Start sinusoidal modelling...")
 
   # loop through all conditions
   for (iType in types) {
     for (iLevel in levels) {
-      if (verbose == T) message(paste("Modelling", iLevel, iType, "..."))
+      if (verbose == TRUE) message(paste("Modelling", iLevel, iType, "..."))
 
       # check if required data exists
       if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
-        if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+        if (verbose == TRUE) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
       # check if sinmod data exists
       if (!is.null(bosc$data[[iLevel]][[iType]]$sinmod)) {
         if (overwrite == TRUE) {
-          if (verbose == T) message("Sinusoidal modelling Data already exists. Will overwrite...")
+          if (verbose == TRUE) message("Sinusoidal modelling Data already exists. Will overwrite...")
         } else {
-          if (verbose == T) message("Sinusoidal modelling Data already exists. Will skip to next dataset without performing the modelling...")
+          if (verbose == TRUE) message("Sinusoidal modelling Data already exists. Will skip to next dataset without performing the modelling...")
           next
         }
       }
@@ -191,6 +198,6 @@ sinmod_bosc <- function(bosc, types = c("real", "surrogate"), levels = c("ss", "
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "sinmod_")
 
-  if (verbose == T) message("Sinusoidal modelling completed.")
+  if (verbose == TRUE) message("Sinusoidal modelling completed.")
   return(bosc)
 }

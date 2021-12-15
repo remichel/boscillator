@@ -30,7 +30,7 @@ test_fft <- function(bosc,
                      alpha = .05,
                      mcc = c("bonferroni", "fdr", "maxfreq"),
                      overwrite = FALSE,
-                     verbose = T) {
+                     verbose = TRUE) {
 
   # get levels
   if (!is.character(levels)) {
@@ -42,7 +42,7 @@ test_fft <- function(bosc,
   }
 
 
-  if (verbose == T) message("Starting tests...")
+  if (verbose == TRUE) message("Starting tests...")
 
   # get MCCs
   if (!is.character(mcc)) {
@@ -62,7 +62,7 @@ test_fft <- function(bosc,
 
   # loop through all conditions
   for (iLevel in levels) {
-    if (verbose == T) message("\nTest on ", iLevel, " level...\n")
+    if (verbose == TRUE) message("\nTest on ", iLevel, " level...\n")
 
     for (iTest in tests) {
 
@@ -70,7 +70,7 @@ test_fft <- function(bosc,
       # check if required data exists
       if (iTest == "ss" | iTest == "ga") {
         if (is.null(bosc$data[[iLevel]]$real$fft) | is.null(bosc$data[[iLevel]]$surrogate$fft)) {
-          if (verbose == T) {
+          if (verbose == TRUE) {
             message(paste(
               "No data found in ", iLevel,
               ".\nWill continue with next Type/Level..."
@@ -80,7 +80,7 @@ test_fft <- function(bosc,
         }
       } else {
         if (is.null(bosc$data$ss$real$fft) | is.null(bosc$data$ss$surrogate$fft)) {
-          if (verbose == T) message(paste("No data found in ss.\nWill continue with next Type/Level..."))
+          if (verbose == TRUE) message(paste("No data found in ss.\nWill continue with next Type/Level..."))
           next
         }
       }
@@ -88,7 +88,7 @@ test_fft <- function(bosc,
       # check if test data exists
       if (!is.null(bosc$tests$fft[[iLevel]][[iTest]])) {
         if (overwrite == TRUE) {
-          if (verbose == T) message("Test already exists. Will overwrite...")
+          if (verbose == TRUE) message("Test already exists. Will overwrite...")
         } else {
           warning("Test already exists. Will skip to next dataset without performing the FFT...")
           next
@@ -109,7 +109,7 @@ test_fft <- function(bosc,
         }
 
 
-        if (verbose == T) {
+        if (verbose == TRUE) {
           message(
             "Comparing Observed FFT Amplitudes against Permutations (alpha = ",
             paste(alpha, collapse = ", "), ")..."
@@ -123,7 +123,7 @@ test_fft <- function(bosc,
           dplyr::mutate(observed = !!bosc$data[[iLevel]]$real$fft$amp) %>%
           dplyr::ungroup() %>%
           # add all alpha levels
-          dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+          dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
           # group by all grouping vars (e.g. frequency and subject) and alpha levels to perform tests on each of these groups separately
           dplyr::group_by_at(c(group_vars, "alpha")) %>%
           # based on alpha, find the critical values for each group within the surrogated amplitudes, extract the p-value and save the observed amplitude again (otherwise its lost after summarize)
@@ -155,7 +155,7 @@ test_fft <- function(bosc,
             dplyr::mutate(observed = !!bosc$data[[iLevel]]$real$fft$amp) %>%
             dplyr::ungroup() %>%
             # add all alpha levels
-            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
             # group by all grouping vars (e.g. frequency and subject), alpha levels AND n_surr to extract the max amplitude from the surrogated datasets
             dplyr::group_by_at(c(group_vars, "n_surr", "alpha")) %>%
             # for each group, extract the maximum amplitude observed in the surrogates
@@ -247,10 +247,10 @@ test_fft <- function(bosc,
           ))
       } else if (iTest == "complex") {
         if (iLevel == "ga" | iLevel == "ss") {
-          if (verbose == T) message("Note: Complex vector analysis needs to be performed with level = merged. Will skip and proceed with next test...")
+          if (verbose == TRUE) message("Note: Complex vector analysis needs to be performed with level = merged. Will skip and proceed with next test...")
           next
         } else if (iLevel == "merged") {
-          if (verbose == T) message("Compare FFT complex vectors against permutations (alpha = ", paste(alpha, collapse = ", "), ") ...")
+          if (verbose == TRUE) message("Compare FFT complex vectors against permutations (alpha = ", paste(alpha, collapse = ", "), ") ...")
         }
 
         # save single surrogate data for 2d plot
@@ -280,7 +280,7 @@ test_fft <- function(bosc,
         # determine critical vector length for each frequency
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
           # add all desired alpha levels
-          dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+          dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
           dplyr::group_by(.data$f, .data$alpha) %>%
           # determine critical vector length within surrogated datasets and determine p value of observed length
           dplyr::summarize(
@@ -300,7 +300,7 @@ test_fft <- function(bosc,
           # get p values for max freq approach
           maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
             # add all desired alpha levels
-            dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+            dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
             dplyr::group_by(.data$n_surr, .data$alpha) %>%
             # determine max vector length within each surrogated dataset
             dplyr::summarise(
@@ -388,11 +388,11 @@ test_fft <- function(bosc,
 
         # skip grand average level
         if (iLevel == "ga" | iLevel == "merged") {
-          if (verbose == T) message("Note: Phase analysis needs to be performed on single subject data. Will skip and proceed with next test...")
+          if (verbose == TRUE) message("Note: Phase analysis needs to be performed on single subject data. Will skip and proceed with next test...")
           next
         }
 
-        if (verbose == T) message("Rayleigh test on phase angles (alpha = ", paste(alpha, collapse = ", "), ")...")
+        if (verbose == TRUE) message("Rayleigh test on phase angles (alpha = ", paste(alpha, collapse = ", "), ")...")
 
         # rayleigh test
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data$ss$real$fft %>%
@@ -454,6 +454,6 @@ test_fft <- function(bosc,
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "test_")
 
-  if (verbose == T) message("\nTest completed.")
+  if (verbose == TRUE) message("\nTest completed.")
   return(bosc)
 }
