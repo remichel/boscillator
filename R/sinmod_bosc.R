@@ -10,6 +10,8 @@
 #' @param niter number of iterations for fitting, is piped into iter argument in nls.multstart function
 #' @param overwrite defaults to F
 #' @param verbose defaults to T
+#' @param convergence_count number of iterations until model is declared winner model, is piped into iter argument in nls.multstart function
+#' @param supp_errors defaults to 'Y', suppresses error messages from nls.multstart?
 #'
 #' @return A BOSC-Object
 #' @importFrom dplyr %>%

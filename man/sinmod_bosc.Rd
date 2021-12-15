@@ -10,6 +10,8 @@ sinmod_bosc(
   levels = c("ss", "ga"),
   fixed_f = NULL,
   niter = 100,
+  convergence_count = 50,
+  supp_errors = "Y",
   overwrite = FALSE,
   verbose = T
 )
@@ -24,6 +26,10 @@ sinmod_bosc(
 \item{fixed_f}{NULL to test all possible frequencies between 0 and nyquist, or specify a vector of frequencies}
 
 \item{niter}{number of iterations for fitting, is piped into iter argument in nls.multstart function}
+
+\item{convergence_count}{number of iterations until model is declared winner model, is piped into iter argument in nls.multstart function}
+
+\item{supp_errors}{defaults to 'Y', suppresses error messages from nls.multstart?}
 
 \item{overwrite}{defaults to F}
 
