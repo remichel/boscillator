@@ -13,17 +13,20 @@
 #'
 #' @author René Michel
 
-bosc <- function(){
+bosc <- function() {
 
   # create bosc object
-  bosc = list(timepoints = NULL,
-              data = list(single_trial = NULL,
-                          ss = NULL,
-                          ga = NULL),
-              tests = NULL,
-              hist = "")
-  class(bosc) = "BOSC-Object"
+  bosc <- list(
+    timepoints = NULL,
+    data = list(
+      single_trial = NULL,
+      ss = NULL,
+      ga = NULL
+    ),
+    tests = NULL,
+    hist = ""
+  )
+  class(bosc) <- "BOSC-Object"
 
   return(bosc)
-
 }

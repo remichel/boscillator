@@ -27,48 +27,47 @@
 test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .05, mcc = c("bonferroni", "fdr"), overwrite = FALSE, verbose = T) {
 
   # get levels
-  if(!is.character(levels)){
+  if (!is.character(levels)) {
     stop("Argument levels must be a character.")
   }
 
   # get tests
-  if(!is.character(tests)){
+  if (!is.character(tests)) {
     stop("Argument levels must be a character.")
   }
 
   # get mccs
-  if(!is.character(mcc)){
+  if (!is.character(mcc)) {
     stop("Argument mcc must be a character.")
-  }else{
-    if(length(mcc) > 0 & mcc[1] != "none"){
-      message("Multiple correction methods ", paste(mcc, collapse = " & ") , " were chosen. All alpha values except ", alpha[1], " will be ignored. \nInstead, ", alpha[1], " will be considered the desired family-wise alpha level for all MCC..\n")
-      alpha = alpha[1]
+  } else {
+    if (length(mcc) > 0 & mcc[1] != "none") {
+      message("Multiple correction methods ", paste(mcc, collapse = " & "), " were chosen. All alpha values except ", alpha[1], " will be ignored. \nInstead, ", alpha[1], " will be considered the desired family-wise alpha level for all MCC..\n")
+      alpha <- alpha[1]
     }
   }
 
 
-  if(verbose == T) message("Starting tests...")
+  if (verbose == T) message("Starting tests...")
 
 
   # loop through all conditions
   for (iLevel in levels) {
+    if (verbose == T) message("\nTest on ", iLevel, " level...\n")
 
-    if(verbose == T) message("\nTest on ", iLevel, ' level...\n')
-
-    for(iTest in tests){
+    for (iTest in tests) {
 
 
       # check if required data exists
-      if(is.null(bosc$data[[iLevel]]$real$sinmod) | is.null(bosc$data[[iLevel]]$surrogate$sinmod)){
-        if(verbose == T) message(paste("No data found in ", iLevel, ".\nWill continue with next iType/iLevel..."))
+      if (is.null(bosc$data[[iLevel]]$real$sinmod) | is.null(bosc$data[[iLevel]]$surrogate$sinmod)) {
+        if (verbose == T) message(paste("No data found in ", iLevel, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
       # check if test data exists
-      if(!is.null(bosc$tests$sinmod[[iLevel]][[iTest]])){
-        if(overwrite == TRUE){
-          if(verbose == T) message("Test already exists. Will overwrite...")
-        }else{
+      if (!is.null(bosc$tests$sinmod[[iLevel]][[iTest]])) {
+        if (overwrite == TRUE) {
+          if (verbose == T) message("Test already exists. Will overwrite...")
+        } else {
           warning("Test already exists. Will skip to next dataset without performing the FFT...")
           next
         }
@@ -77,23 +76,25 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
 
 
       # Perform test
-      if(iTest == "r2"){
+      if (iTest == "r2") {
 
         # define group vars for the following step
-        group_vars = NULL
+        group_vars <- NULL
         # for fixed freq test, group by frequencies
-        if("fixed_f" %in% colnames(bosc$data[[iLevel]]$real$sinmod)){group_vars = c(group_vars, "fixed_f")}
+        if ("fixed_f" %in% colnames(bosc$data[[iLevel]]$real$sinmod)) {
+          group_vars <- c(group_vars, "fixed_f")
+        }
         # for single subject data, group by subject
-        if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+        if (iLevel == "ss") {
+          group_vars <- c(group_vars, "subj")
+        }
 
 
-        if(verbose == T) message("Comparing Observed R2 against Permutations (alpha = ", paste(alpha, collapse = ", "),")...")
+        if (verbose == T) message("Comparing Observed R2 against Permutations (alpha = ", paste(alpha, collapse = ", "), ")...")
 
 
         # join permutations and observed r2 and determine crit value & p value
-        if("fixed_f" %in% colnames(bosc$data[[iLevel]]$real$sinmod)){
-
-
+        if ("fixed_f" %in% colnames(bosc$data[[iLevel]]$real$sinmod)) {
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$sinmod %>%
             dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(group_vars, "term"), suffix = c("_surr", "_observed")) %>%
             dplyr::select(.data$fixed_f, .data$r2_surr, .data$r2_observed) %>%
@@ -101,29 +102,32 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
             dplyr::ungroup() %>%
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
-            dplyr::mutate(n_surrogates = max(.data$n_surr),
-                          crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
-                          p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%
+            dplyr::mutate(
+              n_surrogates = max(.data$n_surr),
+              crit_value = unname(stats::quantile(.data$r2_surr, probs = 1 - alpha, na.rm = T)), # is na.rm = T causing any harm here??
+              p = 1 - stats::ecdf(.data$r2_surr)(.data$r2_observed)
+            ) %>%
             dplyr::distinct(.data$crit_value, .keep_all = T) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
             dplyr::relocate(c(.data$fixed_f, .data$r2_observed), .before = .data$n_surrogates) # %>%
-            #dplyr::mutate(sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
-            #                                     .data$r2_observed <= .data$crit_value ~ 0))
+          # dplyr::mutate(sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
+          #                                     .data$r2_observed <= .data$crit_value ~ 0))
 
 
           # MCC
-          if(length(mcc) > 0 & !("none" %in% mcc)){
+          if (length(mcc) > 0 & !("none" %in% mcc)) {
 
 
 
             # define group vars for MCC
-            group_vars = NULL
+            group_vars <- NULL
             # for single subject data, group by subject
-            if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+            if (iLevel == "ss") {
+              group_vars <- c(group_vars, "subj")
+            }
 
             # apply all MCC corrections
-            for(iMCC in mcc){
-
+            for (iMCC in mcc) {
               bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$tests$sinmod[[iLevel]][[iTest]]$results %>%
                 dplyr::group_by_at(c(group_vars, "alpha")) %>%
                 dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
@@ -135,17 +139,16 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
               dplyr::rename(uncorrected = .data$p) %>%
               tidyr::pivot_longer(cols = c(.data$uncorrected, !!mcc), names_to = "mcc_method", values_to = "p") %>%
               dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
-
           }
 
           # add significance column
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$tests$sinmod[[iLevel]][[iTest]]$results %>%
-            dplyr::mutate(sig = dplyr::case_when(.data$alpha > .data$p ~ 1,
-                                                 .data$alpha <= .data$p ~ 0))
-
-        }else{
-
-          if(!("none" %in% mcc) & length(mcc) > 0) message("No fixed frequencies were found. No multiple comparison correction will be applied...")
+            dplyr::mutate(sig = dplyr::case_when(
+              .data$alpha > .data$p ~ 1,
+              .data$alpha <= .data$p ~ 0
+            ))
+        } else {
+          if (!("none" %in% mcc) & length(mcc) > 0) message("No fixed frequencies were found. No multiple comparison correction will be applied...")
 
           bosc$tests$sinmod[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$sinmod %>%
             dplyr::left_join(bosc$data[[iLevel]]$real$sinmod, by = c(group_vars, "term"), suffix = c("_surr", "_observed")) %>%
@@ -154,19 +157,19 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
             dplyr::ungroup() %>%
             dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
-            dplyr::mutate(n_surrogates = max(.data$n_surr),
-                          crit_value = unname(stats::quantile(.data$r2_surr, probs = 1-alpha, na.rm = T)), # is na.rm = T causing any harm here??
-                          p = 1-stats::ecdf(.data$r2_surr)(.data$r2_observed)) %>%
+            dplyr::mutate(
+              n_surrogates = max(.data$n_surr),
+              crit_value = unname(stats::quantile(.data$r2_surr, probs = 1 - alpha, na.rm = T)), # is na.rm = T causing any harm here??
+              p = 1 - stats::ecdf(.data$r2_surr)(.data$r2_observed)
+            ) %>%
             dplyr::distinct(.data$crit_value, .keep_all = T) %>%
             dplyr::select(-.data$n_surr, -.data$r2_surr) %>%
             dplyr::relocate(c(.data$estimate_observed, .data$r2_observed), .before = .data$n_surrogates) %>%
-            dplyr::mutate(sig = dplyr::case_when(.data$r2_observed > .data$crit_value ~ 1,
-                                                 .data$r2_observed <= .data$crit_value ~ 0))
+            dplyr::mutate(sig = dplyr::case_when(
+              .data$r2_observed > .data$crit_value ~ 1,
+              .data$r2_observed <= .data$crit_value ~ 0
+            ))
         }
-
-
-
-
       }
     }
   }
@@ -175,6 +178,6 @@ test_sinmod <- function(bosc, levels = c("ss", "ga"), tests = c("r2"), alpha = .
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "test_")
 
-  if(verbose == T) message("\nTest completed.")
+  if (verbose == T) message("\nTest completed.")
   return(bosc)
 }

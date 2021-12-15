@@ -25,80 +25,80 @@ scale_bosc <- function(bosc,
                        verbose = T) {
 
   # get levels
-  if(!is.character(levels)){
+  if (!is.character(levels)) {
     stop("Argument levels must be a character.")
   }
 
   # get types
-  if(!is.character(types)){
+  if (!is.character(types)) {
     stop("Argument types must be a character.")
   }
 
   # get method
-  if(method == "none"){
-    if(verbose == T) message("Will skip scaling...")
-    skip = T
-  }else if(method == "z"){
-    skip = F
-  }else{
+  if (method == "none") {
+    if (verbose == T) message("Will skip scaling...")
+    skip <- T
+  } else if (method == "z") {
+    skip <- F
+  } else {
     stop("There is no other method than z-scaling (or no scaling) implemented yet.")
   }
 
 
-  if(skip == F){
+  if (skip == F) {
+    if (verbose == T) message("Start Scaling...")
 
-  if(verbose == T) message("Start Scaling...")
+    # loop through all conditions
+    for (iType in types) {
+      for (iLevel in levels) {
+        if (verbose == T) message(paste("Scaling", iLevel, iType, "..."))
 
-  # loop through all conditions
-  for (iType in types) {
-    for (iLevel in levels) {
+        # check if required data exists
+        if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
+          if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+          next
+        }
 
-      if(verbose == T) message(paste("Scaling", iLevel, iType, "..."))
-
-      # check if required data exists
-      if(is.null(bosc$data[[iLevel]][[iType]]$data)){
-        if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
-        next
-      }
-
-      # check whether padding was already applied for the condition at hand
-      if(!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)){
-        if("SCALED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
-          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already scaled. Are you sure you want to continue with yet another scaling?"))
-          if(reply == 2){
-            next
+        # check whether padding was already applied for the condition at hand
+        if (!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
+          if ("SCALED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")) {
+            reply <- utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already scaled. Are you sure you want to continue with yet another scaling?"))
+            if (reply == 2) {
+              next
+            }
           }
         }
+
+        # define group vars for the following step
+        group_vars <- NULL
+        # for single subject data, group by subject
+        if (iLevel == "ss") {
+          group_vars <- c(group_vars, "subj")
+        }
+        # for surrogate data, group by n_surr
+        if (iType == "surrogate") {
+          group_vars <- c(group_vars, "n_surr")
+        }
+
+
+        # scaling
+        bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
+          dplyr::group_by_at(group_vars) %>%
+          dplyr::mutate(hr = scale(.data$hr))
+
+        # add preprocessing step to documentation
+        if (is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
+          bosc$data[[iLevel]][[iType]]$preprocessing <- paste0("SCALED_METHOD:", method)
+        } else {
+          bosc$data[[iLevel]][[iType]]$preprocessing <- paste(bosc$data[[iLevel]][[iType]]$preprocessing, paste0("SCALED_METHOD:", method), sep = "_")
+        }
       }
-
-      # define group vars for the following step
-      group_vars = NULL
-      # for single subject data, group by subject
-      if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
-      # for surrogate data, group by n_surr
-      if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
-
-
-      # scaling
-      bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
-        dplyr::group_by_at(group_vars) %>%
-        dplyr::mutate(hr = scale(.data$hr))
-
-      # add preprocessing step to documentation
-      if (is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
-        bosc$data[[iLevel]][[iType]]$preprocessing <- paste0("SCALED_METHOD:", method)
-      } else {
-        bosc$data[[iLevel]][[iType]]$preprocessing <- paste(bosc$data[[iLevel]][[iType]]$preprocessing, paste0("SCALED_METHOD:", method), sep = "_")
-      }
-
     }
+
+    # add executed command to history
+    bosc$hist <- paste0(bosc$hist, "scaled_")
   }
 
-  # add executed command to history
-  bosc$hist <- paste0(bosc$hist, "scaled_")
-
-  }
-
-  if(verbose == T) message("Scaling completed.")
+  if (verbose == T) message("Scaling completed.")
   return(bosc)
 }

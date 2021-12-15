@@ -26,55 +26,58 @@ detrend_bosc <- function(bosc,
                          verbose = T) {
 
   # get levels
-  if(!is.character(levels)){
+  if (!is.character(levels)) {
     stop("Argument levels must be a character.")
   }
 
   # get types
-  if(!is.character(types)){
+  if (!is.character(types)) {
     stop("Argument types must be a character.")
   }
 
   # check order
-  if(order < 0){
+  if (order < 0) {
     stop("Negative order. No detrending will be applied...")
-  }else if((order %% 1) != 0){
+  } else if ((order %% 1) != 0) {
     stop("Order must be an integer. No detrending will be applied...")
-  }else{
-    poly_order <- max(order,1)
+  } else {
+    poly_order <- max(order, 1)
   }
 
 
-  if(verbose == T) message("Start detrending...")
+  if (verbose == T) message("Start detrending...")
 
   # loop through all conditions
   for (iType in types) {
     for (iLevel in levels) {
-
-      if(verbose == T) message(paste("Detrending", iLevel, iType, "..."))
+      if (verbose == T) message(paste("Detrending", iLevel, iType, "..."))
 
       # check if required data exists
-      if(is.null(bosc$data[[iLevel]][[iType]]$data)){
-        if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+      if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
+        if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
       # check whether detrending was already applied for the condition at hand
-      if(!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)){
-        if("DETRENDED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
-          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already detrended. Are you sure you want to continue with yet another detrending?"))
-          if(reply == 2){
+      if (!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
+        if ("DETRENDED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")) {
+          reply <- utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already detrended. Are you sure you want to continue with yet another detrending?"))
+          if (reply == 2) {
             next
           }
         }
       }
 
       # define group vars for the following step
-      group_vars = NULL
+      group_vars <- NULL
       # for single subject data, group by subject
-      if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+      if (iLevel == "ss") {
+        group_vars <- c(group_vars, "subj")
+      }
       # for surrogate data, group by n_surr
-      if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
+      if (iType == "surrogate") {
+        group_vars <- c(group_vars, "n_surr")
+      }
 
       # de-trending
       bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
@@ -92,15 +95,14 @@ detrend_bosc <- function(bosc,
       } else {
         bosc$data[[iLevel]][[iType]]$preprocessing <- paste(bosc$data[[iLevel]][[iType]]$preprocessing, paste0("DETRENDED_ORDER:", order), sep = "_")
       }
-
     }
   }
 
 
-    # add executed command to history
-    bosc$hist <- paste0(bosc$hist, "detrend_")
+  # add executed command to history
+  bosc$hist <- paste0(bosc$hist, "detrend_")
 
 
-  if(verbose == T) message("Detrending completed.")
+  if (verbose == T) message("Detrending completed.")
   return(bosc)
 }

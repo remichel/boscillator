@@ -39,9 +39,9 @@ simulate_experiment <-
            n_trials = 100,
            sfreq = 25,
            osc_params = c(0.5, .1, 4, 0),
-           phase_jitter = c(0,0),
-           amplitude_jitter = c(0,0),
-           freq_jitter = c(0,0),
+           phase_jitter = c(0, 0),
+           amplitude_jitter = c(0, 0),
+           freq_jitter = c(0, 0),
            intercept_jitter = 0,
            transient = "none",
            transient_expModel_params = c(0, 1, .3),
@@ -52,41 +52,58 @@ simulate_experiment <-
            seed_num = NULL) {
 
     # exponential model for transient window / trend
-    expModel <- function(t, intercept, n0, tau) {intercept + n0 * exp(-t / tau)}
+    expModel <- function(t, intercept, n0, tau) {
+      intercept + n0 * exp(-t / tau)
+    }
 
     # linear model for transient window / trend
-    linModel <- function(t, b0, b1) {b0 + t * b1}
+    linModel <- function(t, b0, b1) {
+      b0 + t * b1
+    }
 
     # generative sinusoidal model
     sin_model <- function(t, intercept, amplitude, frequency, phi) {
 
       # transient
-      transient <- `if`(transient == "hanning", bspec::hannwindow(n_timepoints),
-                        `if`(transient == "exponential", expModel(t,
-                                                                  transient_expModel_params[1],
-                                                                  transient_expModel_params[2],
-                                                                  transient_expModel_params[3]),
-                             rep(1, n_timepoints)))
+      transient <- `if`(
+        transient == "hanning", bspec::hannwindow(n_timepoints),
+        `if`(
+          transient == "exponential", expModel(
+            t,
+            transient_expModel_params[1],
+            transient_expModel_params[2],
+            transient_expModel_params[3]
+          ),
+          rep(1, n_timepoints)
+        )
+      )
 
       # trend
-      trend <- `if`(trend == "linear", linModel(t,
-                                                trend_linModel_params[1],
-                                                trend_linModel_params[2]),
-                    `if`(trend == "exponential", expModel(t,
-                                                          trend_expModel_params[1],
-                                                          trend_expModel_params[2],
-                                                          trend_expModel_params[3]),
-                         intercept))
+      trend <- `if`(
+        trend == "linear", linModel(
+          t,
+          trend_linModel_params[1],
+          trend_linModel_params[2]
+        ),
+        `if`(
+          trend == "exponential", expModel(
+            t,
+            trend_expModel_params[1],
+            trend_expModel_params[2],
+            trend_expModel_params[3]
+          ),
+          intercept
+        )
+      )
 
       # oscillation
       osc_amplitude <- stats::rnorm(1, amplitude, amplitude_jitter[1])
-      osc_freq      <- stats::rnorm(1, frequency, freq_jitter[1])
-      osc_phase     <- stats::rnorm(1, phi, phase_jitter[1])
-      oscillation   <- osc_amplitude * sin(2 * pi * t * osc_freq + osc_phase)
+      osc_freq <- stats::rnorm(1, frequency, freq_jitter[1])
+      osc_phase <- stats::rnorm(1, phi, phase_jitter[1])
+      oscillation <- osc_amplitude * sin(2 * pi * t * osc_freq + osc_phase)
 
       # generate model
       trend + oscillation * transient
-
     }
 
     # set seed
@@ -99,8 +116,10 @@ simulate_experiment <-
     t <- seq(0, (n_timepoints - 1) / sfreq, 1 / sfreq)
 
     # create grid of subjects x time points
-    data <- expand.grid(list(subj = as.factor(c(1:n_sub)),
-                             time = t))
+    data <- expand.grid(list(
+      subj = as.factor(c(1:n_sub)),
+      time = t
+    ))
 
 
     # simulate single trial data
@@ -108,29 +127,35 @@ simulate_experiment <-
       dplyr::group_by(.data$subj) %>%
       # for each subject, determine the probability for a hit for each point in "t" from the underlying sinusoidal model
       # max() is used to avoid negative input values for the sin_model fctn which might occur due to high jitter values
-      dplyr::mutate(osc = sin_model(t = .data$time,
-                                    intercept = max(0, !!osc_params[1] + stats::rnorm(1, 0, !!intercept_jitter)),
-                                    amplitude = max(0, !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2])),
-                                    frequency = max(0, !!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2])),
-                                    phi = !!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2]))) %>%
+      dplyr::mutate(osc = sin_model(
+        t = .data$time,
+        intercept = max(0, !!osc_params[1] + stats::rnorm(1, 0, !!intercept_jitter)),
+        amplitude = max(0, !!osc_params[2] + stats::rnorm(1, 0, !!amplitude_jitter[2])),
+        frequency = max(0, !!osc_params[3] + stats::rnorm(1, 0, !!freq_jitter[2])),
+        phi = !!osc_params[4] + stats::rnorm(1, 0, !!phase_jitter[2])
+      )) %>%
       # apply limiter to the probabilities to stay within probability space [0 1]
-      dplyr::mutate(osc = dplyr::case_when(.data$osc > 1 ~ 1,
-                                           .data$osc < 0 ~ 0,
-                                           TRUE ~ .data$osc)) %>%
+      dplyr::mutate(osc = dplyr::case_when(
+        .data$osc > 1 ~ 1,
+        .data$osc < 0 ~ 0,
+        TRUE ~ .data$osc
+      )) %>%
       dplyr::ungroup() %>%
       # based on the probabilites saved in .data$osc, simulate single trial responses for n_trials by drawing from a binom distr
-      dplyr::mutate(trial = purrr::map(.data$osc, function(x){
+      dplyr::mutate(trial = purrr::map(.data$osc, function(x) {
         stats::rbinom(x, n = !!n_trials, size = 1) %>%
           t() %>%
           dplyr::as_tibble(.name_repair = ~ vctrs::vec_as_names(..., repair = "unique", quiet = TRUE))
-        })) %>%
+      })) %>%
       tidyr::unnest(cols = .data$trial) %>%
       # rename the columns into "trial numbers"
-      dplyr::rename_with(~seq(1,n_trials, 1), .cols = paste0("...", 1:!!n_trials)) %>%
+      dplyr::rename_with(~ seq(1, n_trials, 1), .cols = paste0("...", 1:!!n_trials)) %>%
       # bring into long format
-      tidyr::pivot_longer(col = "1":as.character(!!n_trials),
-                          names_to = "trial",
-                          values_to = "resp") %>%
+      tidyr::pivot_longer(
+        col = "1":as.character(!!n_trials),
+        names_to = "trial",
+        values_to = "resp"
+      ) %>%
       dplyr::mutate(trial = as.numeric(.data$trial)) %>%
       # eliminate underlying probability values
       dplyr::select(-.data$osc)
@@ -164,12 +189,9 @@ simulate_experiment <-
     bosc$hist <- paste0(bosc$hist, "sim-exp_")
 
     # if desired, aggregate the single trial data
-    if(aggregate == TRUE){
-      bosc = aggregate_bosc(bosc, types = "real", levels = c("ss","ga"))
+    if (aggregate == TRUE) {
+      bosc <- aggregate_bosc(bosc, types = "real", levels = c("ss", "ga"))
     }
 
     return(bosc)
   }
-
-
-

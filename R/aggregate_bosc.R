@@ -22,67 +22,61 @@
 aggregate_bosc <- function(bosc,
                            types = c("real"),
                            levels = c("ss", "ga"),
-                           overwrite = FALSE){
+                           overwrite = FALSE) {
 
   # check for bosc object
-  if(class(bosc) != "BOSC-Object"){
+  if (class(bosc) != "BOSC-Object") {
     stop("No object of class 'BOSC-Object' found. Consider using 'bosc()' to generate a BOSC object before calling this function.")
   }
 
   # get levels
-  if(!is.character(levels)){
+  if (!is.character(levels)) {
     stop("Argument levels must be a character.")
   }
 
   # get types
-  if(!is.character(types)){
+  if (!is.character(types)) {
     stop("Argument types must be a character.")
   }
 
 
   # loop through all conditions
-  for(iType in types){
+  for (iType in types) {
+    for (iLevel in levels) {
+      if (is.null(bosc$data[[iLevel]][[iType]]) | overwrite == TRUE) {
 
-    for(iLevel in levels){
-
-        if(is.null(bosc$data[[iLevel]][[iType]]) | overwrite == TRUE){
-
-          # check for existing data
-          if(!is.null(bosc$data[[iLevel]][[iType]])) message("Data already exists and will be overwritten...")
+        # check for existing data
+        if (!is.null(bosc$data[[iLevel]][[iType]])) message("Data already exists and will be overwritten...")
 
 
-          # which levels of data should be aggregated?
-          if(iLevel == "ss"){
-            group_subj    = "subj"
-            input_level   = "single_trial"
-            output_level  = "ss"
-            var           = "resp"
-          }else if(iLevel == "ga"){
-            group_subj    = NULL
-            input_level   = "ss"
-            output_level  = "ga"
-            var           = "hr"
-          }
+        # which levels of data should be aggregated?
+        if (iLevel == "ss") {
+          group_subj <- "subj"
+          input_level <- "single_trial"
+          output_level <- "ss"
+          var <- "resp"
+        } else if (iLevel == "ga") {
+          group_subj <- NULL
+          input_level <- "ss"
+          output_level <- "ga"
+          var <- "hr"
+        }
 
-          # define grouping variables based on the type of data
-          if(iType == "surrogate"){
-            group_vars = c(group_subj, "time", "n_surr")
-          }else{
-            group_vars = c(group_subj, "time")
-          }
+        # define grouping variables based on the type of data
+        if (iType == "surrogate") {
+          group_vars <- c(group_subj, "time", "n_surr")
+        } else {
+          group_vars <- c(group_subj, "time")
+        }
 
-          # aggregate
-          bosc$data[[output_level]][[iType]]$data <- bosc$data[[input_level]][[iType]]$data %>%
-            dplyr::group_by_at(group_vars) %>%
-            dplyr::summarise(hr = mean(!!as.name(var)))
-
-      }else{
-
+        # aggregate
+        bosc$data[[output_level]][[iType]]$data <- bosc$data[[input_level]][[iType]]$data %>%
+          dplyr::group_by_at(group_vars) %>%
+          dplyr::summarise(hr = mean(!!as.name(var)))
+      } else {
         stop("Data already exists. If you want to overwrite, please specify as overwrite = T.")
-
       }
     }
-
   }
 
   # add executed command to history

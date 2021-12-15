@@ -14,10 +14,8 @@
 #'
 #' #' @author René Michel
 #'
-split_string_arg <- function(string, sep){
-
-  string_list = strsplit(string, sep)
-  string_vec = unlist(string_list)
+split_string_arg <- function(string, sep) {
+  string_list <- strsplit(string, sep)
+  string_vec <- unlist(string_list)
   return(string_vec)
-
 }

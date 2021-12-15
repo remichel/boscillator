@@ -29,19 +29,36 @@ bosc_sim_default <- function(surrogates = T,
                              fft = F,
                              sinmod = F,
                              fft_test = F,
-                             sinmod_test = F){
-
+                             sinmod_test = F) {
   bosc <- boscillator::simulate_experiment()
 
-  if(surrogates){bosc <- boscillator::generate_surrogates(bosc, n_surr = 10)}
-  if(detrend){bosc <- boscillator::detrend_bosc(bosc)}
-  if(window){bosc <- boscillator::window_bosc(bosc)}
-  if(scale){bosc <- scale_bosc(bosc)}
-  if(pad){bosc <- pad_bosc(bosc)}
-  if(fft){bosc <- fft_bosc(bosc)}
-  if(sinmod){bosc <- sinmod_bosc(bosc)}
-  if(fft_test){bosc <- test_fft(bosc)}
-  if(sinmod_test){bosc <- test_sinmod(bosc)}
+  if (surrogates) {
+    bosc <- boscillator::generate_surrogates(bosc, n_surr = 10)
+  }
+  if (detrend) {
+    bosc <- boscillator::detrend_bosc(bosc)
+  }
+  if (window) {
+    bosc <- boscillator::window_bosc(bosc)
+  }
+  if (scale) {
+    bosc <- scale_bosc(bosc)
+  }
+  if (pad) {
+    bosc <- pad_bosc(bosc)
+  }
+  if (fft) {
+    bosc <- fft_bosc(bosc)
+  }
+  if (sinmod) {
+    bosc <- sinmod_bosc(bosc)
+  }
+  if (fft_test) {
+    bosc <- test_fft(bosc)
+  }
+  if (sinmod_test) {
+    bosc <- test_sinmod(bosc)
+  }
 
   return(bosc)
 }

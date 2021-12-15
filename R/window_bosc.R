@@ -30,61 +30,68 @@ window_bosc <- function(bosc,
                         verbose = T) {
 
   # get levels
-  if(!is.character(levels)){
+  if (!is.character(levels)) {
     stop("Argument levels must be a character.")
   }
   # get types
-  if(!is.character(types)){
+  if (!is.character(types)) {
     stop("Argument types must be a character.")
   }
   # check order
-  if(!is.character(method)){
+  if (!is.character(method)) {
     stop("Method must be a character.")
   }
 
-  if(verbose == T) message("Start windowing...")
+  if (verbose == T) message("Start windowing...")
 
   # loop through all conditions
   for (iType in types) {
     for (iLevel in levels) {
-
-      if(verbose == T) message(paste("Windowing", iLevel, iType, "..."))
+      if (verbose == T) message(paste("Windowing", iLevel, iType, "..."))
 
       # check if required data exists
-      if(is.null(bosc$data[[iLevel]][[iType]]$data)){
-        if(verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
+      if (is.null(bosc$data[[iLevel]][[iType]]$data)) {
+        if (verbose == T) message(paste("No data found in ", iLevel, iType, ".\nWill continue with next iType/iLevel..."))
         next
       }
 
       # check whether detrending was already applied for the condition at hand
-      if(!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)){
-        if("WINDOWED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")){
-          reply = utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already windowed. Are you sure you want to continue with yet another windowing?"))
-          if(reply == 2){
+      if (!is.null(bosc$data[[iLevel]][[iType]]$preprocessing)) {
+        if ("WINDOWED" %in% split_string_arg(bosc$data[[iLevel]][[iType]]$preprocessing, "_")) {
+          reply <- utils::menu(c("Yes", "No"), title = paste("Data in", iLevel, iType, "was already windowed. Are you sure you want to continue with yet another windowing?"))
+          if (reply == 2) {
             next
           }
         }
       }
 
       # determine window length
-      if(length(bosc$timepoints) == length(unique(bosc$data[[iLevel]][[iType]]$data$time))){
-        n = length(bosc$timepoints)
-      }else{
-        if(verbose == T) message("Number of timepoints in dataset seems to deviate from original number of timepoints, possibly due to padding. Continue with number the number of timepoints in dataset, which is ",
-                                 length(unique(bosc$data[[iLevel]][[iType]]$data$time)), "...")
-        n = length(unique(bosc$data[[iLevel]][[iType]]$data$time))
+      if (length(bosc$timepoints) == length(unique(bosc$data[[iLevel]][[iType]]$data$time))) {
+        n <- length(bosc$timepoints)
+      } else {
+        if (verbose == T) {
+          message(
+            "Number of timepoints in dataset seems to deviate from original number of timepoints, possibly due to padding. Continue with number the number of timepoints in dataset, which is ",
+            length(unique(bosc$data[[iLevel]][[iType]]$data$time)), "..."
+          )
+        }
+        n <- length(unique(bosc$data[[iLevel]][[iType]]$data$time))
       }
 
 
       # define group vars for the following step
-      group_vars = NULL
+      group_vars <- NULL
       # for single subject data, group by subject
-      if(iLevel == "ss"){group_vars = c(group_vars, "subj")}
+      if (iLevel == "ss") {
+        group_vars <- c(group_vars, "subj")
+      }
       # for surrogate data, group by n_surr
-      if(iType == "surrogate"){group_vars = c(group_vars, "n_surr")}
+      if (iType == "surrogate") {
+        group_vars <- c(group_vars, "n_surr")
+      }
 
       # windowing
-      if(method != "none"){
+      if (method != "none") {
         bosc$data[[iLevel]][[iType]]$data <- bosc$data[[iLevel]][[iType]]$data %>%
           dplyr::group_by_at(group_vars) %>%
           dplyr::mutate(hr = dplyr::case_when(
@@ -95,8 +102,8 @@ window_bosc <- function(bosc,
             !!method == "cosine" ~ .data$hr * bspec::cosinewindow(!!n, !!alpha),
             !!method == "kaiser" ~ .data$hr * bspec::kaiserwindow(!!n, !!alpha)
           ))
-      }else{
-        if(verbose == T) message("No window will be applied...")
+      } else {
+        if (verbose == T) message("No window will be applied...")
       }
 
 
@@ -106,13 +113,12 @@ window_bosc <- function(bosc,
       } else {
         bosc$data[[iLevel]][[iType]]$preprocessing <- paste(bosc$data[[iLevel]][[iType]]$preprocessing, paste0("WINDOWED_METHOD:", method), sep = "_")
       }
-
     }
   }
 
   # add executed command to history
   bosc$hist <- paste0(bosc$hist, "window_")
 
-  if(verbose == T) message("Windowing completed.")
+  if (verbose == T) message("Windowing completed.")
   return(bosc)
 }

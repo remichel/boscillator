@@ -30,7 +30,7 @@ generate_surrogates <-
            aggregate = T) {
 
     # check for bosc object
-    if(class(bosc) != "BOSC-Object"){
+    if (class(bosc) != "BOSC-Object") {
       stop("No object of class 'BOSC-Object' found. Consider using 'bosc()' to generate a BOSC object before calling this function.")
     }
 
@@ -64,24 +64,23 @@ generate_surrogates <-
       bosc$data$single_trial$surrogate$spec <- list(
         seed_num = seed_num,
         method = method,
-        n_surr = n_surr)
+        n_surr = n_surr
+      )
 
-        # aggregate surrogates
-        if (aggregate == TRUE) {
-
-          bosc = aggregate_bosc(bosc, types = "surrogate", levels = c("ss", "ga"))
-
-        }
-
-    }else if(method == "ar"){
-
+      # aggregate surrogates
+      if (aggregate == TRUE) {
+        bosc <- aggregate_bosc(bosc, types = "surrogate", levels = c("ss", "ga"))
+      }
+    } else if (method == "ar") {
       bosc$data$ss$surrogate$data <- bosc$data$ss$real$data %>%
         # fit an AR model to each subject's time course
         dplyr::group_by(.data$subj) %>%
         tidyr::nest() %>%
-        dplyr::mutate(model = purrr::map(.data$data, ~ forecast::Arima(y = .x$hr,
-                                                                       order = c(1, 0, 0),
-                                                                       method = "ML"))) %>%
+        dplyr::mutate(model = purrr::map(.data$data, ~ forecast::Arima(
+          y = .x$hr,
+          order = c(1, 0, 0),
+          method = "ML"
+        ))) %>%
         # replicate the dataset to generate n_surr rows per subjects
         dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
         dplyr::group_by(.data$subj) %>%
@@ -96,36 +95,35 @@ generate_surrogates <-
       bosc$data$ss$surrogate$spec <- list(
         seed_num = seed_num,
         method = method,
-        n_surr = n_surr)
+        n_surr = n_surr
+      )
 
-        # AR1 models from grand average (this might be easier & faster using purrr:map as in simulate_experiment)
-        bosc$data$ga$surrogate$data <- bosc$data$ga$real$data %>%
-          # fit an AR model to the GA time course
-          tidyr::nest(data = tidyr::everything()) %>%
-          dplyr::mutate(model = purrr::map(.data$data, ~ forecast::Arima(y = .x$hr,
-                                                                         order = c(1, 0, 0),
-                                                                         method = "ML"))) %>%
-          # replicate the dataset to generate n_surr rows per subjects
-          dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
-          dplyr::mutate(n_surr = dplyr::row_number()) %>%
-          # simulate a time course from the AR model for each n_surr
-          dplyr::mutate(sim = purrr::map(.data$model, ~ stats::simulate(.x, n_sim = !!bosc$timepoints))) %>%
-          tidyr::unnest(cols = c(.data$data, .data$sim)) %>%
-          dplyr::select(-c(.data$hr, .data$model)) %>%
-          dplyr::rename(hr = .data$sim)
+      # AR1 models from grand average (this might be easier & faster using purrr:map as in simulate_experiment)
+      bosc$data$ga$surrogate$data <- bosc$data$ga$real$data %>%
+        # fit an AR model to the GA time course
+        tidyr::nest(data = tidyr::everything()) %>%
+        dplyr::mutate(model = purrr::map(.data$data, ~ forecast::Arima(
+          y = .x$hr,
+          order = c(1, 0, 0),
+          method = "ML"
+        ))) %>%
+        # replicate the dataset to generate n_surr rows per subjects
+        dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
+        dplyr::mutate(n_surr = dplyr::row_number()) %>%
+        # simulate a time course from the AR model for each n_surr
+        dplyr::mutate(sim = purrr::map(.data$model, ~ stats::simulate(.x, n_sim = !!bosc$timepoints))) %>%
+        tidyr::unnest(cols = c(.data$data, .data$sim)) %>%
+        dplyr::select(-c(.data$hr, .data$model)) %>%
+        dplyr::rename(hr = .data$sim)
 
-        # save information about surrogates in a spec file
-        bosc$data$ga$surrogate$spec <- list(
-          seed_num = seed_num,
-          method = method,
-          n_surr = n_surr)
-
-
-
-    }else{
-
+      # save information about surrogates in a spec file
+      bosc$data$ga$surrogate$spec <- list(
+        seed_num = seed_num,
+        method = method,
+        n_surr = n_surr
+      )
+    } else {
       stop("Method unknown.")
-
     }
 
     # add executed command to history
