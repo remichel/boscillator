@@ -74,15 +74,25 @@ bosc_import <- function(data, sfreq, n_timepoints, vars = c("subj", "time", "tri
     stop("Your desired level is not implemented in boscillator yet... :(")
   }
 
+
+  # calculate mean sfreq from differences between time points
+  timepoints <- sort(unique(data$time))
+  est_sfreq <-  1/mean(diff(timepoints))
+
   # check if timepoints and sfreq can be reproduced in data
-  if(length(unique(data$time)) !=  n_timepoints){
+  if(length(timepoints) !=  n_timepoints){
     warning("Number of timepoints doesn't match number of timepoints found in dataset")
   }
-  if(1/(sort(unique(data$time))[2] - sort(unique(data$time))[1]) != sfreq){
-    warning("Sfreq in dataset is ", 1/(sort(unique(data$time))[2] - sort(unique(data$time))[1]), " but ", sfreq, "was piped into sfreq-argument.")
+  if(est_sfreq != sfreq){
+    warning("Estimated sfreq within dataset (derived from spacing between time points) is ", est_sfreq, "Hz but ", sfreq, "Hz was piped into sfreq-argument.")
   }
 
-  message("Found ", length(unique(data$subj)), " subjects.\nFound ", length(unique(data$time)), " timepoints ranging from ", sort(unique(data$time))[1] ," to ", sort(unique(data$time))[n_timepoints] , ".\nFound ", stats::xtabs(~data$subj+data$time)[1], " trials per condition.")
+
+
+  message("Found ", length(unique(data$subj)),
+          " subjects.\nFound ", length(timepoints),
+          " timepoints ranging from ", timepoints[1] ," to ", timepoints[n_timepoints] ,
+          ".\nFound ", stats::xtabs(~data$subj+data$time)[1], " trials per condition.")
 
 
   # add executed command to history
