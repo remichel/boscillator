@@ -18,3 +18,37 @@ def_trend_linModel_params = c(0, 0)
 def_trend_expModel_params = c(0, 0, 0)
 def_aggregate = T
 def_seed_num = NULL
+
+# generate surrogates defaults
+def_n_surr = 20
+no_surr_bosc = simulate_experiment()
+
+# aggregate defaults
+no_agg_bosc = simulate_experiment(aggregate = F)
+def_types = c("real")
+def_levels = c("ss", "ga")
+def_overwrite = FALSE
+
+# detrend defaults
+no_detr_bosc_lin = simulate_experiment(trend = "linear", trend_linModel_params = c(0.3, 0.2))
+no_detr_bosc_lin = generate_surrogates(no_detr_bosc_lin)
+
+no_detr_bosc_exp = simulate_experiment(trend = "exponential", trend_expModel_params = c(0, 1 - 2 * 0.1, .6))
+no_detr_bosc_exp = generate_surrogates(no_detr_bosc_exp)
+
+# window/pad/scale defaults
+no_x_bosc = simulate_experiment()
+no_x_bosc = generate_surrogates(no_x_bosc, n_surr = def_n_surr)
+
+def_n_pads = 50
+
+# sinmod/fft defaults
+no_model_bosc = simulate_experiment()
+no_model_bosc = generate_surrogates(no_model_bosc, n_surr = def_n_surr)
+
+def_bins = c(1.25, 2.50, 3.75, 5.00, 6.25, 7.50, 8.75, 10.00, 11.25, 12.50)
+
+
+
+
+

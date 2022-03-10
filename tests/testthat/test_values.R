@@ -1,7 +1,9 @@
 #' BOSC TESTS TEST VALUES FILE
 #' stores all test matrices for unit testing boscillator functions
 
-# define test matrix
+# SIMULATE EXPERIMENT
+library(tidyverse)
+# define test matrix for
 test_matrix <- data.frame(n_sub = c(20),
                           n_timepoints = c(30),
                           n_trials = c(200),
@@ -36,3 +38,7 @@ test_matrix <- test_matrix %>% add_row(n_sub = c(10),
                         trend_expModel_params = I(list(c(0, 1 - 2 * 0.1, .6))),
                         aggregate = c(T),
                         seed_num = c(872957.7))
+
+# AGGREGATE BOSC
+aggregate_matrix <-data.frame(types = c("real", "surrogate"),
+                              levels = c("ss", "ss-ga"))

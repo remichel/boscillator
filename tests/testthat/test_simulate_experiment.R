@@ -8,7 +8,6 @@
 # - test_matrix schöner & values per loop unpacken
 # -> vielleicht sinnvoller als Liste anstatt data.frame? Dann muss tidyverse auch nicht extra laden
 ###################################################################################################
-library(tidyverse)
 source("test_values.R") # sources test matrix
 source("defaults.R") # sources defaults (here only n_sub, n_timepoints & n_trials & sfreq used)
 
@@ -44,20 +43,7 @@ for (i in 1:nrow(test_matrix)){
     # data is aggregated (as set in defaults)
     bosc <- simulate_experiment(aggregate = T)
     expect_match(bosc$hist, "_aggregate_")
-
-    # check, if single subject data was aggregated correctly
-    expect_equal(nrow(bosc$data$ss$real$data), def_n_sub * def_n_timepoints)
-    expect_equal(bosc$data$ss$real$data$subj, as.factor(sort(rep(1:def_n_sub, def_n_timepoints))))
-    expect_equal(bosc$data$ss$real$data$time, rep(seq(0, (def_n_timepoints - 1) / def_sfreq, 1 / def_sfreq), def_n_sub)) ##########
-    #check, if parameters are combined correctly -> unique combination
-    expect_equal(unique(xtabs(~bosc$data$ss$real$data$subj + bosc$data$ss$real$data$time)), 1)
-
-    # check, if grand average data was aggregated correctly
-    expect_equal(nrow(bosc$data$ga$real$data), def_n_timepoints)
-    expect_equal(bosc$data$ga$real$data$time, seq(0, (def_n_timepoints - 1) / def_sfreq, 1 / def_sfreq)) ########
-    #################################################################################################
-    #check, if parameters are uniquely combined omitted since 2 identical hit rates are pretty likely
-    #################################################################################################
+    # aggregation itself is tested in test_aggregate
   })
 
 
