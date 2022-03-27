@@ -100,7 +100,7 @@ bosc_import <- function(data, sfreq, n_timepoints, vars = c("subj", "time", "tri
 
   # aggregate
   if(aggregate == T){
-    if(level = "single_trial"){
+    if(level == "single_trial"){
       bosc = aggregate_bosc(bosc, types = "real", levels = c("ss", "ga"))
     }else if(level == "ss"){
       bosc = aggregate_bosc(bosc, types = "real", levels = c("ga"))
