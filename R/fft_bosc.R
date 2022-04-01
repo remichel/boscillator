@@ -111,7 +111,7 @@ fft_bosc <- function(bosc,
         dplyr::mutate(
           amp = Mod(.data$complex),
           phase = Arg(.data$complex),
-          f = !!fbins
+          f = fbins
         ) %>%
         dplyr::relocate(.data$f, .before = .data$complex)
 
