@@ -32,11 +32,15 @@ test_fft <- function(bosc,
                      overwrite = FALSE,
                      verbose = TRUE) {
 
+  # ----------------------------------------------------------------------------
   # get levels
+  # ----------------------------------------------------------------------------
   if (!is.character(levels)) {
     stop("Argument levels must be a character.")
   }
+  # ----------------------------------------------------------------------------
   # get tests
+  # ----------------------------------------------------------------------------
   if (!is.character(tests)) {
     stop("Argument levels must be a character.")
   }
@@ -44,7 +48,9 @@ test_fft <- function(bosc,
 
   if (verbose == TRUE) message("Starting tests...")
 
+  # ----------------------------------------------------------------------------
   # get MCCs
+  # ----------------------------------------------------------------------------
   if (!is.character(mcc)) {
     stop("Argument mcc must be a character.")
   } else {
@@ -59,15 +65,17 @@ test_fft <- function(bosc,
     }
   }
 
-
+  # ----------------------------------------------------------------------------
   # loop through all conditions
+  # ----------------------------------------------------------------------------
   for (iLevel in levels) {
     if (verbose == TRUE) message("\nTest on ", iLevel, " level...\n")
 
     for (iTest in tests) {
 
-
+      # ------------------------------------------------------------------------
       # check if required data exists
+      # ------------------------------------------------------------------------
       if (iTest == "ss" | iTest == "ga") {
         if (is.null(bosc$data[[iLevel]]$real$fft) | is.null(bosc$data[[iLevel]]$surrogate$fft)) {
           if (verbose == TRUE) {
@@ -85,7 +93,9 @@ test_fft <- function(bosc,
         }
       }
 
-      # check if test data exists
+      # ------------------------------------------------------------------------
+      # check if test results already exist
+      # ------------------------------------------------------------------------
       if (!is.null(bosc$tests$fft[[iLevel]][[iTest]])) {
         if (overwrite == TRUE) {
           if (verbose == TRUE) message("Test already exists. Will overwrite...")
@@ -96,18 +106,10 @@ test_fft <- function(bosc,
       }
 
 
-
-      # Perform test
+      # ------------------------------------------------------------------------
+      # Perform Amplitude vs Permutation Test
+      # ------------------------------------------------------------------------
       if (iTest == "amp") {
-
-
-        # get correct group vars depending on the analysis level
-        group_vars <- "f"
-        # for surrogate data, group by n_surr
-        if (iLevel == "ss") {
-          group_vars <- c(group_vars, "subj")
-        }
-
 
         if (verbose == TRUE) {
           message(
@@ -116,43 +118,58 @@ test_fft <- function(bosc,
           )
         }
 
+        # ------------------------------------------------------------------------
+        # get correct group vars depending on the analysis level
+        # ------------------------------------------------------------------------
+        if (iLevel == "ss") {
+          group_vars <- c("subj")
+        } else {
+          group_vars <- NULL
+        }
 
+
+        # ------------------------------------------------------------------------
+        # Compare Amplitudes in each FBin with Amplitudes in Permutations
+        # ------------------------------------------------------------------------
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
           # add observed amplitudes in a separate column to the surrogate dataset
-          dplyr::mutate(observed = !!bosc$data[[iLevel]]$real$fft$amp) %>%
+          dplyr::mutate(observed = bosc$data[[iLevel]]$real$fft$amp) %>%
           dplyr::ungroup() %>%
           # add all alpha levels
           dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
           # group by all grouping vars (e.g. frequency and subject) and alpha levels to perform tests on each of these groups separately
-          dplyr::group_by_at(c(group_vars, "alpha")) %>%
+          dplyr::group_by_at(c(group_vars, "f", "alpha")) %>%
           # based on alpha, find the critical values for each group within the surrogated amplitudes, extract the p-value and save the observed amplitude again (otherwise its lost after summarize)
           dplyr::summarize(
             crit_value = unname(stats::quantile(.data$amp, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
             p = 1 - stats::ecdf(.data$amp)(.data$observed),
             observed = .data$observed
           ) %>%
-          # eliminate dublicates
+          # eliminate duplicates
           dplyr::distinct() %>%
           dplyr::ungroup()
 
-
+        # ------------------------------------------------------------------------
+        # If Max-Freq MCC is desired, repeat the test but only extract highest Amp per Freq
+        # ------------------------------------------------------------------------
         if ("maxfreq" %in% mcc) {
 
 
           # get correct group vars depending on the analysis level
-          group_vars <- NULL
-          # for surrogate data, group by n_surr
           if (iLevel == "ss") {
-            group_vars <- c(group_vars, "subj")
+            group_vars <- c("subj")
+          }else{
+            group_vars <- NULL
           }
 
-
+          # ------------------------------------------------------------------------
           # get p values for max freq approach
+          # ------------------------------------------------------------------------
           maxfreq <- bosc$data[[iLevel]]$surrogate$fft %>%
             dplyr::group_by(.data$n_surr) %>%
             # add observed amplitudes in a separate column to the surrogate dataset
-            dplyr::mutate(observed = !!bosc$data[[iLevel]]$real$fft$amp) %>%
+            dplyr::mutate(observed = bosc$data[[iLevel]]$real$fft$amp) %>%
             dplyr::ungroup() %>%
             # add all alpha levels
             dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
@@ -176,31 +193,18 @@ test_fft <- function(bosc,
             # eliminate dublicates
             dplyr::distinct()
 
+          # ------------------------------------------------------------------------
           # add max freq p values to results table
+          # ------------------------------------------------------------------------
           bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
             dplyr::mutate(maxfreq = !!maxfreq$p)
 
-
-          # if no other MCC method needs to be applied, clean dataset now
-          if (length(mcc) == 1) {
-
-            # pivot longer
-            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-              dplyr::group_by_at(c(group_vars, "alpha")) %>%
-              dplyr::rename(uncorrected = .data$p) %>%
-              # bring dataset into long format to have one row per result
-              tidyr::pivot_longer(
-                cols = c(.data$uncorrected, !!mcc),
-                names_to = "mcc_method",
-                values_to = "p"
-              ) %>%
-              dplyr::select(-.data$crit_value) # delecte crit value, as it refers to uncorrected alpha and is thus misleading if mcc is used
-          }
         }
 
 
-
+        # ------------------------------------------------------------------------
         #  if other MCC method needs to be applied, do it now
+        # ------------------------------------------------------------------------
         if (length(mcc) > 0 & !("none" %in% mcc)) {
 
           # exclude maxfreq from the "to-be-computed" list, but keep mcc for the pivot longer cols argument
@@ -211,40 +215,52 @@ test_fft <- function(bosc,
           }
 
           # get correct group vars depending on the analysis level
-          group_vars <- NULL
-          # for surrogate data, group by n_surr
           if (iLevel == "ss") {
-            group_vars <- c(group_vars, "subj")
+            group_vars <- c("subj")
+          }else{
+            group_vars <- NULL
           }
 
-          # apply all MCC corrections
+          # apply all MCC corrections (except max freq)
           for (iMCC in padjust_list) {
             bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
               dplyr::group_by_at(c(group_vars, "alpha")) %>%
               # apply all desired MCCs and save them in separate columns named after the correction method
               dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
           }
-
-          # convert to long format and erase unused columns
-          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-            dplyr::group_by_at(c(group_vars, "alpha")) %>%
-            dplyr::rename(uncorrected = .data$p) %>%
-            # bring dataset into long format to have one row per result
-            tidyr::pivot_longer(
-              cols = c(.data$uncorrected, !!mcc),
-              names_to = "mcc_method",
-              values_to = "p"
-            ) %>%
-            dplyr::select(-.data$crit_value) # delecte crit value, as it refers to uncorrected alpha and is thus misleading if mcc is used
         }
 
+        # ------------------------------------------------------------------------
+        # convert to long format and erase unused columns
+        # ------------------------------------------------------------------------
+        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+          dplyr::group_by_at(c(group_vars, "alpha")) %>%
+          dplyr::rename(uncorrected = .data$p) %>%
+          # bring dataset into long format to have one row per result
+          tidyr::pivot_longer(
+            cols = c(.data$uncorrected, !!mcc),
+            names_to = "mcc_method",
+            values_to = "p"
+          ) %>%
+          # delecte crit value, as it refers to uncorrected alpha and is thus misleading if mcc is used
+          dplyr::select(-.data$crit_value)
 
+        # ------------------------------------------------------------------------
         # add significance column
+        # ------------------------------------------------------------------------
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
           dplyr::mutate(sig = dplyr::case_when(
             .data$alpha > .data$p ~ 1,
             .data$alpha <= .data$p ~ 0
           ))
+
+
+
+        # ------------------------------------------------------------------------
+        # Perform Complex Plain vs Permutation Test
+        # ------------------------------------------------------------------------
+
+
       } else if (iTest == "complex") {
         if (iLevel == "ga" | iLevel == "ss") {
           if (verbose == TRUE) message("Note: Complex vector analysis needs to be performed with level = merged. Will skip and proceed with next test...")
