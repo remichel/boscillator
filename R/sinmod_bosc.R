@@ -144,7 +144,7 @@ sinmod_bosc <- function(bosc,
           iter <- rep(grid, nparams)
 
 
-          message("Grid search approach using a ", grid, "x", nparams, " grid of starting parameters will be used.")
+          message("Grid search approach using a ", grid, "^", nparams, " grid of starting parameters will be used.")
         }
 
 
@@ -187,11 +187,6 @@ sinmod_bosc <- function(bosc,
         }
 
 
-        # fixed frequencies dataframe to join it with dataset
-        freqs <- as.data.frame(fixed_f)
-        freqs$helper <- 1
-
-
         # eliminate f from boundary lists, as it is now fixed
         lower$f <- NULL
         upper$f <- NULL
@@ -208,16 +203,14 @@ sinmod_bosc <- function(bosc,
           if(is.null(grid)){
             grid <- ceiling((nyquist-fres)/2)
           }
-          message("Grid search approach using a ", grid, "x", nparams, " grid of starting parameters will be used.")
+          message("Grid search approach using a ", grid, "^", nparams, " grid of starting parameters will be used.")
         }
 
 
         options(dplyr.nest.inform = FALSE)
         # fit sinmod for every fixed frequency
         bosc$data[[iLevel]][[iType]]$sinmod <- bosc$data[[iLevel]][[iType]]$data %>%
-          dplyr::mutate(helper = 1) %>%
-          dplyr::full_join(y = freqs, by = .data$helper) %>%
-          dplyr::select(-.data$helper) %>%
+          dplyr::full_join(y = as.data.frame(fixed_f), copy = TRUE, by = character()) %>%
           dplyr::mutate(f = .data$fixed_f) %>%
           dplyr::group_by_at(group_vars) %>%
           tidyr::nest() %>%
