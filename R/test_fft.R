@@ -129,7 +129,7 @@ test_fft <- function(bosc,
 
 
         # ------------------------------------------------------------------------
-        # Compare Amplitudes in each FBin with Amplitudes in Permutations
+        # Compare Amplitudes in each fbin with Amplitudes in Permutations
         # ------------------------------------------------------------------------
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data[[iLevel]]$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
@@ -138,9 +138,12 @@ test_fft <- function(bosc,
           dplyr::ungroup() %>%
           # add all alpha levels
           dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
-          # group by all grouping vars (e.g. frequency and subject) and alpha levels to perform tests on each of these groups separately
+          # group by all grouping vars (e.g. frequency and subject)
+          # and alpha levels to perform tests on each of these groups separately
           dplyr::group_by_at(c(group_vars, "f", "alpha")) %>%
-          # based on alpha, find the critical values for each group within the surrogated amplitudes, extract the p-value and save the observed amplitude again (otherwise its lost after summarize)
+          # based on alpha, find the critical values for each group within the
+          # surrogated amplitudes, extract the p-value and save the observed
+          # amplitude again (otherwise its lost after summarize)
           dplyr::summarize(
             crit_value = unname(stats::quantile(.data$amp, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
             p = 1 - stats::ecdf(.data$amp)(.data$observed),
@@ -173,7 +176,8 @@ test_fft <- function(bosc,
             dplyr::ungroup() %>%
             # add all alpha levels
             dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
-            # group by all grouping vars (e.g. frequency and subject), alpha levels AND n_surr to extract the max amplitude from the surrogated datasets
+            # group by all grouping vars (e.g. frequency and subject),
+            # alpha levels AND n_surr to extract the max amplitude from the surrogated datasets
             dplyr::group_by_at(c(group_vars, "n_surr", "alpha")) %>%
             # for each group, extract the maximum amplitude observed in the surrogates
             dplyr::summarise(
@@ -181,7 +185,8 @@ test_fft <- function(bosc,
               observed = .data$observed,
               f = .data$f
             ) %>%
-            # group by all grouping vars (e.g. frequency and subject), alpha levels, and extract the critical value from the max amplitude distribution for each group
+            # group by all grouping vars (e.g. frequency and subject), alpha levels,
+            # and extract the critical value from the max amplitude distribution for each group
             dplyr::group_by_at(c(group_vars, "alpha")) %>%
             dplyr::summarize(
               crit_value = unname(stats::quantile(.data$max, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
@@ -207,7 +212,7 @@ test_fft <- function(bosc,
         # ------------------------------------------------------------------------
         if (length(mcc) > 0 & !("none" %in% mcc)) {
 
-          # exclude maxfreq from the "to-be-computed" list, but keep mcc for the pivot longer cols argument
+          # exclude maxfreq from the "to-be-computed" list, but keep mcc vector for the pivot longer cols argument
           if ("maxfreq" %in% mcc) {
             padjust_list <- mcc[-which(mcc == "maxfreq")]
           } else {
@@ -256,12 +261,16 @@ test_fft <- function(bosc,
 
 
 
-        # ------------------------------------------------------------------------
-        # Perform Complex Plain vs Permutation Test
-        # ------------------------------------------------------------------------
+      # ------------------------------------------------------------------------
+      # Perform Complex Plain vs Permutation Test
+      # ------------------------------------------------------------------------
 
 
       } else if (iTest == "complex") {
+
+        # ------------------------------------------------------------------------
+        # Check if Complex Test is available for current Level of data
+        # ------------------------------------------------------------------------
         if (iLevel == "ga" | iLevel == "ss") {
           if (verbose == TRUE) message("Note: Complex vector analysis needs to be performed with level = merged. Will skip and proceed with next test...")
           next
@@ -269,11 +278,14 @@ test_fft <- function(bosc,
           if (verbose == TRUE) message("Compare FFT complex vectors against permutations (alpha = ", paste(alpha, collapse = ", "), ") ...")
         }
 
+
+        # ------------------------------------------------------------------------
         # save single surrogate data for 2d plot
+        # ------------------------------------------------------------------------
         bosc$tests$fft[[iLevel]][[iTest]]$data <- bosc$data$ss$surrogate$fft %>%
           dplyr::group_by(.data$n_surr) %>%
           # add observed complex vectors to surrogate dataset
-          dplyr::mutate(observed = !!bosc$data$ss$real$fft$complex) %>%
+          dplyr::mutate(observed = bosc$data$ss$real$fft$complex) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(.data$n_surr, .data$f) %>%
           # summarize complex vectors for observed and surrogate datasets
@@ -293,7 +305,9 @@ test_fft <- function(bosc,
 
 
 
+        # ------------------------------------------------------------------------
         # determine critical vector length for each frequency
+        # ------------------------------------------------------------------------
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
           # add all desired alpha levels
           dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
@@ -309,7 +323,9 @@ test_fft <- function(bosc,
           dplyr::relocate(.data$alpha, .after = .data$f) %>%
           dplyr::ungroup()
 
-
+        # ------------------------------------------------------------------------
+        # Max Freq MCC Application
+        # ------------------------------------------------------------------------
 
         if ("maxfreq" %in% mcc) {
 
@@ -339,29 +355,13 @@ test_fft <- function(bosc,
           # add max freq p values to results table
           bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
             dplyr::mutate(maxfreq = !!maxfreq$p)
-
-
-          # if no other mcc is applied, clean dataset now
-          if (length(mcc) == 1) {
-
-            # pivot longer
-            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-              dplyr::group_by(.data$alpha) %>%
-              dplyr::rename(uncorrected = .data$p) %>%
-              # bring dataset into long format to have one row per result
-              tidyr::pivot_longer(
-                cols = c(.data$uncorrected, !!mcc),
-                names_to = "mcc_method",
-                values_to = "p"
-              ) %>%
-              dplyr::select(-.data$crit_value) # misleading if mcc is used, as it refers to uncorrected alpha
-          }
         }
 
 
 
-
-        # MCC
+        # ------------------------------------------------------------------------
+        # Apply all MCCs (except MaxFreq)
+        # ------------------------------------------------------------------------
         if (length(mcc) > 0 & !("none" %in% mcc)) {
 
 
@@ -379,90 +379,104 @@ test_fft <- function(bosc,
               # apply all desired MCCs and save them in separate columns named after the correction method
               dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
           }
-
-          # convert to long format and erase unused columns
-          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-            dplyr::group_by(.data$alpha) %>%
-            dplyr::rename(uncorrected = .data$p) %>%
-            # bring dataset into long format to have one row per result
-            tidyr::pivot_longer(
-              cols = c(.data$uncorrected, !!mcc),
-              names_to = "mcc_method",
-              values_to = "p"
-            ) %>%
-            dplyr::select(-.data$crit_length) # misleading if mcc is used, as it refers to uncorrected alpha
         }
 
+        # ------------------------------------------------------------------------
+        # convert results to long format and erase unused columns
+        # ------------------------------------------------------------------------
+        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+          dplyr::group_by(.data$alpha) %>%
+          dplyr::rename(uncorrected = .data$p) %>%
+          # bring dataset into long format to have one row per result
+          tidyr::pivot_longer(
+            cols = c(.data$uncorrected, !!mcc),
+            names_to = "mcc_method",
+            values_to = "p"
+          ) %>%
+          # misleading if mcc is used, as it refers to uncorrected alpha
+          dplyr::select(-.data$crit_length)
+
+
+        # ------------------------------------------------------------------------
         # add significance column
+        # ------------------------------------------------------------------------
         bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
           dplyr::mutate(sig = dplyr::case_when(
             .data$alpha > .data$p ~ 1,
             .data$alpha <= .data$p ~ 0
           ))
+
+
+      # ------------------------------------------------------------------------
+      # Phase Test
+      # ------------------------------------------------------------------------
       } else if (iTest == "phase") {
 
 
-        # skip grand average level
-        if (iLevel == "ga" | iLevel == "merged") {
-          if (verbose == TRUE) message("Note: Phase analysis needs to be performed on single subject data. Will skip and proceed with next test...")
-          next
-        }
+        message("Phase test skipped - still needs final check.")
+        # # skip grand average level
+        # if (iLevel == "ga" | iLevel == "merged") {
+        #   if (verbose == TRUE) message("Note: Phase analysis needs to be performed on single subject data. Will skip and proceed with next test...")
+        #   next
+        # }
+        #
+        # if (verbose == TRUE) message("Rayleigh test on phase angles (alpha = ", paste(alpha, collapse = ", "), ")...")
+        #
+        # # rayleigh test
+        # bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data$ss$real$fft %>%
+        #   dplyr::ungroup() %>%
+        #   # add all desired alpha levels
+        #   dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
+        #   dplyr::group_by(.data$f, .data$alpha) %>%
+        #   # transform phase into radians and determine mean phase, compute rayleigh test statistic and extract p val
+        #   dplyr::summarize(
+        #     mean_phase = circular::mean.circular(circular::circular(.data$phase, units = c("radians"))),
+        #     statistic = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$statistic,
+        #     p = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$p.value
+        #   ) %>%
+        #   dplyr::ungroup()
+        #
+        #
+        # # MCC
+        # if (length(mcc) > 0 & !("none" %in% mcc)) {
+        #
+        #   # check if maxfreq is in mcclist and exclude it
+        #   if ("maxfreq" %in% mcc) {
+        #     phase_mcc <- mcc[-which(mcc == "maxfreq")]
+        #     message("Max Freq MCC method not applicable to phase test. Will be skipped...")
+        #   } else {
+        #     phase_mcc <- mcc
+        #   }
+        #
+        #   # apply all MCC corrections
+        #   for (iMCC in phase_mcc) {
+        #     bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+        #       dplyr::group_by(.data$alpha) %>%
+        #       # apply all desired MCCs and save them in separate columns named after the correction method
+        #       dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
+        #   }
+        #
+        #   # convert to long format and erase unused columns
+        #   bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+        #     dplyr::group_by(.data$alpha) %>%
+        #     dplyr::rename(uncorrected = .data$p) %>%
+        #     # bring dataset into long format to have one row per result
+        #     tidyr::pivot_longer(
+        #       cols = c(.data$uncorrected, !!phase_mcc),
+        #       names_to = "mcc_method",
+        #       values_to = "p"
+        #     )
+        # }
+        #
+        # # add significance column
+        #
+        # bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
+        #   dplyr::mutate(sig = dplyr::case_when(
+        #     .data$alpha > .data$p ~ 1,
+        #     .data$alpha <= .data$p ~ 0
+        #   ))
 
-        if (verbose == TRUE) message("Rayleigh test on phase angles (alpha = ", paste(alpha, collapse = ", "), ")...")
 
-        # rayleigh test
-        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$data$ss$real$fft %>%
-          dplyr::ungroup() %>%
-          # add all desired alpha levels
-          dplyr::left_join(as.data.frame(alpha), copy = T, by = character()) %>%
-          dplyr::group_by(.data$f, .data$alpha) %>%
-          # transform phase into radians and determine mean phase, compute rayleigh test statistic and extract p val
-          dplyr::summarize(
-            mean_phase = circular::mean.circular(circular::circular(.data$phase, units = c("radians"))),
-            statistic = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$statistic,
-            p = circular::rayleigh.test(circular::circular(.data$phase, units = c("radians")), mu = NULL)$p.value
-          ) %>%
-          dplyr::ungroup()
-
-
-        # MCC
-        if (length(mcc) > 0 & !("none" %in% mcc)) {
-
-          # check if maxfreq is in mcclist and exclude it
-          if ("maxfreq" %in% mcc) {
-            phase_mcc <- mcc[-which(mcc == "maxfreq")]
-            message("Max Freq MCC method not applicable to phase test. Will be skipped...")
-          } else {
-            phase_mcc <- mcc
-          }
-
-          # apply all MCC corrections
-          for (iMCC in phase_mcc) {
-            bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-              dplyr::group_by(.data$alpha) %>%
-              # apply all desired MCCs and save them in separate columns named after the correction method
-              dplyr::mutate(!!iMCC := stats::p.adjust(.data$p, method = !!iMCC))
-          }
-
-          # convert to long format and erase unused columns
-          bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-            dplyr::group_by(.data$alpha) %>%
-            dplyr::rename(uncorrected = .data$p) %>%
-            # bring dataset into long format to have one row per result
-            tidyr::pivot_longer(
-              cols = c(.data$uncorrected, !!phase_mcc),
-              names_to = "mcc_method",
-              values_to = "p"
-            )
-        }
-
-        # add significance column
-
-        bosc$tests$fft[[iLevel]][[iTest]]$results <- bosc$tests$fft[[iLevel]][[iTest]]$results %>%
-          dplyr::mutate(sig = dplyr::case_when(
-            .data$alpha > .data$p ~ 1,
-            .data$alpha <= .data$p ~ 0
-          ))
       }
     }
   }
