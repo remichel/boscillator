@@ -71,6 +71,7 @@ generate_surrogates <-
       if (aggregate == TRUE) {
         bosc <- aggregate_bosc(bosc, types = "surrogate", levels = c("ss", "ga"))
       }
+
     } else if (method == "ar") {
       bosc$data$ss$surrogate$data <- bosc$data$ss$real$data %>%
         # fit an AR model to each subject's time course

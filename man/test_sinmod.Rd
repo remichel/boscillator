@@ -11,7 +11,7 @@ test_sinmod(
   alpha = 0.05,
   mcc = c("bonferroni", "fdr"),
   overwrite = FALSE,
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{

@@ -9,11 +9,14 @@ sinmod_bosc(
   types = c("real", "surrogate"),
   levels = c("ss", "ga"),
   fixed_f = NULL,
-  niter = 100,
-  convergence_count = 50,
+  niter = NULL,
+  grid = 3,
+  convergence_count = FALSE,
   supp_errors = "Y",
+  lower = list(intercept = 0, a = 0, f = NULL, phi = 0),
+  upper = list(intercept = 1, a = 1, f = NULL, phi = 2 * pi),
   overwrite = FALSE,
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{
@@ -25,11 +28,17 @@ sinmod_bosc(
 
 \item{fixed_f}{NULL to test all possible frequencies between 0 and nyquist, or specify a vector of frequencies}
 
-\item{niter}{number of iterations for fitting, is piped into iter argument in nls.multstart function}
+\item{niter}{number of iterations for fitting, is piped into iter argument in nls.multstart function if NULL, a grid search approach will be used}
 
-\item{convergence_count}{number of iterations until model is declared winner model, is piped into iter argument in nls.multstart function}
+\item{grid}{number of start values per parameter, will be equally distributed within parameter boundaries, e.g. grid = 5 will create a 5x5x5x... grid, argument will be ignored if iter != NULL, if grid = NULL and iter = NULL, the grid will automatically be generated with grid = ceiling((nyquist-fres)/2)}
+
+\item{convergence_count}{number of iterations until model is declared winner model, is piped into iter argument in nls.multstart function, will be ignored if grid search approach is used}
 
 \item{supp_errors}{defaults to 'Y', suppresses error messages from nls.multstart?}
+
+\item{lower}{lower boundaries for model estimates. if NULL is chosen for f, it will automatically be set to the lowest possible frequency given the frequency resolution in the dataset}
+
+\item{upper}{upper boundaries for model estimates. if NULL is chosen for f, it will automatically be set to the nyquist frequency in the dataset}
 
 \item{overwrite}{defaults to F}
 

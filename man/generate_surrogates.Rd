@@ -9,8 +9,8 @@ generate_surrogates(
   n_surr = 100,
   method = "perm",
   seed_num = NULL,
-  overwrite = F,
-  aggregate = T
+  overwrite = FALSE,
+  aggregate = TRUE
 )
 }
 \arguments{

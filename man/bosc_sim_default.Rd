@@ -5,15 +5,15 @@
 \title{bosc_sim_default}
 \usage{
 bosc_sim_default(
-  surrogates = T,
-  detrend = T,
-  window = T,
-  scale = F,
-  pad = F,
-  fft = F,
-  sinmod = F,
-  fft_test = F,
-  sinmod_test = F
+  surrogates = TRUE,
+  detrend = TRUE,
+  window = TRUE,
+  scale = FALSE,
+  pad = FALSE,
+  fft = FALSE,
+  sinmod = FALSE,
+  fft_test = FALSE,
+  sinmod_test = FALSE
 )
 }
 \arguments{

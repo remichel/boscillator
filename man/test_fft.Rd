@@ -11,7 +11,7 @@ test_fft(
   alpha = 0.05,
   mcc = c("bonferroni", "fdr", "maxfreq"),
   overwrite = FALSE,
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{

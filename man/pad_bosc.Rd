@@ -10,7 +10,7 @@ pad_bosc(
   levels = c("ss", "ga"),
   method = "zero",
   n_pads = length(bosc$timepoints),
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{

@@ -9,7 +9,7 @@ fft_bosc(
   types = c("real", "surrogate"),
   levels = c("ss", "ga"),
   overwrite = FALSE,
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{

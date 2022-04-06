@@ -11,9 +11,9 @@
 #' @param intercept_jitter sd of mean performance across subjects
 #' @param transient "none", "hanning", or "exponential"
 #' @param transient_expModel_params model parameters for exponential transient
-#' @param trend "none", "linear" or "exponential"
+#' @param trend "none", "linear" or "2ndorder"
 #' @param trend_linModel_params model parameters for linear trend in performance
-#' @param trend_expModel_params model parameters for exponential trend in performance
+#' @param trend_expModel_params model parameters for 2ndorder trend in performance
 #' @param aggregate aggregate single trial data to single subject and grand average time series? defaults to T
 #' @param seed_num seed number. if not specified, a random seed will be used and saved alongside with the data.
 #'
@@ -47,82 +47,98 @@ simulate_experiment <-
            transient_expModel_params = c(0, 1, .3),
            trend = "none",
            trend_linModel_params = c(osc_params[1], osc_params[2]),
-           trend_expModel_params = c(0, 1 - 2 * osc_params[2], .6),
+           trend_polyModel_params = c(.9, -1.2, .5),
            aggregate = TRUE,
            seed_num = NULL) {
 
-    # exponential model for transient window / trend
+    # ------------------------------------------------
+    # exponential decay model for transient window
+    # ------------------------------------------------
+
     expModel <- function(t, intercept, n0, tau) {
       intercept + n0 * exp(-t / tau)
     }
 
-    # linear model for transient window / trend
+
+    # ------------------------------------------------
+    # 2nd order poly function for trend
+    # ------------------------------------------------
+
+    polyModel <- function(t, b0, b1, b2) {
+      b2 * t^2 + b1 * x + b0
+    }
+
+
+    # ------------------------------------------------
+    # linear model for trend
+    # ------------------------------------------------
+
     linModel <- function(t, b0, b1) {
       b0 + t * b1
     }
 
+    # ------------------------------------------------
     # generative sinusoidal model
+    # ------------------------------------------------
+
     sin_model <- function(t, intercept, amplitude, frequency, phi) {
 
-      # transient
-      transient <- `if`(
-        transient == "hanning", bspec::hannwindow(n_timepoints),
-        `if`(
-          transient == "exponential", expModel(
-            t,
-            transient_expModel_params[1],
-            transient_expModel_params[2],
-            transient_expModel_params[3]
-          ),
-          rep(1, n_timepoints)
-        )
-      )
+      # window fctn to simulate transient
+      if(transient == "hanning"){
+        win_fun <- bspec::hannwindow(n_timepoints)
+      }else if(transient == "exponential"){
+        win_fun <- expModel(t, transient_expModel_params[1], transient_expModel_params[2], transient_expModel_params[3])
+      }else if(transient == "none"){
+        win_fun <- rep(1, n_timepoints)
+      }else{
+        stop(transient, " is no valid option for argument transient.")
+      }
 
-      # trend
-      trend <- `if`(
-        trend == "linear", linModel(
-          t,
-          trend_linModel_params[1],
-          trend_linModel_params[2]
-        ),
-        `if`(
-          trend == "exponential", expModel(
-            t,
-            trend_expModel_params[1],
-            trend_expModel_params[2],
-            trend_expModel_params[3]
-          ),
-          intercept
-        )
-      )
+      #  simulate trend in data
+      if(trend == "linear"){
+        trend_fun <- linModel(t, trend_linModel_params[1], trend_linModel_params[2])
+      }else if(trend == "2ndorder"){
+        trend_fun <- polyModel(t, trend_polyModel_params[1], trend_polyModel_params[2], trend_polyModel_params[3])
+      }else if(trend == "none"){
+        trend_fun <- intercept
+      }else{
+        stop(trend, " is no valid option for argument trend.")
+      }
 
       # oscillation
       osc_amplitude <- stats::rnorm(1, amplitude, amplitude_jitter[1])
-      osc_freq <- stats::rnorm(1, frequency, freq_jitter[1])
-      osc_phase <- stats::rnorm(1, phi, phase_jitter[1])
-      oscillation <- osc_amplitude * sin(2 * pi * t * osc_freq + osc_phase)
+      osc_freq      <- stats::rnorm(1, frequency, freq_jitter[1])
+      osc_phase     <- stats::rnorm(1, phi, phase_jitter[1])
+      oscillation   <- osc_amplitude * sin(2 * pi * t * osc_freq + osc_phase)
 
       # generate model
-      trend + oscillation * transient
+      trend_fun + oscillation * win_fun
     }
 
+    # ------------------------------------------------
     # set seed
+    # ------------------------------------------------
     if (is.null(seed_num)) {
       seed_num <- stats::runif(1, 1, 2^20)
     }
     set.seed(seed_num)
 
+    # ------------------------------------------------
     # create time vector (.e.g. SOAs)
+    # ------------------------------------------------
     t <- seq(0, (n_timepoints - 1) / sfreq, 1 / sfreq)
 
+    # ------------------------------------------------
     # create grid of subjects x time points
+    # ------------------------------------------------
     data <- expand.grid(list(
       subj = as.factor(c(1:n_sub)),
       time = t
     ))
 
-
+    # ------------------------------------------------
     # simulate single trial data
+    # ------------------------------------------------
     data <- data %>%
       dplyr::group_by(.data$subj) %>%
       # for each subject, determine the probability for a hit for each point in "t" from the underlying sinusoidal model
@@ -161,12 +177,16 @@ simulate_experiment <-
       dplyr::select(-.data$osc)
 
 
-
+    # ------------------------------------------------
     # create BOSC object
+    # ------------------------------------------------
     bosc <- bosc()
-    bosc$timepoints <- t # save timepoints
-    bosc$data$single_trial$real$data <- data # save simulated data
-    bosc$data$single_trial$real$spec <- list( # save information about simulation parameters
+    # save timepoints
+    bosc$timepoints <- t
+    # save simulated data
+    bosc$data$single_trial$real$data <- data
+    # save information about simulation parameters
+    bosc$data$single_trial$real$spec <- list(
       seed_num = seed_num,
       n_sub = n_sub,
       n_timepoints = n_timepoints,
@@ -181,14 +201,17 @@ simulate_experiment <-
       transient_expModel_params = transient_expModel_params,
       trend = trend,
       trend_linModel_params = trend_linModel_params,
-      trend_expModel_params = trend_expModel_params
+      trend_polyModel_params = trend_polyModel_params
     )
 
-
+    # ------------------------------------------------
     # add executed command to history
+    # ------------------------------------------------
     bosc$hist <- paste0(bosc$hist, "sim-exp_")
 
+    # ------------------------------------------------
     # if desired, aggregate the single trial data
+    # ------------------------------------------------
     if (aggregate == TRUE) {
       bosc <- aggregate_bosc(bosc, types = "real", levels = c("ss", "ga"))
     }

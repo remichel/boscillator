@@ -9,7 +9,7 @@ scale_bosc(
   types = c("real", "surrogate"),
   levels = c("ss", "ga"),
   method = "z",
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{
