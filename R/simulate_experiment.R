@@ -65,7 +65,7 @@ simulate_experiment <-
     # ------------------------------------------------
 
     polyModel <- function(t, b0, b1, b2) {
-      b2 * t^2 + b1 * x + b0
+      b2 * t^2 + b1 * t + b0
     }
 
 
