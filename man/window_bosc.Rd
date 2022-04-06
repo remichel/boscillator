@@ -11,7 +11,7 @@ window_bosc(
   method = "hann",
   r = 0.1,
   alpha = 0.54,
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{

@@ -9,7 +9,7 @@ detrend_bosc(
   types = c("real", "surrogate"),
   levels = c("ss", "ga"),
   order = 0,
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{

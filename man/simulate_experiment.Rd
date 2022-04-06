@@ -18,8 +18,8 @@ simulate_experiment(
   transient_expModel_params = c(0, 1, 0.3),
   trend = "none",
   trend_linModel_params = c(osc_params[1], osc_params[2]),
-  trend_expModel_params = c(0, 1 - 2 * osc_params[2], 0.6),
-  aggregate = T,
+  trend_polyModel_params = c(0.9, -1.2, 0.5),
+  aggregate = TRUE,
   seed_num = NULL
 )
 }
@@ -46,15 +46,15 @@ simulate_experiment(
 
 \item{transient_expModel_params}{model parameters for exponential transient}
 
-\item{trend}{"none", "linear" or "exponential"}
+\item{trend}{"none", "linear" or "2ndorder"}
 
 \item{trend_linModel_params}{model parameters for linear trend in performance}
-
-\item{trend_expModel_params}{model parameters for exponential trend in performance}
 
 \item{aggregate}{aggregate single trial data to single subject and grand average time series? defaults to T}
 
 \item{seed_num}{seed number. if not specified, a random seed will be used and saved alongside with the data.}
+
+\item{trend_expModel_params}{model parameters for 2ndorder trend in performance}
 }
 \value{
 A data frame
