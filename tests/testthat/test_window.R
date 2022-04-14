@@ -26,30 +26,30 @@ test_that("windowing ~ hann", {
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$real$data %>%
-                                   group_by(subj) %>%
-                                   mutate (hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(subj) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(win_bosc$data$ga$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$real$data %>%
-                                   mutate(hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::mutate(hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # surrogates
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$surrogate$data %>%
-                                   group_by(subj, n_surr) %>%
-                                   mutate (hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(subj, n_surr) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(win_bosc$data$ga$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$surrogate$data %>%
-                                   group_by(n_surr) %>%
-                                   mutate(hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(n_surr) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::hannwindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 })
 
 test_that("windowing ~ tukey", {
@@ -59,30 +59,30 @@ test_that("windowing ~ tukey", {
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$real$data %>%
-                                   group_by(subj) %>%
-                                   mutate (hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(subj) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(win_bosc$data$ga$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$real$data %>%
-                                   mutate(hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::mutate(hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # surrogates
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$surrogate$data %>%
-                                   group_by(subj, n_surr) %>%
-                                   mutate (hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(subj, n_surr) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(win_bosc$data$ga$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$surrogate$data %>%
-                                   group_by(n_surr) %>%
-                                   mutate(hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(n_surr) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::tukeywindow(def_n_timepoints, r)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 })
 
 test_that("windowing ~ triangle", {
@@ -91,28 +91,28 @@ test_that("windowing ~ triangle", {
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$real$data %>%
-                                   group_by(subj) %>%
-                                   mutate (hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(subj) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(win_bosc$data$ga$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$real$data %>%
-                                   mutate(hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::mutate(hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # surrogates
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$surrogate$data %>%
-                                   group_by(subj, n_surr) %>%
-                                   mutate (hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(subj, n_surr) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(win_bosc$data$ga$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$surrogate$data %>%
-                                   group_by(n_surr) %>%
-                                   mutate(hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(n_surr) %>%
+                                   dplyr::mutate(hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 })

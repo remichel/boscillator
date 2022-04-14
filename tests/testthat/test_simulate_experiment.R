@@ -26,7 +26,7 @@ for (i in 1:nrow(test_matrix)){
   test_transient_expModel_params  <- test_matrix$transient_expModel_params[[i]]
   test_trend                      <- test_matrix$trend[i]
   test_trend_linModel_params      <- test_matrix$trend_linModel_params[[i]]
-  test_trend_expModel_params      <- test_matrix$trend_expModel_params[[i]]
+  test_trend_polyModel_params     <- test_matrix$trend_polyModel_params[[i]]
   test_seed_num                   <- test_matrix$seed_num
 
   # test class
@@ -177,10 +177,10 @@ for (i in 1:nrow(test_matrix)){
   # test trend parameters
   test_that("parameter trend", {
     bosc <- simulate_experiment(trend = test_trend, trend_linModel_params = test_trend_linModel_params,
-                                trend_expModel_params = test_trend_expModel_params)
+                                trend_polyModel_params = test_trend_polyModel_params)
     expect_identical(bosc$data$single_trial$real$spec$trend, test_trend)
     expect_identical(bosc$data$single_trial$real$spec$trend_linModel_params, test_trend_linModel_params)
-    expect_identical(bosc$data$single_trial$real$spec$trend_expModel_params, test_trend_expModel_params)
+    expect_identical(bosc$data$single_trial$real$spec$trend_polyModel_params, test_trend_polyModel_params)
     #################################################################################################
     # TEST MISSING: verändert der trend die Daten sinngemäß & quantifizierbar richtig?
     #               mögliche Lösungen:

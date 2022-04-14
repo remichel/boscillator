@@ -33,7 +33,7 @@ def_overwrite = FALSE
 no_detr_bosc_lin = simulate_experiment(trend = "linear", trend_linModel_params = c(0.3, 0.2))
 no_detr_bosc_lin = generate_surrogates(no_detr_bosc_lin)
 
-no_detr_bosc_exp = simulate_experiment(trend = "exponential", trend_expModel_params = c(0, 1 - 2 * 0.1, .6))
+no_detr_bosc_exp = simulate_experiment(trend = "2ndorder", trend_polyModel_params = c(0, 1 - 2 * 0.1, .6))
 no_detr_bosc_exp = generate_surrogates(no_detr_bosc_exp)
 
 # window/pad/scale defaults

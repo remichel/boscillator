@@ -19,30 +19,30 @@ test_that("scaling", {
   # ss
   expect_equal(as.numeric(scaled_bosc$data$ss$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$real$data %>%
-                                   group_by(subj) %>%
-                                   mutate (hr = scale(.data$hr)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::group_by(subj) %>%
+                                   dplyr::mutate (hr = scale(.data$hr)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(scaled_bosc$data$ga$real$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$real$data %>%
-                                   mutate(hr = scale(.data$hr)) %>%
-                                   ungroup %>% select(hr))))
+                                   dplyr::mutate(hr = scale(.data$hr)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # surrogates
   # ss
   expect_equal(as.numeric(scaled_bosc$data$ss$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ss$surrogate$data %>%
-                                   group_by(subj, n_surr) %>%
-                                    mutate (hr = scale(.data$hr)) %>%
-                                      ungroup %>% select(hr))))
+                                   dplyr::group_by(subj, n_surr) %>%
+                                   dplyr::mutate (hr = scale(.data$hr)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
   # ga
   expect_equal(as.numeric(scaled_bosc$data$ga$surrogate$data$hr),
                as.numeric(unlist(no_x_bosc$data$ga$surrogate$data %>%
-                                   group_by(n_surr) %>%
-                                    mutate(hr = scale(.data$hr)) %>%
-                                     ungroup %>% select(hr))))
+                                   dplyr::group_by(n_surr) %>%
+                                   dplyr::mutate(hr = scale(.data$hr)) %>%
+                                   dplyr::ungroup() %>% dplyr::select(hr))))
 
 })
 
