@@ -176,7 +176,7 @@ test_fft <- function(bosc,
             dplyr::ungroup() %>%
             # add all alpha levels
             dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
-            # group by all grouping vars (e.g. frequency and subject),
+            # group by all grouping vars (e.g. subject),
             # alpha levels AND n_surr to extract the max amplitude from the surrogated datasets
             dplyr::group_by_at(c(group_vars, "n_surr", "alpha")) %>%
             # for each group, extract the maximum amplitude observed in the surrogates
@@ -187,7 +187,7 @@ test_fft <- function(bosc,
             ) %>%
             # group by all grouping vars (e.g. frequency and subject), alpha levels,
             # and extract the critical value from the max amplitude distribution for each group
-            dplyr::group_by_at(c(group_vars, "alpha")) %>%
+            dplyr::group_by_at(c(group_vars, "f", "alpha")) %>%
             dplyr::summarize(
               crit_value = unname(stats::quantile(.data$max, probs = 1 - alpha, na.rm = TRUE)), # is na.rm = TRUE causing any harm here??
               p = 1 - stats::ecdf(.data$max)(.data$observed),
@@ -340,7 +340,7 @@ test_fft <- function(bosc,
               observed_length = .data$observed_length,
               f = .data$f
             ) %>%
-            dplyr::group_by(.data$alpha) %>%
+            dplyr::group_by(.data$alpha, .data$f) %>%
             # determine critical maximum vector length within surrogated datasets and determine p value of observed length
             dplyr::summarize(
               crit_length = unname(stats::quantile(.data$max, probs = 1 - alpha, na.rm = TRUE)), # does it cause harm here?
