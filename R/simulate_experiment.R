@@ -13,7 +13,7 @@
 #' @param transient_expModel_params model parameters for exponential transient
 #' @param trend "none", "linear" or "2ndorder"
 #' @param trend_linModel_params model parameters for linear trend in performance
-#' @param trend_expModel_params model parameters for 2ndorder trend in performance
+#' @param trend_polyModel_params model parameters for 2ndorder trend in performance
 #' @param aggregate aggregate single trial data to single subject and grand average time series? defaults to T
 #' @param seed_num seed number. if not specified, a random seed will be used and saved alongside with the data.
 #'

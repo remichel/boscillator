@@ -50,11 +50,11 @@ simulate_experiment(
 
 \item{trend_linModel_params}{model parameters for linear trend in performance}
 
+\item{trend_polyModel_params}{model parameters for 2ndorder trend in performance}
+
 \item{aggregate}{aggregate single trial data to single subject and grand average time series? defaults to T}
 
 \item{seed_num}{seed number. if not specified, a random seed will be used and saved alongside with the data.}
-
-\item{trend_expModel_params}{model parameters for 2ndorder trend in performance}
 }
 \value{
 A data frame
