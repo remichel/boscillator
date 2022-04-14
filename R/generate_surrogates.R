@@ -5,7 +5,7 @@
 #'
 #' @param bosc BOSC-Object
 #' @param n_surr Number of to-be-created surrogate datasets
-#' @param method permutation ("perm") or autoregression-model ("ar")
+#' @param method permutation ("perm") or autoregression-model, either on single subject level only  (and averaged afterward; "ar_ss") or modelling both on single subject and grand average level ("ar_ss_ga")
 #' @param seed_num number of the seed
 #' @param overwrite overwrite existing surrogates? defaults to F
 #' @param aggregate aggregate surrogated datasets? defaults to T
@@ -72,7 +72,43 @@ generate_surrogates <-
         bosc <- aggregate_bosc(bosc, types = "surrogate", levels = c("ss", "ga"))
       }
 
-    } else if (method == "ar") {
+    } else if (method == "ar_ss") {
+
+      bosc$data$ss$surrogate$data <- bosc$data$ss$real$data %>%
+        # fit an AR model to each subject's time course
+        dplyr::group_by(.data$subj) %>%
+        tidyr::nest() %>%
+        dplyr::mutate(model = purrr::map(.data$data, ~ forecast::Arima(
+          y = .x$hr,
+          order = c(1, 0, 0),
+          method = "ML"
+        ))) %>%
+        # replicate the dataset to generate n_surr rows per subjects
+        dplyr::slice(rep(1:dplyr::n(), each = !!n_surr)) %>%
+        dplyr::group_by(.data$subj) %>%
+        dplyr::mutate(n_surr = dplyr::row_number()) %>%
+        dplyr::ungroup() %>%
+        # simulate a time course from the AR model for each subj and n_surr
+        dplyr::mutate(sim = purrr::map(.data$model, ~ stats::simulate(.x, n_sim = !!bosc$timepoints))) %>%
+        tidyr::unnest(cols = c(.data$data, .data$sim)) %>%
+        dplyr::select(-c(.data$hr, .data$model)) %>%
+        dplyr::rename(hr = .data$sim)
+
+      bosc$data$ss$surrogate$spec <- list(
+        seed_num = seed_num,
+        method = method,
+        n_surr = n_surr
+      )
+
+      # aggregate surrogates
+      if (aggregate == TRUE) {
+        bosc <- aggregate_bosc(bosc, types = "surrogate", levels = c("ga"))
+      }
+
+    }
+    else if (method == "ar_ss_ga"){
+
+
       bosc$data$ss$surrogate$data <- bosc$data$ss$real$data %>%
         # fit an AR model to each subject's time course
         dplyr::group_by(.data$subj) %>%
