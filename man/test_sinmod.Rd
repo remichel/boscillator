@@ -39,7 +39,7 @@ Performs statistical test on sinusoidal models obtained from sinmod_bosc.
 \examples{
 bosc = simulate_experiment(n_sub = 3)
 bosc = generate_surrogates(bosc, n_surr = 10)
-bosc = sinmod_bosc(bosc)
+bosc = sinmod_bosc(bosc, levels = "ga")
 bosc = test_sinmod(bosc, levels = "ga", tests = "r2")
 
 }
