@@ -18,7 +18,7 @@ generate_surrogates(
 
 \item{n_surr}{Number of to-be-created surrogate datasets}
 
-\item{method}{permutation ("perm") or autoregression-model ("ar")}
+\item{method}{permutation ("perm") or autoregression-model, either on single subject level only  (and averaged afterward; "ar_ss") or modelling both on single subject and grand average level ("ar_ss_ga")}
 
 \item{seed_num}{number of the seed}
 
