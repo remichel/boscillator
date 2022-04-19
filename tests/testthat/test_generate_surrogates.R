@@ -1,10 +1,9 @@
 #' Test the boscillator function 'generate surrogates' that simulates a surrogate dataset of a dense
 #' sampling study.
-###################################################################################################
-# INFO:
-# - aggregate_bosc deckt aggregation ab, deshalb nur schneller Test ob Zeilenanzahl stimmt hier
-###################################################################################################
-source("defaults.R") # sources defaults
+
+source("defaults.R")
+load("agg_bosc.RData")
+load("surr_bosc.RData")
 
 test_that("function call gen-surr added to history of object", {
   surr_bosc <- generate_surrogates(no_surr_bosc, n_surr = def_n_surr)
@@ -26,4 +25,9 @@ test_that("quick test of aggregation", {
   surr_bosc <- generate_surrogates(no_surr_bosc, n_surr = def_n_surr)
   expect_length(surr_bosc$data$ss$surrogate$data$subj, def_n_sub * def_n_timepoints * def_n_surr)
   expect_length(surr_bosc$data$ga$surrogate$data$time, def_n_timepoints * def_n_surr)
+})
+
+test_that("failsafe", {
+  surr = generate_surrogates(agg_bosc, n_surr = 10, seed_num = 389493.1)
+  expect_equal(surr, surr_bosc)
 })

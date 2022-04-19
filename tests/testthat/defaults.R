@@ -42,13 +42,16 @@ no_x_bosc = generate_surrogates(no_x_bosc, n_surr = def_n_surr)
 
 def_n_pads = 50
 
-# sinmod/fft defaults
+# fft defaults
 no_model_bosc = simulate_experiment()
 no_model_bosc = generate_surrogates(no_model_bosc, n_surr = def_n_surr)
 
 def_bins = c(1.25, 2.50, 3.75, 5.00, 6.25, 7.50, 8.75, 10.00, 11.25, 12.50)
 
+# sinmod defaults
+no_model2_bosc = simulate_experiment(n_sub = 5, osc_params = def_osc_params)
+no_model2_bosc = generate_surrogates(no_model2_bosc, n_surr = 5)
 
-
-
-
+sinm_sub = 5
+sinm_surr = 5
+sinm_f = 4

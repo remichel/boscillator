@@ -2,26 +2,18 @@
 #' the time courses of a dense sampling study.
 #' Possible methods: hann, hamm, tukey, triangle, cosine, kaiser
 
-###################################################################################################
-# TO DO:
-# - wieder so semi sinnvoll, da eigentlich nur Anwendung von bspec functions geprüft wird
-# - händisch aber krass extensive
-# - hamming, cosine und kaiser failed wegen kleiner numerischer Unterschiede,
-#   deswegen erstmal weggelassen
-# - looping über verschiedene Methoden möglich, aber dauert halt länger
-#   (mit sapply werden Tests nicht mehr so schön im Build Fenster angezeigt)
-###################################################################################################
-
 source("defaults.R") # sources defaults
+load("surr_bosc.RData")
+load("hann_win_bosc.RData")
 
 
 test_that("function call window added to history of object", {
-  win_bosc <- window_bosc(no_x_bosc)
+  win_bosc <- window_bosc(no_x_bosc, verbose = F)
   expect_match(win_bosc$hist, "_window_")
 })
 
 test_that("windowing ~ hann", {
-  win_bosc <- window_bosc(no_x_bosc, method = "hann")
+  win_bosc <- window_bosc(no_x_bosc, method = "hann", verbose = F)
   # real data
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$real$data$hr),
@@ -54,7 +46,7 @@ test_that("windowing ~ hann", {
 
 test_that("windowing ~ tukey", {
   r <- .1
-  win_bosc <- window_bosc(no_x_bosc, method = "tukey", r = r)
+  win_bosc <- window_bosc(no_x_bosc, method = "tukey", r = r, verbose = F)
   # real data
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$real$data$hr),
@@ -86,7 +78,7 @@ test_that("windowing ~ tukey", {
 })
 
 test_that("windowing ~ triangle", {
-  win_bosc <- window_bosc(no_x_bosc, method = "triangle")
+  win_bosc <- window_bosc(no_x_bosc, method = "triangle", verbose = F)
   # real data
   # ss
   expect_equal(as.numeric(win_bosc$data$ss$real$data$hr),
@@ -115,4 +107,9 @@ test_that("windowing ~ triangle", {
                                    dplyr::group_by(n_surr) %>%
                                    dplyr::mutate(hr = .data$hr * bspec::trianglewindow(def_n_timepoints)) %>%
                                    dplyr::ungroup() %>% dplyr::select(hr))))
+})
+
+test_that("failsafe", {
+  hann_win <- window_bosc(surr_bosc, method = "hann", r = .1, alpha = .54, verbose = F)
+  expect_equal(hann_win, hann_win_bosc)
 })
