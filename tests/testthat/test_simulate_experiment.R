@@ -1,10 +1,6 @@
 #' Test the boscillator function 'simulate_experiment' that simulates the raw dataset of a dense
 #' sampling study.
 
-###################################################################################################
-# TO DO:
-# - add trendexoModel vs. trendpolyModel
-###################################################################################################
 source("test_values.R") # sources test matrix
 source("defaults.R") # sources defaults (here only n_sub, n_timepoints & n_trials & sfreq used)
 
@@ -23,7 +19,7 @@ for (i in 1:nrow(test_matrix)){
   test_transient_expModel_params  <- test_matrix$transient_expModel_params[[i]]
   test_trend                      <- test_matrix$trend[i]
   test_trend_linModel_params      <- test_matrix$trend_linModel_params[[i]]
-  test_trend_polyModel_params     <- test_matrix$trend_polyModel_params[[i]]
+  test_trend_polyModel_params      <- test_matrix$trend_polyModel_params[[i]]
   test_seed_num                   <- test_matrix$seed_num
 
   # test class
@@ -137,7 +133,7 @@ test_that("failsafe", {
                               transient_expModel_params = c(0, 1, .4),
                               trend = "linear",
                               trend_linModel_params = c(0.4, 0.09),
-                              trend_expModel_params = c(0, 1 - 2 * 0.09, .6),
+                              trend_polyModel_params = c(0, 1 - 2 * 0.09, .6),
                               aggregate = T,
                               seed_num = 292585.9)
   sim2 <- simulate_experiment(n_sub = 20,
@@ -151,9 +147,9 @@ test_that("failsafe", {
                               intercept_jitter = 0.1,
                               transient = "hanning",
                               transient_expModel_params = c(0, 1, .4),
-                              trend = "exponential",
+                              trend = "2ndorder",
                               trend_linModel_params = c(0.4, 0.09),
-                              trend_expModel_params = c(0, 1 - 2 * 0.09, .6),
+                              trend_polyModel_params = c(0, 1 - 2 * 0.09, .6),
                               aggregate = T,
                               seed_num = 292585.9)
   expect_equal(sim1, sim1_bosc)

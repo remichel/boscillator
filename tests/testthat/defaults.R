@@ -15,7 +15,7 @@ def_transient = "none"
 def_transient_expModel_params = c(0, 0, 0)
 def_trend = "none"
 def_trend_linModel_params = c(0, 0)
-def_trend_expModel_params = c(0, 0, 0)
+def_trend_polyModel_params = c(0, 0, 0)
 def_aggregate = T
 def_seed_num = NULL
 
