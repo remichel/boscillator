@@ -3,10 +3,7 @@
 
 ###################################################################################################
 # TO DO:
-# - test for all cases of parameters, test_matrix dementsprechend erweitern
-#   (trend & transient!)
-# - test_matrix schöner & values per loop unpacken
-# -> vielleicht sinnvoller als Liste anstatt data.frame? Dann muss tidyverse auch nicht extra laden
+# - add trendexoModel vs. trendpolyModel
 ###################################################################################################
 source("test_values.R") # sources test matrix
 source("defaults.R") # sources defaults (here only n_sub, n_timepoints & n_trials & sfreq used)
@@ -73,86 +70,30 @@ for (i in 1:nrow(test_matrix)){
   test_that("parameter osc_params", {
     bosc <- simulate_experiment(osc_params = test_osc_params)
     expect_identical(bosc$data$single_trial$real$spec$osc_params, test_osc_params)
-    #################################################################################################
-    # TEST MISSING: verändert sich das Modell bei Veränderung der oscillation parameters
-    #               sinngemäß & quantifizierbar richtig?
-    #               mögliche Lösungen:
-    #               a) 1 Fall festlegen; anhand dessen die Veränderung der Daten durch Veränderung der
-    #                  Parameter mit tatsächlichen Zahlenwerten quantifizieren, d.h. tatsächliche
-    #                  Zahlen zum Testen verwenden
-    #               b) Gegen das default-Modell basierend auf den default-Werten testen und nur einen
-    #                  heuristischen Vergleich anstellen
-    #                  (ändert die Veränderung eines Parameters das Modell auf entsprechend richtige Weise?)
-    #################################################################################################
   })
 
   # test phase jitter parameter
   test_that("parameter phase_jitter", {
     bosc <- simulate_experiment(phase_jitter = test_phase_jitter)
     expect_identical(bosc$data$single_trial$real$spec$phase_jitter, test_phase_jitter)
-    #################################################################################################
-    # TEST MISSING: verändert der phase jitter die Daten sinngemäß & quantifizierbar richtig?
-    #               mögliche Lösungen:
-    #               a) 1 Fall festlegen; anhand dessen die Veränderung der Daten durch den jitter mit
-    #                  tatsächlichen Zahlenwerten quantifizieren, d.h. tatsächliche
-    #                  Zahlen zum Testen verwenden
-    #               b) Gegen das default-Modell basierend auf den default-Werten testen und nur einen
-    #                  heuristischen Vergleich anstellen
-    #                  (z.B. führt ein Modell mit phase jitter zu stärker verschobenen Phasen
-    #                  im Vergleich zu dem auf den defaults basierenden Modell)
-    #################################################################################################
   })
 
   # test amplitude jitter parameter
   test_that("parameter amplitude_jitter", {
     bosc <- simulate_experiment(amplitude_jitter = test_amplitude_jitter)
     expect_identical(bosc$data$single_trial$real$spec$amplitude_jitter, test_amplitude_jitter)
-    #################################################################################################
-    # TEST MISSING: verändert der amplitude jitter die Daten sinngemäß & quantifizierbar richtig?
-    #               mögliche Lösungen:
-    #               a) 1 Fall festlegen; anhand dessen die Veränderung der Daten durch den jitter mit
-    #                  tatsächlichen Zahlenwerten quantifizieren, d.h. tatsächliche
-    #                  Zahlen zum Testen verwenden
-    #               b) Gegen das default-Modell basierend auf den default-Werten testen und nur einen
-    #                  heuristischen Vergleich anstellen
-    #                  (z.B. führt ein Modell mit amplitude jitter zu stärker unterschiedlich hohen
-    #                  Amplituden im Vergleich mit den Amplituden des Modells, das auf den
-    #                  defaults basiert)
-    #################################################################################################
   })
 
   # test frequency jitter parameter
   test_that("parameter freq_jitter", {
     bosc <- simulate_experiment(freq_jitter = test_freq_jitter)
     expect_identical(bosc$data$single_trial$real$spec$freq_jitter, test_freq_jitter)
-    #################################################################################################
-    # TEST MISSING: verändert der frequency jitter die Daten sinngemäß & quantifizierbar richtig?
-    #               mögliche Lösungen:
-    #               a) 1 Fall festlegen; anhand dessen die Veränderung der Daten durch den jitter mit
-    #                  tatsächlichen Zahlenwerten quantifizieren, d.h. tatsächliche
-    #                  Zahlen zum Testen verwenden
-    #               b) Gegen das default-Modell basierend auf den default-Werten testen und nur einen
-    #                  heuristischen Vergleich anstellen
-    #                  (z.B. führt ein Modell mit frequency jitter zu stärker verstreuten Frequenzen
-    #                  im Vergleich zu den Frequenzen des Modells, das auf den defaults basiert)
-    #################################################################################################
   })
 
   # test intercept jitter parameter
   test_that("parameter intercept_jitter", {
     bosc <- simulate_experiment(intercept_jitter = test_intercept_jitter)
     expect_identical(bosc$data$single_trial$real$spec$intercept_jitter, test_intercept_jitter)
-    #################################################################################################
-    # TEST MISSING: verändert der intercept jitter die Daten sinngemäß & quantifizierbar richtig?
-    #               mögliche Lösungen:
-    #               a) 1 Fall festlegen; anhand dessen die Veränderung der Daten durch den jitter mit
-    #                  tatsächlichen Zahlenwerten quantifizieren, d.h. tatsächliche
-    #                  Zahlen zum Testen verwenden
-    #               b) Gegen das default-Modell basierend auf den default-Werten testen und nur einen
-    #                  heuristischen Vergleich anstellen
-    #                  (z.B. führt ein Modell mit intercept jitter zu stärker verstreuten intercepts
-    #                  im Vergleich zu den intercepts des Modells, das auf den defaults basiert)
-    #################################################################################################
   })
 
   # test transient parameters
@@ -160,18 +101,6 @@ for (i in 1:nrow(test_matrix)){
     bosc <- simulate_experiment(transient = test_transient, transient_expModel_params = test_transient_expModel_params)
     expect_identical(bosc$data$single_trial$real$spec$transient, test_transient)
     expect_identical(bosc$data$single_trial$real$spec$transient_expModel_params, test_transient_expModel_params)
-    #################################################################################################
-    # TEST MISSING: verändert der transient die Daten sinngemäß & quantifizierbar richtig?
-    #               mögliche Lösungen:
-    #               a) 1 Fall festlegen; anhand dessen die Veränderung der Daten durch den transient mit
-    #                  tatsächlichen Zahlenwerten quantifizieren, d.h. tatsächliche
-    #                  Zahlen zum Testen verwenden
-    #               b) Gegen das default-Modell basierend auf den default-Werten in beide Richtungen
-    #                  testen und nur einen heuristischen Vergleich anstellen
-    #                  (z.B. ist der positive exponentielle transient im Modell mit Fall
-    #                  "positiver-exponentieller-transient" größer als im Modell basierend auf
-    #                   den defaults)
-    #################################################################################################
   })
 
   # test trend parameters
@@ -181,17 +110,6 @@ for (i in 1:nrow(test_matrix)){
     expect_identical(bosc$data$single_trial$real$spec$trend, test_trend)
     expect_identical(bosc$data$single_trial$real$spec$trend_linModel_params, test_trend_linModel_params)
     expect_identical(bosc$data$single_trial$real$spec$trend_expModel_params, test_trend_expModel_params)
-    #################################################################################################
-    # TEST MISSING: verändert der trend die Daten sinngemäß & quantifizierbar richtig?
-    #               mögliche Lösungen:
-    #               a) 1 Fall festlegen; anhand dessen die Veränderung der Daten durch den trend mit
-    #                  tatsächlichen Zahlenwerten quantifizieren, d.h. tatsächliche
-    #                  Zahlen zum Testen verwenden
-    #               b) Gegen das default-Modell basierend auf den default-Werten in beide Richtungen
-    #                  testen und nur einen heuristischen Vergleich anstellen
-    #                  (z.B. ist der positive lineare trend im Modell mit Fall
-    #                  "positiver-linearer-trend" größer als im Modell basierend auf den defaults)
-    #################################################################################################
   })
 
   # test seed number parameter
@@ -200,3 +118,45 @@ for (i in 1:nrow(test_matrix)){
     expect_identical(bosc$data$single_trial$real$spec$seed_num, test_seed_num)
   })
 }
+
+# konkretes Bsp. als failsafe für check nach Veränderung der Funktion
+load("sim1_bosc.RData")
+load("sim2_bosc.RData")
+
+test_that("failsafe", {
+  sim1 <- simulate_experiment(n_sub = 20,
+                              n_timepoints = 25,
+                              n_trials = 200,
+                              sfreq = 20,
+                              osc_params = c(0.5, .1, 6, 0),
+                              phase_jitter = c(0.3, 0.1),
+                              amplitude_jitter = c(0.1, 0.3),
+                              freq_jitter = c(0.3, 0.1),
+                              intercept_jitter = 0.1,
+                              transient = "exponential",
+                              transient_expModel_params = c(0, 1, .4),
+                              trend = "linear",
+                              trend_linModel_params = c(0.4, 0.09),
+                              trend_expModel_params = c(0, 1 - 2 * 0.09, .6),
+                              aggregate = T,
+                              seed_num = 292585.9)
+  sim2 <- simulate_experiment(n_sub = 20,
+                              n_timepoints = 25,
+                              n_trials = 200,
+                              sfreq = 20,
+                              osc_params = c(0.5, .1, 6, 0),
+                              phase_jitter = c(0.3, 0.1),
+                              amplitude_jitter = c(0.1, 0.3),
+                              freq_jitter = c(0.3, 0.1),
+                              intercept_jitter = 0.1,
+                              transient = "hanning",
+                              transient_expModel_params = c(0, 1, .4),
+                              trend = "exponential",
+                              trend_linModel_params = c(0.4, 0.09),
+                              trend_expModel_params = c(0, 1 - 2 * 0.09, .6),
+                              aggregate = T,
+                              seed_num = 292585.9)
+  expect_equal(sim1, sim1_bosc)
+  expect_equal(sim2, sim2_bosc)
+})
+

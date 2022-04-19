@@ -1,28 +1,26 @@
 #' Test the boscillator function 'detrend bosc' that detrends time courses of a dense
 #' sampling study.
-###################################################################################################
-# TO DO:
-# - add loop through test matrix to test detrend on different trends in data?
-# - exponential detrending does not detrend real data, why?
-# - more tests besides spot tests?
 
-# requires package funtimes
-###################################################################################################
-source("defaults.R") # sources defaults
+source("defaults.R")
+load("sim1_bosc.RData")
+load("sim2_bosc.RData")
+load("lin_detrend_bosc.RData")
+load("exp_detrend_bosc.RData")
 
 test_that("function call detrend added to history of object", {
-  detr_bosc <- detrend_bosc(no_detr_bosc_lin)
+  detr_bosc <- detrend_bosc(no_detr_bosc_lin, verbose = F)
   expect_match(detr_bosc$hist, "_detrend_")
 })
 
 test_that("detrending linear trend", {
-  detr_bosc_lin <- detrend_bosc(no_detr_bosc_lin)
+  detr_bosc_lin <- detrend_bosc(no_detr_bosc_lin, order = 1, verbose = F)
   # real data detrending
   # level ss - spot check of subject 1
   p <- notrend_test(detr_bosc_lin$data$ss$real$data[detr_bosc_lin$data$ss$real$data$subj == 1,]$hr)$p.value
   expect_gt(p, 0.05)
   # level ga
-  expect_gt(notrend_test(detr_bosc_lin$data$ga$real$data$hr)$p.value, 0.05)
+  p <- notrend_test(detr_bosc_lin$data$ga$real$data$hr)$p.value
+  expect_gt(p, 0.05)
 
   # surrogate data detrending
   # level ss spot check of surrogate 1 of subject 1
@@ -36,13 +34,14 @@ test_that("detrending linear trend", {
 
 
 test_that("detrending exponential trend", {
-  detr_bosc_exp <- detrend_bosc(no_detr_bosc_exp)
+  detr_bosc_exp <- detrend_bosc(no_detr_bosc_exp, order = 2, verbose = F)
   # real data detrending
   # level ss - spot check of subject 1
   p <- notrend_test(detr_bosc_exp$data$ss$real$data[detr_bosc_exp$data$ss$real$data$subj == 1,]$hr, test = "MK")$p.value
   expect_gt(p, 0.05)
   # level ga
-  expect_gt(notrend_test(detr_bosc_exp$data$ga$real$data$hr, test = "MK")$p.value, 0.05)
+  p <- notrend_test(detr_bosc_exp$data$ga$real$data$hr, test = "MK")$p.value
+  expect_gt(p, 0.05)
 
   # surrogate data detrending
   # level ss - spot check of surrogate 1 of subject 1
@@ -52,4 +51,13 @@ test_that("detrending exponential trend", {
   # level ga - spot check of surrogate 1
   p <- notrend_test(detr_bosc_exp$data$ga$surrogate$data[detr_bosc_exp$data$ga$surrogate$data$n_surr == 1,]$hr, test = "MK")$p.value
   expect_gt(p, 0.05)
+})
+
+test_that("failsafe", {
+  sim1_bosc = generate_surrogates(sim1_bosc, n_surr = 50, seed_num = 389493.1)
+  sim2_bosc = generate_surrogates(sim2_bosc, n_surr = 50, seed_num = 389493.1)
+  lin_detrend = detrend_bosc(sim1_bosc, order = 1, verbose = F)
+  exp_detrend = detrend_bosc(sim2_bosc, order = 2, verbose = F)
+  expect_equal(lin_detrend, lin_detrend_bosc)
+  expect_equal(exp_detrend, exp_detrend_bosc)
 })

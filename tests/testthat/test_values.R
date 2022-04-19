@@ -2,7 +2,6 @@
 #' stores all test matrices for unit testing boscillator functions
 
 # SIMULATE EXPERIMENT
-library(tidyverse)
 # define test matrix for
 test_matrix <- data.frame(n_sub = c(20),
                           n_timepoints = c(30),
@@ -22,7 +21,7 @@ test_matrix <- data.frame(n_sub = c(20),
                           seed_num = c(872957.7))
 
 # add values
-test_matrix <- test_matrix %>% add_row(n_sub = c(10),
+test_matrix <- test_matrix %>% dplyr::add_row(n_sub = c(10),
                         n_timepoints = c(150),
                         n_trials = c(100),
                         sfreq = c(25),
@@ -39,6 +38,3 @@ test_matrix <- test_matrix %>% add_row(n_sub = c(10),
                         aggregate = c(T),
                         seed_num = c(872957.7))
 
-# AGGREGATE BOSC
-aggregate_matrix <-data.frame(types = c("real", "surrogate"),
-                              levels = c("ss", "ss-ga"))
