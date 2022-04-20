@@ -1,5 +1,5 @@
 #' Documentation file for creating the bosc testing objects
-#' last update: 19.04.2022
+#' last update: 20.04.2022
 
 # basic bosc-object
 bosc = simulate_experiment(n_sub = 20,
@@ -15,7 +15,7 @@ bosc = simulate_experiment(n_sub = 20,
                     transient_expModel_params = c(0, 1, .4),
                     trend = "none",
                     trend_linModel_params = c(0.4, 0.09),
-                    trend_expModel_params = c(0, 1 - 2 * 0.09, .6),
+                    trend_polyModel_params = c(0, 1 - 2 * 0.09, .6),
                     aggregate = F,
                     seed_num = 292585.9)
 save(bosc, file = "bosc.RData")
@@ -34,7 +34,7 @@ sim1_bosc = simulate_experiment(n_sub = 20,
                            transient_expModel_params = c(0, 1, .4),
                            trend = "linear",
                            trend_linModel_params = c(0.4, 0.09),
-                           trend_expModel_params = c(0, 1 - 2 * 0.09, .6),
+                           trend_polyModel_params = c(0, 1 - 2 * 0.09, .6),
                            aggregate = T,
                            seed_num = 292585.9)
 save(sim1_bosc, file = "sim1_bosc.RData")
@@ -50,9 +50,9 @@ sim2_bosc = simulate_experiment(n_sub = 20,
                                 intercept_jitter = 0.1,
                                 transient = "hanning",
                                 transient_expModel_params = c(0, 1, .4),
-                                trend = "exponential",
+                                trend = "2ndorder",
                                 trend_linModel_params = c(0.4, 0.09),
-                                trend_expModel_params = c(0, 1 - 2 * 0.09, .6),
+                                trend_polyModel_params = c(0, 1 - 2 * 0.09, .6),
                                 aggregate = T,
                                 seed_num = 292585.9)
 save(sim2_bosc, file = "sim2_bosc.RData")
@@ -61,9 +61,17 @@ save(sim2_bosc, file = "sim2_bosc.RData")
 agg_bosc = aggregate_bosc(bosc)
 save(agg_bosc, file = "agg_bosc.RData")
 
-# surrogates
-surr_bosc = generate_surrogates(agg_bosc, n_surr = 10, seed_num = 389493.1)
+# surrogates - perm
+surr_bosc = generate_surrogates(agg_bosc, n_surr = 10, method = "perm", seed_num = 389493.1)
 save(surr_bosc, file = "surr_bosc.RData")
+
+# surrogates - ar_ss
+surr_ss_bosc = generate_surrogates(agg_bosc, n_surr = 10, method = "ar_ss", seed_num = 389493.1)
+save(surr_ss_bosc, file = "surr_ss_bosc.RData")
+
+# surrogates - ar_ss_ga
+surr_ga_bosc = generate_surrogates(agg_bosc, n_surr = 10, method = "ar_ss_ga", seed_num = 389493.1)
+save(surr_ga_bosc, file = "surr_ga_bosc.RData")
 
 # pad
 pad0_bosc = pad_bosc(surr_bosc, method = "zero", n_pads = 50)
