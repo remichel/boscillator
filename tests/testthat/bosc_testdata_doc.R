@@ -104,6 +104,9 @@ save(exp_detrend_bosc, file = "exp_detrend_bosc.RData")
 fftcomp_bosc = fft_bosc(surr_bosc)
 save(fftcomp_bosc, file = "fftcomp_bosc.RData")
 
+# test fft
+fftest = test_fft(fftcomp_bosc)
+save(fftest, file = "fftest.RData")
 
 
 
