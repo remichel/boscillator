@@ -1,7 +1,9 @@
 #' Test the boscillator function 'test_fft' that performs a statistical test on frequency spectra
 #' obtained by function fft_bosc.
 
-source("defaults.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# sinmod defaults')
 load("fftcomp_bosc.RData")
 load("fftest.RData")
 

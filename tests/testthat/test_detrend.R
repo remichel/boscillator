@@ -1,7 +1,9 @@
 #' Test the boscillator function 'detrend bosc' that detrends time courses of a dense
 #' sampling study.
 
-source("defaults.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# window/pad/scale defaults')
 load("sim1_bosc.RData")
 load("sim2_bosc.RData")
 load("lin_detrend_bosc.RData")

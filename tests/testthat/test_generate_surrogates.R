@@ -2,7 +2,9 @@
 #' sampling study.
 #' Two possible methods: perm or auto-regression model (ss vs. ss_ga)
 
-source("defaults.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag ='# aggregate defaults')
 load("agg_bosc.RData")
 load("surr_bosc.RData")
 load("surr_ss_bosc.RData")

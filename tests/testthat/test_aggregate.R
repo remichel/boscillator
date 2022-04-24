@@ -1,8 +1,9 @@
 #' Test the boscillator function 'aggregate' that aggregates various levels of data in a bosc object.
 
 # load needed defaults & test values
-source("defaults.R")
-source("test_values.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# detrend defaults')
 load("bosc.RData")
 load("agg_bosc.RData")
 

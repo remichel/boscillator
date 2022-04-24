@@ -1,8 +1,10 @@
 #' Test the boscillator function 'simulate_experiment' that simulates the raw dataset of a dense
 #' sampling study.
 
-source("test_values.R") # sources test matrix
-source("defaults.R") # sources defaults (here only n_sub, n_timepoints & n_trials & sfreq used)
+source("test_values.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# generate surrogates defaults')
 
 # loop through test_matrix rows for all other parameters
 for (i in 1:nrow(test_matrix)){

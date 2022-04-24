@@ -1,7 +1,9 @@
 #' Test the boscillator function 'scale_bosc' that z_scales the time courses of a dense
 #' sampling study.
 
-source("defaults.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# fft defaults')
 load("scaled_bosc.RData")
 load("surr_bosc.RData")
 

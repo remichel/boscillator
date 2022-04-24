@@ -1,7 +1,9 @@
 #' Test the boscillator function 'pad_bosc' that pads the time courses of a dense
 #' sampling study.
 
-source("defaults.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# fft defaults')
 load("surr_bosc.RData")
 load("pad0_bosc.RData")
 load("padme_bosc.RData")

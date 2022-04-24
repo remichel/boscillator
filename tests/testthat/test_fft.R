@@ -1,7 +1,9 @@
 #' Test the boscillator function 'fft_bosc' that performs a fft on the time courses of a dense
 #' sampling study.
 
-source("defaults.R")
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# test fft defaults')
 load("surr_bosc.RData")
 load("fftcomp_bosc.RData")
 
@@ -17,10 +19,15 @@ test_that("fft real data", {
   expect_equal(nrow(fftd_bosc$data$ss$real$fft),
                length(seq(def_sfreq/def_n_timepoints, def_sfreq/2, def_sfreq/def_n_timepoints))*def_n_sub)
   expect_equal(as.numeric(fftd_bosc$data$ss$real$fft$f), rep(def_bins, def_n_sub))
+  # amplitude highest in bin of simulated frequency? (bin here: 3.75)
+  expect_equal(unique(fftd_bosc$data$ss$real$fft %>% group_by(subj)
+                      %>% slice(which.max(amp)) %>% pull(f)), 3.75)
   # ga
   expect_equal(nrow(fftd_bosc$data$ga$real$fft),
                length(seq(def_sfreq/def_n_timepoints, def_sfreq/2, def_sfreq/def_n_timepoints)))
   expect_equal(as.numeric(fftd_bosc$data$ga$real$fft$f), def_bins)
+  # amplitude highest in bin of simulated frequency? (bin here: 3.75)
+  expect_equal(unique(fftd_bosc$data$ss$real$fft %>% slice(which.max(amp)) %>% pull(f)), 3.75)
 })
 
 test_that("fft surrogates", {

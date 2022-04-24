@@ -2,7 +2,9 @@
 #' the time courses of a dense sampling study.
 #' Possible methods: hann, hamm, tukey, triangle, cosine, kaiser
 
-source("defaults.R") # sources defaults
+sourcePartial("defaults.R",
+              startTag = '# simulate_experiment defaults',
+              endTag = '# fft defaults')
 load("surr_bosc.RData")
 load("hann_win_bosc.RData")
 
