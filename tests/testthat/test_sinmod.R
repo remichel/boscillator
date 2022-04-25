@@ -71,19 +71,30 @@ for (i in methods){
 }
 
 # piping fixed frequencies------------------------------------------------------------------
+suppressWarnings(sin_bosc <- sinmod_bosc(no_model2_bosc, grid = 8,
+                                         fixed_f = c(4,6), verbose = F))
 
-# suppressWarnings(sin_bosc <- sinmod_bosc(no_model2_bosc, fixed_f = c(1,15), verbose = F))
+test_that("sinmod real data fixed_f", {
+  # ss
+  expect_equal(nrow(sin_bosc$data$ss$real$sinmod), sinm_sub * 3 * fixed_freqs)
+  expect_equal(as.numeric(sin_bosc$data$ss$real$sinmod$subj), sort(rep(1:sinm_sub, 3*fixed_freqs)))
+  # expect deviance < 0.05 & r2 > 0.9
+  expect_true(!is.null(sin_bosc$data$ss$real$sinmod %>% filter(deviance >= 0.05 | r2 <= 0.9)))
+  # ga
+  expect_equal(nrow(sin_bosc$data$ga$real$sinmod), 3 * fixed_freqs)
+  # expect deviance < 0.05 & r2 > 0.9
+  expect_true(!is.null(sin_bosc$data$ga$real$sinmod %>% filter(deviance >= 0.05 | r2 <= 0.9)))
+})
 
-# yields "singular gradient matrix" error in nls
-# possibly due to no noise in data? (nls apparently can't deal with "zero-residual" data,
-# one should not try to test an artificial model)
-# BUT: tested, still occurs when data is jittered (intercept + frequency)
-# error is in line 212-234 in sinmod_bosc -> fitting model to fixed_f fails
-# mathematically prove that the set of parameters will give the same value
-# of the function to be minimized & the gradient is singular
-# NLS is supposed to minimize
-# intercept + a * sin(2 * pi * t * f + phi)
-# params here:
-# lower: 0 + 0 * sin(2pi * t * f + 0)
-# upper: 1 + 1 * sin(2pi * t * f + 2 * pi)
-# t is e.g. 0.24 (see spacial frequency simulated)
+test_that("sinmod surrogate data fixed_f", {
+  # ss
+  expect_equal(nrow(sin_bosc$data$ss$surrogate$sinmod), sinm_sub * sinm_surr * 3 * fixed_freqs)
+  expect_equal(as.numeric(sin_bosc$data$ss$surrogate$sinmod$subj),
+               sort(rep(1:sinm_sub, sinm_surr*3*fixed_freqs)))
+  # expect deviance < 0.05 & r2 > 0.9
+  expect_true(!is.null(sin_bosc$data$ss$surrogate$sinmod %>% filter(deviance >= 0.05 | r2 <= 0.9)))
+  # ga
+  expect_equal(nrow(sin_bosc$data$ga$surrogate$sinmod), 3*sinm_surr*fixed_freqs)
+  # expect deviance < 0.05 & r2 > 0.9
+  expect_true(!is.null(sin_bosc$data$ga$surrogate$sinmod %>% filter(deviance >= 0.05 | r2 <= 0.9)))
+})

@@ -60,6 +60,9 @@ no_model2_bosc = generate_surrogates(no_model2_bosc, n_surr = 20)
 sinm_sub = 5
 sinm_surr = 20
 sinm_f = 4
+fixed_freqs = 2
 
 # test sinmod defaults
 suppressWarnings(testsinmod_bosc <- sinmod_bosc(no_model2_bosc, niter = 25, convergence_count = 20, verbose = F))
+suppressWarnings(testsinmod2_bosc <- sinmod_bosc(no_model2_bosc, niter = 25, fixed_f = c(4,6), verbose = F))
+

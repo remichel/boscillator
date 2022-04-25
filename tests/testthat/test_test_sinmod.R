@@ -3,7 +3,7 @@
 
 source("defaults.R")
 
-# test sinmod results
+# test sinmod results, no fixed frequencies--------------------------------------------------------
 suppressWarnings(testedsinmod <- test_sinmod(testsinmod_bosc, verbose = F))
 
 test_that("function call _test_ added to history of object", {
@@ -32,5 +32,49 @@ test_that("sinmod test on ga level is done correctly", {
   }
 })
 
-# add tests for fixed frequency test!!
+# test sinmod results, fixed frequencies-----------------------------------------------------------
+suppressWarnings(testedsinmod <- test_sinmod(testsinmod2_bosc, verbose = F))
+
+test_that("fixed f sinmod test on ss level is done correctly", {
+  # structure
+  expect_equal(nrow(testedsinmod$tests$sinmod$ss$r2$results), sinm_sub * 3 * fixed_freqs)
+  expect_equal(testedsinmod$tests$sinmod$ss$r2$results$mcc_method,
+               rep(c("uncorrected", "bonferroni", "fdr"), sinm_sub * fixed_freqs))
+  # observed r2 > 0.9?
+  expect_true(!is.null(testedsinmod$tests$sinmod$ss$r2$results %>% filter(r2_observed <= 0.9)))
+  # did all tests reach significance in fixed_f that was the simulated frequency?
+  expect_equal(unique(testedsinmod$tests$sinmod$ss$r2$results %>% filter(fixed_f == sinm_f) %>% pull(sig)), 1)
+  # are all tests performed on other fixed frequencies not significant?
+  expect_equal(unique(testedsinmod$tests$sinmod$ss$r2$results %>% filter(fixed_f != sinm_f) %>% pull(sig)), 0)
+  # uncorrected always smaller p than other tests?
+  expect_equal(unique(testedsinmod$tests$sinmod$ss$r2$results %>% group_by(subj, fixed_f)
+                      %>% slice(which.min(p)) %>% pull(mcc_method)), "uncorrected")
+  # fdr <= bonferroni?
+  expect_equal(unique(testedsinmod$tests$sinmod$ss$r2$results %>%
+                        filter(mcc_method == "fdr" | mcc_method == "bonferroni") %>%
+                        group_by(subj, fixed_f) %>% mutate(tmp = p[mcc_method == "fdr"]) %>%
+                        mutate(comp = ifelse(p >= tmp, 1, 0)) %>% pull(comp)), 1)
+})
+
+test_that("fixed f sinmod test on ga level is done correctly", {
+  # structure
+  expect_equal(nrow(testedsinmod$tests$sinmod$ga$r2$results), 3 * fixed_freqs)
+  expect_equal(testedsinmod$tests$sinmod$ga$r2$results$mcc_method,
+               rep(c("uncorrected", "bonferroni", "fdr"), fixed_freqs))
+  # observed r2 > 0.9?
+  expect_true(!is.null(testedsinmod$tests$sinmod$ga$r2$results %>% filter(r2_observed <= 0.9)))
+  # did all tests reach significance in fixed_f that was the simulated frequency?
+  expect_equal(unique(testedsinmod$tests$sinmod$ga$r2$results %>% filter(fixed_f == sinm_f) %>% pull(sig)), 1)
+  # are all tests performed on other fixed frequencies not significant?
+  expect_equal(unique(testedsinmod$tests$sinmod$ga$r2$results %>% filter(fixed_f != sinm_f) %>% pull(sig)), 0)
+  # uncorrected always smaller p than other tests?
+  expect_equal(unique(testedsinmod$tests$sinmod$ss$r2$results
+                      %>% slice(which.min(p)) %>% pull(mcc_method)), "uncorrected")
+  # fdr <= bonferroni?
+  expect_equal(unique(testedsinmod$tests$sinmod$ga$r2$results %>%
+                        filter(mcc_method == "fdr" | mcc_method == "bonferroni") %>%
+                        group_by(fixed_f) %>%
+                        mutate(tmp = p[mcc_method == "fdr"]) %>%
+                        mutate(comp = ifelse(p >= tmp, 1, 0)) %>% pull(comp)), 1)
+})
 
