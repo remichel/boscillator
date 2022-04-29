@@ -71,7 +71,7 @@ for (i in methods){
 }
 
 # piping fixed frequencies------------------------------------------------------------------
-suppressWarnings(sin_bosc <- sinmod_bosc(no_model2_bosc, grid = 8,
+suppressWarnings(sin_bosc <- sinmod_bosc(no_model2_bosc, niter = 25,
                                          fixed_f = c(4,6), verbose = F))
 
 test_that("sinmod real data fixed_f", {
