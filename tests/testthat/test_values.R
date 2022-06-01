@@ -39,6 +39,3 @@ test_matrix <- test_matrix %>% dplyr::add_row(n_sub = c(10),
                         aggregate = c(T),
                         seed_num = c(872957.7))
 
-# AGGREGATE BOSC
-aggregate_matrix <-data.frame(types = c("real", "surrogate"),
-                              levels = c("ss", "ss-ga"))
