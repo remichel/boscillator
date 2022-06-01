@@ -169,7 +169,7 @@ test_fft <- function(bosc,
           # ------------------------------------------------------------------------
           # get p values for max freq approach
           # ------------------------------------------------------------------------
-          maxfreq <- bosc$data[[iLevel]]$surrogate$fft %>%
+          bosc$tests$fft[[iLevel]][[iTest]]$maxfreq <- bosc$data[[iLevel]]$surrogate$fft %>%
             dplyr::group_by(.data$n_surr) %>%
             # add observed amplitudes in a separate column to the surrogate dataset
             dplyr::mutate(observed = bosc$data[[iLevel]]$real$fft$amp) %>%
@@ -184,7 +184,9 @@ test_fft <- function(bosc,
               max = max(.data$amp),
               observed = .data$observed,
               f = .data$f
-            ) %>%
+            )
+
+          maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$maxfreq %>%
             # group by all grouping vars (e.g. frequency and subject), alpha levels,
             # and extract the critical value from the max amplitude distribution for each group
             dplyr::group_by_at(c(group_vars, "f", "alpha")) %>%
@@ -330,7 +332,7 @@ test_fft <- function(bosc,
         if ("maxfreq" %in% mcc) {
 
           # get p values for max freq approach
-          maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
+          bosc$tests$fft[[iLevel]][[iTest]]$maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$data %>%
             # add all desired alpha levels
             dplyr::left_join(as.data.frame(alpha), copy = TRUE, by = character()) %>%
             dplyr::group_by(.data$n_surr, .data$alpha) %>%
@@ -339,7 +341,9 @@ test_fft <- function(bosc,
               max = max(.data$surrogate_length),
               observed_length = .data$observed_length,
               f = .data$f
-            ) %>%
+            )
+
+          maxfreq <- bosc$tests$fft[[iLevel]][[iTest]]$maxfreq %>%
             dplyr::group_by(.data$alpha, .data$f) %>%
             # determine critical maximum vector length within surrogated datasets and determine p value of observed length
             dplyr::summarize(
