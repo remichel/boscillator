@@ -76,7 +76,7 @@ test_fft <- function(bosc,
       # ------------------------------------------------------------------------
       # check if required data exists
       # ------------------------------------------------------------------------
-      if (iTest == "ss" | iTest == "ga") {
+      if (iLevel == "ss" | iLevel == "ga") {
         if (is.null(bosc$data[[iLevel]]$real$fft) | is.null(bosc$data[[iLevel]]$surrogate$fft)) {
           if (verbose == TRUE) {
             message(paste(
