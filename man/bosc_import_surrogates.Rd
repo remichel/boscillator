@@ -37,5 +37,4 @@ bosc-Object
 }
 \description{
 \code{bosc_import}
-Imports a dense sampling study's data frame into boscillator.
 }

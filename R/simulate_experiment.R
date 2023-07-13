@@ -30,8 +30,6 @@
 #' @examples
 #' bosc = simulate_experiment()
 #'
-#' @author René Michel
-#'
 
 simulate_experiment <-
   function(n_sub = 14,

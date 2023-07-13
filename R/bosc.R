@@ -11,7 +11,6 @@
 #' @examples
 #' bosc = bosc()
 #'
-#' @author René Michel
 
 bosc <- function() {
 

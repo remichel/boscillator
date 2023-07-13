@@ -1,7 +1,6 @@
 #' bosc_import
 #'
 #' @description \code{bosc_import}
-#' Imports a dense sampling study's data frame into boscillator.
 #'
 #' @param bosc A bosc-object
 #' @param data A dataframe with dense sampling data

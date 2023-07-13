@@ -67,6 +67,3 @@ Simulates the raw dataset of a dense sampling study.
 bosc = simulate_experiment()
 
 }
-\author{
-René Michel
-}

@@ -17,6 +17,3 @@ Creates an empty bosc object for further processing with boscillator functions.
 bosc = bosc()
 
 }
-\author{
-René Michel
-}
