@@ -10,6 +10,11 @@
 The goal of boscillator is to provide a framework for simulating and
 analyzing dense sampling studies to investigate behavioral ryhthms.
 
+## Words of caution
+
+This package is still under development. While the `dior` branch contains a subset of stable and tested functions, it is not recommended to use the package without knowing exactly what you are doing, and there is no warranty that the documentation is complete. 
+
+
 ## Installation
 
 <!-- You can install the released version of boscillator from [CRAN](https://CRAN.R-project.org) with: -->
@@ -18,12 +23,12 @@ analyzing dense sampling studies to investigate behavioral ryhthms.
 install.packages("boscillator")
 ```-->
 
-You can install the development version from
+You can install the dior version from
 [GitHub](https://github.com/) with:
 
 ``` r
 install.packages("devtools")
-devtools::install_github("remichel/boscillator@dev")
+devtools::install_github("remichel/boscillator@dior")
 ```
 
 <!--## Example
